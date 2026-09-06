@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+  <meta name="theme-color" content="#090909"/>
+  <meta name="description" content="LSH Studio RB Emilly — Lash design, beleza, cuidado e resultados que transformam."/>
+  <meta property="og:title" content="LSH Studio RB Emilly"/>
+  <meta property="og:description" content="Realce sua beleza com quem entende de detalhes."/>
+  <title>LSH Studio RB Emilly — Beleza Premium</title>
+  <link rel="icon" href="assets/logo-premium-v4.svg?v=4"/>
+  <link rel="stylesheet" href="lsh-premium-v4.css?v=4"/>
+  <script>
+  (function(){
+    try{
+      if('serviceWorker' in navigator){
+        navigator.serviceWorker.getRegistrations().then(function(rs){
+          rs.forEach(function(r){ r.unregister(); });
+        });
+      }
+      if('caches' in window){
+        caches.keys().then(function(keys){
+          keys.forEach(function(k){ caches.delete(k); });
+        });
+      }
+    }catch(e){}
+  })();
+  </script>
+</head>
+<body class="premium">
+  <div class="backdrop-eye"></div>
+  <div class="page-glow glow-a"></div>
+  <div class="page-glow glow-b"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#inicio" aria-label="LSH Studio RB Emilly">
+      <img src="assets/logo-premium-v4.svg?v=4" alt="Logo LSH Studio RB Emilly"/>
+    </a>
+
+    <nav class="desktop-nav">
+      <a href="#inicio">Início</a>
+      <a href="#sobre">Sobre</a>
+      <a href="#servicos">Serviços</a>
+      <a href="#resultados">Resultados</a>
+      <a href="#agendamento">Agendar</a>
+      <a href="#contato">Contato</a>
+    </nav>
+
+    <div class="top-actions">
+      <a class="btn btn-wa mini" id="topWhatsappBtn" target="_blank" rel="noopener">Falar no WhatsApp</a>
+    </div>
+
+    <button class="menu-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
+  </header>
+
+  <aside class="mobile-menu" id="mobileMenu">
+    <button class="close-menu" id="closeMenu">×</button>
+    <a href="#inicio">Início</a>
+    <a href="#sobre">Sobre</a>
+    <a href="#servicos">Serviços</a>
+    <a href="#resultados">Resultados</a>
+    <a href="#agendamento">Agendar</a>
+    <a href="#contato">Contato</a>
+    <a class="btn btn-pink" id="mobileWhatsappBtn" target="_blank" rel="noopener">Falar no WhatsApp</a>
+  </aside>
+
+  <main>
+    <section class="hero section" id="inicio">
+      <div class="hero-copy reveal">
+        <img src="assets/logo-premium-v4.svg?v=4" class="hero-logo" alt="Logo LSH Studio RB Emilly"/>
+        <h1>Realce o que te faz <em>única.</em></h1>
+        <p>Olhares mais expressivos, beleza em cada detalhe e um atendimento pensado para valorizar você.</p>
+
+        <div class="hero-actions">
+          <a class="btn btn-pink btn-lg" href="#agendamento">AGENDAR HORÁRIO</a>
+          <a class="btn btn-outline btn-lg" id="heroWhatsappBtn" target="_blank" rel="noopener">FALAR NO WHATSAPP</a>
+        </div>
+
+        <div class="hero-icons">
+          <div><span>◇</span><small>Atendimento<br>personalizado</small></div>
+          <div><span>🛡</span><small>Produtos de<br>alta qualidade</small></div>
+          <div><span>♡</span><small>Ambiente<br>confortável</small></div>
+          <div><span>★</span><small>Resultados<br>naturais</small></div>
+        </div>
+      </div>
+
+      <div class="hero-visual reveal">
+        <div class="hero-photo">
+          <img src="assets/proprietaria-lsh.webp" alt="Emilly, proprietária do LSH Studio RB"/>
+          <div class="neon-box">
+            <strong>Beleza<br>Confiança<br>Autoestima</strong>
+            <small>todos os dias ♡</small>
+          </div>
+          <div class="hero-signature">
+            <span>Emilly♡</span>
+            <small>Lash Designer</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section about-premium-dark about-solo" id="sobre">
+      <div class="about-shell reveal">
+        <div class="about-text">
+          <span class="eyebrow">SOBRE MIM</span>
+          <h2>Olá, eu sou a <br><strong>Emilly♡</strong></h2>
+          <p>Sou lash designer e minha missão é realçar a beleza do seu olhar, proporcionando mais autoestima e confiança. No LSH Studio RB, cada atendimento é feito com muito carinho, técnica e dedicação, sempre pensando no que há de melhor para você.</p>
+
+          <div class="about-points">
+            <div><b>Atendimento</b><span>Cuidadoso e personalizado</span></div>
+            <div><b>Beleza</b><span>Acabamento delicado e sofisticado</span></div>
+            <div><b>Objetivo</b><span>Valorizar seu olhar com elegância</span></div>
+          </div>
+
+          <a class="btn btn-pink soft" href="#resultados">CONHEÇA MEU TRABALHO</a>
+        </div>
+
+        <div class="about-gallery-solo">
+          <div class="about-photo-feature">
+            <img src="assets/proprietaria-lsh.webp" alt="Emilly do LSH Studio RB">
+          </div>
+          <div class="about-badge">Emilly • Lash Designer</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section services-premium" id="servicos">
+      <div class="section-head center light reveal">
+        <h2>Meus serviços</h2>
+        <p>Realce a sua beleza com técnicas modernas e seguras.</p>
+      </div>
+
+      <div class="service-pill-grid">
+        <article class="service-pill reveal"><span>◠</span><h3>Alongamento de Cílios</h3><p>Diversos efeitos para o seu olhar.</p></article>
+        <article class="service-pill reveal"><span>⌒</span><h3>Design de Sobrancelhas</h3><p>Mais harmonia para o seu rosto.</p></article>
+        <article class="service-pill reveal"><span>◡</span><h3>Lifting de Cílios</h3><p>Cílios mais curvados e definidos.</p></article>
+        <article class="service-pill reveal"><span>✦</span><h3>Henna</h3><p>Sobrancelhas mais preenchidas.</p></article>
+        <article class="service-pill reveal"><span>☺</span><h3>Limpeza de Pele</h3><p>Cuidado e realce ainda maior para seu olhar.</p></article>
+        <article class="service-pill reveal"><span>•••</span><h3>Outros serviços</h3><p>Consulte disponibilidade.</p></article>
+      </div>
+    </section>
+
+    <section class="section results-premium" id="resultados">
+      <div class="section-head center light reveal">
+        <h2>Resultados reais</h2>
+        <p>Uma apresentação mais delicada e bonita, em formato de álbum interativo.</p>
+      </div>
+
+      <div class="album-shell reveal" data-album>
+        <div class="album-preview">
+          <div class="album-main-frame">
+            <img id="albumMainImage" src="assets/depois-01.webp" alt="Resultado LSH Studio RB">
+            <button class="album-nav prev" type="button" aria-label="Foto anterior">‹</button>
+            <button class="album-nav next" type="button" aria-label="Próxima foto">›</button>
+            <div class="album-main-overlay">
+              <span class="album-mini-tag" id="albumMainTag">ÁLBUM LSH</span>
+              <h3 id="albumMainTitle">Acabamento delicado e elegante</h3>
+              <p id="albumMainText">Selecione uma foto abaixo para navegar pelo álbum de resultados da Emilly.</p>
+            </div>
+          </div>
+        </div>
+
+        <aside class="album-sidebar">
+          <div class="album-copy-card">
+            <span class="eyebrow">PORTFÓLIO</span>
+            <h3>Pequeno álbum interativo</h3>
+            <p>Agora os resultados ficam organizados em um formato mais leve, bonito e sofisticado, sem aquele destaque rígido de antes e depois.</p>
+            <div class="album-counter"><b id="albumCurrent">01</b><span>/ 03</span></div>
+          </div>
+
+          <div class="album-thumbs">
+            <button class="album-thumb active" type="button"
+              data-image="assets/depois-01.webp"
+              data-title="Acabamento delicado e elegante"
+              data-text="Um resultado com visual suave, bonito e bem finalizado."
+              data-tag="RESULTADO 01">
+              <img src="assets/depois-01.webp" alt="Resultado 1">
+              <div><b>Resultado 01</b><span>Toque delicado</span></div>
+            </button>
+
+            <button class="album-thumb" type="button"
+              data-image="assets/resultado-02.webp"
+              data-title="Realce do olhar com naturalidade"
+              data-text="Um olhar mais valorizado, mantendo leveza e sofisticação."
+              data-tag="RESULTADO 02">
+              <img src="assets/resultado-02.webp" alt="Resultado 2">
+              <div><b>Resultado 02</b><span>Natural e sofisticado</span></div>
+            </button>
+
+            <button class="album-thumb" type="button"
+              data-image="assets/resultado-03.webp"
+              data-title="Mais um trabalho da Emilly"
+              data-text="Outro resultado em destaque para reforçar a qualidade do atendimento."
+              data-tag="RESULTADO 03">
+              <img src="assets/resultado-03.webp" alt="Resultado 3">
+              <div><b>Resultado 03</b><span>Estilo premium</span></div>
+            </button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section booking-premium" id="agendamento">
+      <div class="booking-layout reveal">
+        <div class="booking-left">
+          <span class="eyebrow">AGENDE SEU HORÁRIO</span>
+          <h2>Agende <br>seu horário</h2>
+          <p>Escolha a data, selecione um horário disponível e envie apenas seus dados. Assim que agendar, o LSH Studio RB recebe sua solicitação.</p>
+          <div class="handwritten">Seu olhar<br>minha arte ♡</div>
+        </div>
+
+        <div class="booking-center">
+          <div class="booking-calendar-box">
+            <label for="bookingDate">Escolha a data</label>
+            <input type="date" id="bookingDate" name="date" required/>
+            <div class="calendar-slots-title">Horários disponíveis</div>
+            <div class="time-grid" id="timeGrid"><p class="muted">Selecione uma data para ver os horários.</p></div>
+            <input type="hidden" id="bookingTime" name="time" required/>
+          </div>
+        </div>
+
+        <div class="booking-right">
+          <form id="bookingForm" class="premium-form">
+            <h3>Seus dados</h3>
+            <div class="field"><input id="clientName" name="name" placeholder="Seu nome completo" maxlength="80" required/></div>
+            <div class="field"><input id="clientPhone" name="phone" inputmode="tel" placeholder="Seu número (WhatsApp)" maxlength="20" required/></div>
+            <button class="btn btn-pink btn-lg full" type="submit">CONFIRMAR AGENDAMENTO</button>
+            <p class="privacy-note">A solicitação fica como pendente até confirmação da Emilly.</p>
+          </form>
+
+          <div class="form-state hidden" id="successState">
+            <div class="state-icon">♥</div>
+            <h3>Solicitação de agendamento enviada! 💗</h3>
+            <p>O LSH Studio RB recebeu sua solicitação e entrará em contato para confirmar seu horário.</p>
+            <button class="btn btn-outline" id="newBooking">Fazer outro agendamento</button>
+          </div>
+
+          <div class="form-state hidden" id="errorState">
+            <div class="state-icon">!</div>
+            <h3>Ops! Não conseguimos concluir seu agendamento agora.</h3>
+            <p>Você pode tentar novamente ou falar diretamente com a LSH pelo WhatsApp. 💗</p>
+            <a class="btn btn-pink" id="errorWhatsapp" target="_blank" rel="noopener">FALAR COM A LSH NO WHATSAPP</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section contact-premium" id="contato">
+      <div class="contact-bottom reveal">
+        <div class="contact-branding">
+          <img src="assets/logo-premium-v4.svg?v=4" alt="LSH Studio RB Emilly">
+          <span>Beleza • Autoestima • Confiança</span>
+        </div>
+
+        <div class="contact-icons">
+          <a id="instagramLink" href="#" aria-label="Instagram">◎</a>
+          <a id="whatsappLink" href="#" aria-label="WhatsApp">✆</a>
+        </div>
+
+        <div class="contact-meta">
+          <p><b>WhatsApp</b> <span id="contactWhatsapp">Atualizar número</span></p>
+          <p><b>Instagram</b> <span id="contactInstagram">@studio.__rb</span></p>
+          <p><b>Endereço</b> <span id="contactAddress">Atualizar endereço</span></p>
+          <p><b>Atendimento</b> <span id="contactHours">Seg a Sáb</span></p>
+        </div>
+
+        <div class="contact-quote">
+          <p>“Mulheres que se olham no espelho e se reconhecem, mudam o mundo.”</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <a class="whatsapp-float" id="whatsappFloat" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
+    <span class="wa-icon">✆</span>
+    <span class="wa-copy"><b>Precisa de ajuda?</b><small>Fale conosco 💗</small></span>
+  </a>
+
+  <nav class="bottom-nav">
+    <a href="#inicio"><span>⌂</span><small>Início</small></a>
+    <a href="#servicos"><span>✦</span><small>Serviços</small></a>
+    <a class="bottom-main" href="#agendamento"><span>＋</span><small>Agendar</small></a>
+    <a href="#contato"><span>✉</span><small>Contato</small></a>
+  </nav>
+
+  <footer class="simple-footer">
+    <p>© <span id="year"></span> LSH Studio RB — Todos os direitos reservados.</p>
+    <a href="admin.html" class="admin-link">Área da proprietária</a>
+  </footer>
+
+  <script src="lsh-premium-v4.js?v=4" defer></script>
+</body>
+</html>
