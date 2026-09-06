@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Painel • LSH Studio RB</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="admin.css?v=7">
+  <link rel="stylesheet" href="admin.css?v=8">
   <link rel="icon" href="assets/logo-premium-v4.svg">
 </head>
 <body class="admin-body">
@@ -44,7 +44,7 @@
         <div>
           <span class="eyebrow">PAINEL LSH</span>
           <h1>Agenda da Emilly</h1>
-          <p class="dash-sub">Acompanhe agendamentos, bloqueios e dias com movimento em um mini calendário visual.</p>
+          <p class="dash-sub">Controle agendamentos, procedimentos, valores, dias, horários e notificações em um só lugar.</p>
         </div>
         <button id="manualBtn" class="btn btn-pink">＋ Agendamento manual</button>
       </div>
@@ -118,14 +118,40 @@
           </div>
         </section>
       </div>
+
+      <section class="admin-settings-grid">
+        <div class="panel-card settings-card schedule-settings">
+          <div class="panel-head">
+            <div><span class="eyebrow">AGENDA SEMANAL</span><h2>Dias e horários</h2><p class="panel-desc">Nada é liberado automaticamente. Você escolhe exatamente os dias e horários que quer atender.</p></div>
+            <button id="saveScheduleBtn" class="btn btn-pink">Salvar horários</button>
+          </div>
+          <div id="scheduleEditor" class="schedule-editor"></div>
+        </div>
+
+        <div class="panel-card settings-card services-settings">
+          <div class="panel-head">
+            <div><span class="eyebrow">PROCEDIMENTOS</span><h2>Serviços e valores</h2><p class="panel-desc">Cadastre os procedimentos, preço, duração e o que fica visível para as clientes.</p></div>
+            <div class="panel-actions"><button id="addServiceBtn" class="btn btn-ghost">＋ Procedimento</button><button id="saveServicesBtn" class="btn btn-pink">Salvar</button></div>
+          </div>
+          <div id="servicesEditor" class="services-editor"></div>
+        </div>
+
+        <div class="panel-card settings-card notifications-settings">
+          <div class="panel-head"><div><span class="eyebrow">NOTIFICAÇÕES</span><h2>Status do sistema</h2><p class="panel-desc">Veja se e-mail, WhatsApp automático e armazenamento persistente estão configurados.</p></div><button id="testEmailBtn" class="btn btn-ghost">Testar e-mail</button></div>
+          <div id="notificationStatus" class="notification-status"></div>
+        </div>
+      </section>
     </section>
   </main>
+
+  <div id="adminToast" class="admin-toast"></div>
 
   <dialog id="manualDialog">
     <form method="dialog" id="manualForm">
       <h2>Novo agendamento</h2>
       <input name="name" placeholder="Nome da cliente" required>
       <input name="phone" placeholder="Telefone / WhatsApp" required>
+      <input name="email" type="email" placeholder="E-mail da cliente (opcional)">
       <input name="date" type="date" required>
       <input name="time" type="time" required>
       <div class="dialog-actions">
@@ -135,6 +161,6 @@
     </form>
   </dialog>
 
-  <script src="admin.js?v=7"></script>
+  <script src="admin-v8.js?v=8"></script>
 </body>
 </html>

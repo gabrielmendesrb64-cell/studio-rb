@@ -9,7 +9,7 @@
   <meta property="og:description" content="Realce sua beleza com quem entende de detalhes."/>
   <title>LSH Studio RB Emilly — Beleza Premium</title>
   <link rel="icon" href="assets/logo-premium-v4.svg?v=4"/>
-  <link rel="stylesheet" href="lsh-premium-v4.css?v=4"/>
+  <link rel="stylesheet" href="lsh-premium-v4.css?v=8"/>
   <script>
   (function(){
     try{
@@ -43,6 +43,7 @@
       <a href="#servicos">Serviços</a>
       <a href="#resultados">Resultados</a>
       <a href="#agendamento">Agendar</a>
+      <a href="#meus-agendamentos">Meus agendamentos</a>
       <a href="#contato">Contato</a>
     </nav>
 
@@ -60,6 +61,7 @@
     <a href="#servicos">Serviços</a>
     <a href="#resultados">Resultados</a>
     <a href="#agendamento">Agendar</a>
+    <a href="#meus-agendamentos">Meus agendamentos</a>
     <a href="#contato">Contato</a>
     <a class="btn btn-pink" id="mobileWhatsappBtn" target="_blank" rel="noopener">Falar no WhatsApp</a>
   </aside>
@@ -200,48 +202,77 @@
       </div>
     </section>
 
-    <section class="section booking-premium" id="agendamento">
-      <div class="booking-layout reveal">
-        <div class="booking-left">
-          <span class="eyebrow">AGENDE SEU HORÁRIO</span>
-          <h2>Agende <br>seu horário</h2>
-          <p>Escolha a data, selecione um horário disponível e envie apenas seus dados. Assim que agendar, o LSH Studio RB recebe sua solicitação.</p>
-          <div class="handwritten">Seu olhar<br>minha arte ♡</div>
+    <section class="section booking-premium booking-v8" id="agendamento">
+      <div class="booking-v8-head reveal">
+        <span class="eyebrow">AGENDE SEU HORÁRIO</span>
+        <h2>Monte seu atendimento do seu jeito ♡</h2>
+        <p>Escolha um ou mais procedimentos, veja o valor total, selecione uma data e um horário liberado pela Emilly.</p>
+      </div>
+
+      <div class="booking-v8-shell reveal">
+        <div class="booking-step procedures-step">
+          <div class="step-title"><span>01</span><div><b>Escolha os procedimentos</b><small>Você pode selecionar mais de um.</small></div></div>
+          <div class="procedure-grid" id="procedureGrid"><div class="booking-alert">Carregando procedimentos...</div></div>
         </div>
 
-        <div class="booking-center">
+        <div class="booking-step schedule-step">
+          <div class="step-title"><span>02</span><div><b>Escolha data e horário</b><small>Só aparecem horários liberados no painel.</small></div></div>
           <div class="booking-calendar-box">
-            <label for="bookingDate">Escolha a data</label>
-            <input type="date" id="bookingDate" name="date" required/>
+            <label for="bookingDate">Data do atendimento</label>
+            <input type="date" id="bookingDate" required/>
             <div class="calendar-slots-title">Horários disponíveis</div>
-            <div class="time-grid" id="timeGrid"><p class="muted">Selecione uma data para ver os horários.</p></div>
-            <input type="hidden" id="bookingTime" name="time" required/>
+            <div class="time-grid" id="timeGrid"><p class="muted">Escolha os procedimentos e uma data.</p></div>
+            <input type="hidden" id="bookingTime"/>
           </div>
         </div>
 
-        <div class="booking-right">
-          <form id="bookingForm" class="premium-form">
-            <h3>Seus dados</h3>
+        <div class="booking-step customer-step">
+          <div class="step-title"><span>03</span><div><b>Seus dados</b><small>Usamos seus dados para localizar e confirmar o agendamento.</small></div></div>
+          <form id="bookingForm" class="premium-form booking-form-v8">
             <div class="field"><input id="clientName" name="name" placeholder="Seu nome completo" maxlength="80" required/></div>
-            <div class="field"><input id="clientPhone" name="phone" inputmode="tel" placeholder="Seu número (WhatsApp)" maxlength="20" required/></div>
-            <button class="btn btn-pink btn-lg full" type="submit">CONFIRMAR AGENDAMENTO</button>
-            <p class="privacy-note">A solicitação fica como pendente até confirmação da Emilly.</p>
+            <div class="field"><input id="clientPhone" name="phone" inputmode="tel" placeholder="Seu WhatsApp com DDD" maxlength="24" required/></div>
+            <div class="field"><input id="clientEmail" name="email" type="email" placeholder="Seu e-mail para receber a confirmação" maxlength="120" required/></div>
+
+            <div class="booking-summary">
+              <div class="summary-head"><b>Resumo</b><span id="bookingDuration">60 min aprox.</span></div>
+              <div class="selected-procedure-list" id="selectedProcedureList"><small>Nenhum procedimento selecionado.</small></div>
+              <div class="summary-total"><span>Total do atendimento</span><strong id="bookingTotal">R$ 0,00</strong></div>
+            </div>
+
+            <button class="btn btn-pink btn-lg full" type="submit">ENVIAR SOLICITAÇÃO</button>
+            <p class="privacy-note">O pedido fica pendente até a Emilly confirmar. Quando for confirmado, você recebe a confirmação pelo canal configurado.</p>
           </form>
 
           <div class="form-state hidden" id="successState">
             <div class="state-icon">♥</div>
-            <h3>Solicitação de agendamento enviada! 💗</h3>
-            <p>O LSH Studio RB recebeu sua solicitação e entrará em contato para confirmar seu horário.</p>
-            <button class="btn btn-outline" id="newBooking">Fazer outro agendamento</button>
+            <h3>Solicitação enviada! 💗</h3>
+            <p>Seu pedido entrou na agenda da LSH Studio RB. Você pode acompanhar em “Meus agendamentos”.</p>
+            <a class="btn btn-outline" href="#meus-agendamentos">VER MEUS AGENDAMENTOS</a>
+            <button class="btn btn-pink" id="newBooking">Fazer outro agendamento</button>
           </div>
 
           <div class="form-state hidden" id="errorState">
             <div class="state-icon">!</div>
-            <h3>Ops! Não conseguimos concluir seu agendamento agora.</h3>
-            <p>Você pode tentar novamente ou falar diretamente com a LSH pelo WhatsApp. 💗</p>
-            <a class="btn btn-pink" id="errorWhatsapp" target="_blank" rel="noopener">FALAR COM EMILLY NO WHATSAPP</a>
+            <h3>Não conseguimos concluir agora.</h3>
+            <p id="bookingErrorText">Confira seus dados e tente novamente.</p>
+            <a class="btn btn-pink" id="errorWhatsapp" target="_blank" rel="noopener">FALAR COM A LSH NO WHATSAPP</a>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section class="section my-bookings-section" id="meus-agendamentos">
+      <div class="my-bookings-shell reveal">
+        <div class="my-bookings-copy">
+          <span class="eyebrow">ÁREA DA CLIENTE</span>
+          <h2>Meus agendamentos</h2>
+          <p>Digite o mesmo WhatsApp usado no agendamento ou seu nome completo para consultar seus horários, procedimentos, total e status.</p>
+        </div>
+        <div class="my-bookings-search">
+          <input id="myBookingQuery" placeholder="WhatsApp ou nome completo" autocomplete="off"/>
+          <button class="btn btn-pink" id="myBookingsSearchBtn" type="button">BUSCAR</button>
+        </div>
+        <div id="myBookingsResult" class="my-bookings-results"></div>
       </div>
     </section>
 
@@ -258,9 +289,9 @@
         </div>
 
         <div class="contact-meta">
-          <p><b>WhatsApp</b> <span id="contactWhatsapp">12981499655</span></p>
+          <p><b>WhatsApp</b> <span id="contactWhatsapp">Atualizar número</span></p>
           <p><b>Instagram</b> <span id="contactInstagram">@studio.__rb</span></p>
-          <p><b>Endereço</b> <span id="contactAddress">Rua Tereza de Oliveira Prado, 145 — Dom Pedro II</span></p>
+          <p><b>Endereço</b> <span id="contactAddress">Atualizar endereço</span></p>
           <p><b>Atendimento</b> <span id="contactHours">Seg a Sáb</span></p>
         </div>
 
@@ -280,6 +311,7 @@
     <a href="#inicio"><span>⌂</span><small>Início</small></a>
     <a href="#servicos"><span>✦</span><small>Serviços</small></a>
     <a class="bottom-main" href="#agendamento"><span>＋</span><small>Agendar</small></a>
+    <a href="#meus-agendamentos"><span>◷</span><small>Agenda</small></a>
     <a href="#contato"><span>✉</span><small>Contato</small></a>
   </nav>
 
@@ -288,6 +320,6 @@
     <a href="admin.html" class="admin-link">Área da proprietária</a>
   </footer>
 
-  <script src="lsh-premium-v4.js?v=4" defer></script>
+  <script src="lsh-premium-v8.js?v=8" defer></script>
 </body>
 </html>

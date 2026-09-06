@@ -918,3 +918,40 @@ input[type="date"]{
     border-radius:22px;
   }
 }
+
+/* ===== V8: agendamento completo + area da cliente ===== */
+.booking-v8{padding-top:90px}
+.booking-v8-head{max-width:850px;margin:0 auto 34px;text-align:center}
+.booking-v8-head h2{font-family:Georgia,serif;font-size:clamp(38px,5vw,68px);line-height:1.02;margin:10px 0 14px;font-weight:500}
+.booking-v8-head p{max-width:690px;margin:0 auto;color:#cdb9c3;line-height:1.7}
+.booking-v8-shell{display:grid;grid-template-columns:1.15fr .85fr .9fr;gap:18px;align-items:start;max-width:1380px;margin:auto}
+.booking-step{background:linear-gradient(180deg,#121014 0%,#0d0b0e 100%);border:1px solid rgba(255,255,255,.08);border-radius:28px;padding:22px;box-shadow:0 22px 70px rgba(0,0,0,.28)}
+.step-title{display:flex;gap:12px;align-items:center;margin-bottom:18px}
+.step-title>span{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,var(--pink-3),var(--pink));color:#111;font-weight:900;flex:none}
+.step-title b{display:block;font-size:17px}.step-title small{display:block;color:#cdb4bf;margin-top:3px;line-height:1.4}
+.procedure-grid{display:grid;gap:10px}
+.procedure-card{width:100%;display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:12px;text-align:left;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);color:#fff;border-radius:18px;padding:14px;cursor:pointer;transition:.18s ease}
+.procedure-card:hover{border-color:rgba(255,104,166,.32);transform:translateY(-1px)}
+.procedure-card.selected{border-color:rgba(255,104,166,.58);background:rgba(255,104,166,.10);box-shadow:0 0 0 1px rgba(255,104,166,.14) inset}
+.procedure-card[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+.procedure-check{width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.15);display:grid;place-items:center;color:transparent}
+.procedure-card.selected .procedure-check{background:var(--pink);border-color:var(--pink);color:#111;font-weight:900}
+.procedure-copy b{display:block}.procedure-copy small{color:#c5abb7;display:block;margin-top:4px}.procedure-card strong{color:#ffd4e5;white-space:nowrap;font-size:14px}
+.booking-form-v8{display:grid;gap:12px}.booking-form-v8 .field{margin:0}.booking-form-v8 input{width:100%}
+.booking-summary{border:1px solid rgba(255,255,255,.08);background:#0c0b0d;border-radius:20px;padding:15px;margin:4px 0}
+.summary-head,.summary-total{display:flex;justify-content:space-between;gap:12px;align-items:center}.summary-head span{font-size:12px;color:#c9adb9}.summary-total{border-top:1px solid rgba(255,255,255,.08);padding-top:13px;margin-top:12px}.summary-total strong{font-size:22px;color:#ff85b6}
+.selected-procedure-list{display:grid;gap:6px;margin-top:12px}.selected-procedure-list>span{display:flex;justify-content:space-between;gap:12px;color:#eadde3;font-size:13px}.selected-procedure-list small{color:#a98f9a}
+.booking-alert{padding:16px;border:1px dashed rgba(255,255,255,.12);border-radius:16px;color:#c9b4bd;text-align:center;line-height:1.55}
+.my-bookings-section{padding-top:70px;padding-bottom:80px}.my-bookings-shell{max-width:1050px;margin:auto;background:linear-gradient(145deg,#141015,#0b0a0c);border:1px solid rgba(255,255,255,.08);border-radius:34px;padding:32px;box-shadow:0 24px 90px rgba(0,0,0,.3)}
+.my-bookings-copy{text-align:center;max-width:700px;margin:0 auto}.my-bookings-copy h2{font-family:Georgia,serif;font-size:clamp(38px,5vw,62px);margin:8px 0 10px;font-weight:500}.my-bookings-copy p{color:#c9b3bd;line-height:1.7}
+.my-bookings-search{max-width:700px;margin:24px auto 0;display:grid;grid-template-columns:1fr auto;gap:10px}.my-bookings-search input{min-width:0;background:#0c0b0d;border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:16px;color:#fff;outline:none}.my-bookings-search input:focus{border-color:rgba(255,104,166,.5)}
+.my-bookings-results{max-width:800px;margin:20px auto 0;display:grid;gap:12px}.my-booking-card{border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:18px;background:rgba(255,255,255,.025)}.my-booking-card.cancelled{opacity:.62}.my-booking-top{display:flex;justify-content:space-between;gap:12px;align-items:center}.my-booking-top span{font-size:11px;text-transform:uppercase;letter-spacing:.09em;padding:7px 10px;border-radius:999px;background:rgba(255,104,166,.1);border:1px solid rgba(255,104,166,.16)}.my-booking-card h3{margin:12px 0 8px;font-size:19px}.my-booking-meta{display:flex;flex-wrap:wrap;gap:14px;color:#cdb8c1;font-size:13px;margin-bottom:14px}.my-booking-card .btn{width:100%;justify-content:center}
+@media(max-width:1100px){.booking-v8-shell{grid-template-columns:1fr 1fr}.customer-step{grid-column:1/-1}.booking-form-v8{grid-template-columns:1fr 1fr}.booking-form-v8 .booking-summary,.booking-form-v8 button,.booking-form-v8 .privacy-note{grid-column:1/-1}}
+@media(max-width:760px){
+  .booking-v8{padding-top:62px}.booking-v8-head{text-align:left;margin-bottom:22px}.booking-v8-head h2{font-size:40px}.booking-v8-head p{font-size:14px}
+  .booking-v8-shell{grid-template-columns:1fr;gap:12px}.customer-step{grid-column:auto}.booking-step{border-radius:22px;padding:16px}.booking-form-v8{grid-template-columns:1fr}
+  .booking-form-v8 .booking-summary,.booking-form-v8 button,.booking-form-v8 .privacy-note{grid-column:auto}.procedure-card{grid-template-columns:28px 1fr}.procedure-card strong{grid-column:2;margin-top:-2px}.procedure-copy small{font-size:11px}
+  .time-grid{grid-template-columns:repeat(3,1fr)!important}.time-slot{min-width:0!important;padding:12px 6px!important}
+  .my-bookings-section{padding-top:48px;padding-bottom:110px}.my-bookings-shell{padding:20px 14px;border-radius:24px}.my-bookings-copy{text-align:left}.my-bookings-copy h2{font-size:40px}.my-bookings-search{grid-template-columns:1fr}.my-bookings-search .btn{width:100%}.my-booking-top{align-items:flex-start;flex-direction:column}.my-booking-meta{display:grid;gap:6px}
+}
+@media(max-width:420px){.booking-step{padding:14px}.step-title>span{width:36px;height:36px}.procedure-card{padding:12px}.time-grid{grid-template-columns:repeat(2,1fr)!important}.bottom-nav{padding-left:6px;padding-right:6px}.bottom-nav a small{font-size:9px}}

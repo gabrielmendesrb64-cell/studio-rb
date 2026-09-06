@@ -4,69 +4,24 @@
   "email": "contato@lshstudiorb.com.br",
   "instagram": "@lshstudiorb",
   "tiktok": "",
-  "address": "Endereço do salão — atualizar",
-  "openingHours": "Seg a Sex • 09h às 18h | Sáb • 09h às 15h",
+  "address": "Rua Tereza de Oliveira Prado, 145 — Dom Pedro II",
+  "openingHours": "Horários definidos pela proprietária no painel",
   "weeklyHours": {
     "0": [],
-    "1": [
-      "09:00",
-      "10:00",
-      "11:00",
-      "13:00",
-      "14:00",
-      "15:00",
-      "16:00",
-      "17:00"
-    ],
-    "2": [
-      "09:00",
-      "10:00",
-      "11:00",
-      "13:00",
-      "14:00",
-      "15:00",
-      "16:00",
-      "17:00"
-    ],
-    "3": [
-      "09:00",
-      "10:00",
-      "11:00",
-      "13:00",
-      "14:00",
-      "15:00",
-      "16:00",
-      "17:00"
-    ],
-    "4": [
-      "09:00",
-      "10:00",
-      "11:00",
-      "13:00",
-      "14:00",
-      "15:00",
-      "16:00",
-      "17:00"
-    ],
-    "5": [
-      "09:00",
-      "10:00",
-      "11:00",
-      "13:00",
-      "14:00",
-      "15:00",
-      "16:00",
-      "17:00"
-    ],
-    "6": [
-      "09:00",
-      "10:00",
-      "11:00",
-      "12:00",
-      "13:00",
-      "14:00"
-    ]
+    "1": [],
+    "2": [],
+    "3": [],
+    "4": [],
+    "5": [],
+    "6": []
   },
   "blockedDates": [],
-  "blockedSlots": []
+  "blockedSlots": [],
+  "services": [
+    {"id":"cilios","name":"Alongamento de Cílios","price":null,"duration":60,"active":true},
+    {"id":"sobrancelhas","name":"Design de Sobrancelhas","price":null,"duration":45,"active":true},
+    {"id":"lifting","name":"Lifting de Cílios","price":null,"duration":60,"active":true},
+    {"id":"henna","name":"Henna","price":null,"duration":45,"active":true},
+    {"id":"pele","name":"Limpeza de Pele","price":null,"duration":60,"active":true}
+  ]
 }

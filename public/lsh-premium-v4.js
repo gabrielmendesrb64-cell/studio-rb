@@ -87,7 +87,6 @@ if(form){
     const fd=new FormData(e.currentTarget);
     if(dateInput && dateInput.value) fd.set('date', dateInput.value);
     const payload=Object.fromEntries(fd.entries());
-    payload.time = timeInput.value;
     try{
       const r=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
       const data=await r.json();

@@ -1,12 +1,13 @@
 {
   "name": "lsh-studio-rb",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Site premium + PWA + agendamento do LSH Studio RB",
+  "description": "LSH Studio RB - agenda completa, painel, notificacoes e area da cliente",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "check": "node --check server.js && node --check public/lsh-premium-v8.js && node --check public/admin-v8.js"
   },
   "dependencies": {
     "compression": "^1.7.4",
@@ -15,6 +16,8 @@
     "express-rate-limit": "^7.4.0",
     "express-session": "^1.18.0",
     "helmet": "^7.1.0",
-    "nodemailer": "^6.9.15"
+    "memorystore": "^1.6.7",
+    "nodemailer": "^6.9.15",
+    "pg": "^8.13.1"
   }
 }
