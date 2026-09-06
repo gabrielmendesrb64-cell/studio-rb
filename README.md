@@ -1,14 +1,11 @@
-VERSÃO V12 — COLOR FIX PREMIUM
+VERSÃO V13 — MOBILE POLISH
 
-Alterações desta versão:
-- Visual refinado com rosa premium + branco rosé.
-- Melhor contraste geral e especialmente na área de agendamento.
-- Formulário sem bloco preto pesado; visual mais elegante e legível.
-- Botões com efeito suave 3D/acetinado.
-- Cards, abas e horários com aparência mais premium.
-- Melhor leitura no celular e contraste ajustado em campos, textos e cards.
-
-Para publicar:
-1. Suba esta versão no GitHub/Render.
-2. Se o navegador mantiver o visual antigo, faça recarga forçada.
-3. Em caso de deploy no Render, basta fazer novo commit/push ou Manual Deploy.
+Correções principais:
+- remove efeito de “bolha”/cartão estranho acima da imagem inicial no celular;
+- hero agora começa limpo logo abaixo do header e usa a foto em largura total;
+- acabamento lateral padronizado em todas as seções;
+- portfólio, agendamento e contato com margens e cantos consistentes;
+- agendamento sem caixas quadradas/estouradas;
+- campo de data ajustado para iPhone/Safari;
+- barra inferior refinada para cobrir menos conteúdo;
+- mantida a identidade rosa/branco premium da V12.

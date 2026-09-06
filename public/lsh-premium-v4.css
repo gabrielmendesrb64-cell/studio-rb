@@ -1556,3 +1556,178 @@ body.premium{
   }
   .whatsapp-float{right:12px;bottom:88px!important}
 }
+
+/* ===== V13 MOBILE POLISH — acabamento das laterais, hero e cards ===== */
+@media(max-width:760px){
+  html,body{width:100%;max-width:100%;overflow-x:hidden!important}
+
+  /* Cabeçalho mais limpo e sem "bolha" entre header e imagem */
+  .topbar{
+    height:calc(72px + env(safe-area-inset-top))!important;
+    padding:env(safe-area-inset-top) 18px 0!important;
+    background:rgba(255,250,252,.97)!important;
+    border-bottom:1px solid rgba(108,53,76,.07)!important;
+    box-shadow:0 8px 24px rgba(92,43,64,.06)!important;
+  }
+  .topbar .brand img{width:132px!important;max-height:54px!important}
+  .menu-btn{font-size:31px!important;line-height:1!important;padding:8px 2px!important;color:#23181d!important}
+
+  /* Hero realmente começa colado no header e ocupa a largura inteira */
+  .hero.section{
+    width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+    padding:0 0 34px!important;
+    min-height:760px!important;
+    border-radius:0!important;
+    overflow:hidden!important;
+    background:#1c1218!important;
+  }
+  .hero::before{
+    top:0!important;left:0!important;right:0!important;bottom:0!important;
+    border-radius:0!important;
+    background-position:center 19%!important;
+  }
+  .hero::after{border-radius:0!important}
+  .hero-copy{
+    width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+    margin-top:auto!important;
+    padding:330px 22px 28px!important;
+    border:0!important;
+    border-radius:0!important;
+    background:linear-gradient(180deg,transparent 0%,rgba(27,17,23,.02) 18%,rgba(27,17,23,.72) 58%,rgba(27,17,23,.96) 100%)!important;
+    box-shadow:none!important;
+    backdrop-filter:none!important;
+  }
+  .hero-logo{width:155px!important;margin:0 0 14px!important}
+  .hero h1{max-width:430px!important;font-size:clamp(43px,12.8vw,59px)!important;line-height:.95!important;margin:0 0 16px!important}
+  .hero p{max-width:430px!important;font-size:15px!important;line-height:1.55!important;color:#fff6fa!important}
+  .hero-actions{margin-top:20px!important;gap:10px!important;max-width:none!important}
+  .hero-actions .btn{min-height:54px!important;border-radius:18px!important}
+
+  /* Espaçamento geral: conteúdo nunca encosta feio nas bordas */
+  main>.section:not(.hero){
+    width:100%!important;
+    max-width:none!important;
+    margin:0!important;
+    padding-left:16px!important;
+    padding-right:16px!important;
+  }
+  .about-premium-dark,.services-premium,.results-premium,.booking-premium,.my-bookings-section,.contact-premium{
+    background:linear-gradient(180deg,#faeff4 0%,#f8edf2 100%)!important;
+  }
+
+  /* Sobre: cartão com respiro e cantos consistentes */
+  .about-shell{
+    margin:0!important;
+    padding:16px!important;
+    border-radius:28px!important;
+    overflow:hidden!important;
+  }
+  .about-gallery-solo{border-radius:22px!important;overflow:hidden!important}
+  .about-text{padding:8px 4px 2px!important}
+
+  /* Serviços: sem blocos cortando lateral */
+  .service-pill-grid{gap:10px!important}
+  .service-pill{border-radius:20px!important;overflow:hidden!important}
+
+  /* Portfólio: título e caixa interna alinhados com mesma margem */
+  .results-premium{padding-top:58px!important}
+  .results-premium .section-head{padding:0!important;margin-bottom:20px!important}
+  .gallery-tabs-wrap{
+    margin-left:0!important;margin-right:0!important;
+    padding:8px 0 8px!important;
+    border-radius:18px!important;
+  }
+  .gallery-category-content{
+    width:100%!important;
+    margin:0!important;
+    padding:14px!important;
+    border-radius:26px!important;
+    overflow:hidden!important;
+    box-shadow:0 14px 34px rgba(99,47,69,.08)!important;
+  }
+  .gallery-category-head{align-items:flex-end!important;gap:8px!important;padding:2px 2px 13px!important}
+  .gallery-category-head h3{font-size:31px!important;line-height:1!important}
+  .category-photo-grid{gap:10px!important}
+  .category-photo-open img{border-radius:16px!important}
+
+  /* Agendamento: remove caixas quadradas gigantes e deixa cartões com acabamento uniforme */
+  .booking-v8{padding-top:58px!important}
+  .booking-v8-head{padding:0 2px!important;margin:0 0 20px!important}
+  .booking-v8-shell{
+    width:100%!important;
+    margin:0!important;
+    padding:0!important;
+    gap:14px!important;
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+  }
+  .booking-step{
+    width:100%!important;
+    margin:0!important;
+    padding:18px 14px!important;
+    border-radius:26px!important;
+    overflow:hidden!important;
+    box-shadow:0 14px 32px rgba(94,44,65,.07)!important;
+  }
+  .step-title{padding:0 2px!important;margin-bottom:16px!important}
+  .procedure-card{border-radius:18px!important;padding:14px 12px!important}
+  .booking-calendar-box{
+    padding:14px!important;
+    border-radius:20px!important;
+    background:linear-gradient(180deg,#fffefd,#fff7fa)!important;
+    border:1px solid rgba(98,46,68,.09)!important;
+  }
+  .booking-calendar-box input[type=date]{
+    min-height:56px!important;height:56px!important;
+    padding:0 14px!important;margin:0 0 18px!important;
+    border-radius:16px!important;
+    color:#24161d!important;
+    background:#fff!important;
+    -webkit-appearance:none!important;appearance:none!important;
+  }
+  .calendar-slots-title{margin:0 0 10px!important}
+  .time-grid{min-height:54px!important}
+  .customer-step .premium-form{padding:0!important}
+  .field input{min-height:54px!important;border-radius:16px!important}
+  .booking-summary{border-radius:18px!important;margin-top:2px!important}
+
+  /* Meus agendamentos / contato: bordas completas, nada colado na tela */
+  .my-bookings-shell{margin:0!important;border-radius:26px!important;overflow:hidden!important}
+  .contact-bottom{
+    width:100%!important;
+    margin:0!important;
+    padding:20px 16px!important;
+    border-radius:26px!important;
+    overflow:hidden!important;
+  }
+  .contact-meta p{
+    grid-template-columns:100px minmax(0,1fr)!important;
+    line-height:1.45!important;
+  }
+
+  /* Navegação inferior um pouco menor para não cobrir tanto conteúdo */
+  .bottom-nav{
+    left:12px!important;right:12px!important;
+    bottom:max(8px,env(safe-area-inset-bottom))!important;
+    border-radius:24px!important;
+    padding:7px 6px!important;
+  }
+  .bottom-nav a{min-height:52px!important}
+  .bottom-nav .bottom-main{border-radius:18px!important}
+  .whatsapp-float{right:16px!important;bottom:92px!important}
+  .simple-footer{padding-bottom:126px!important}
+}
+
+@media(max-width:390px){
+  main>.section:not(.hero){padding-left:12px!important;padding-right:12px!important}
+  .hero-copy{padding-left:18px!important;padding-right:18px!important;padding-top:315px!important}
+  .hero h1{font-size:41px!important}
+  .booking-step{padding:16px 12px!important}
+  .gallery-category-content{padding:11px!important}
+  .contact-bottom{padding:18px 13px!important}
+}
