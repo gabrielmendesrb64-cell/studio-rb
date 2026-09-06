@@ -1,7 +1,7 @@
 {
-  "name": "LSH Studio RB Emilly",
+  "name": "Lash Studio RB Emilly",
   "short_name": "LSH Emilly",
-  "description": "Agendamento e portfólio do LSH Studio RB",
+  "description": "Agendamento e portfólio do Lash Studio RB",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#090909",

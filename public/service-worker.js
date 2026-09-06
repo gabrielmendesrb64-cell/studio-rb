@@ -1,4 +1,4 @@
-const CACHE='lsh-premium-v1';
+const CACHE='lash-mobile-beauty-v10';
 const ASSETS=[
   './',
   './styles.css',

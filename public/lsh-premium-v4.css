@@ -1048,3 +1048,144 @@ img{height:auto}
 @media(max-width:380px){
   .section{padding-left:13px;padding-right:13px}.hero h1{font-size:40px}.service-pill-grid{grid-template-columns:1fr}.time-grid{grid-template-columns:1fr 1fr!important}.album-thumb{flex-basis:88%}.bottom-nav a small{font-size:8px}
 }
+
+/* ===== V10 MOBILE BEAUTY — referência visual sem trocar a paleta ===== */
+.hero h1,.section-head h2,.about-text h2,.booking-v8-head h2,.my-bookings-copy h2,
+.album-main-overlay h3,.album-copy-card h3,.service-pill h3,.hero-signature span,
+.brand,.eyebrow{ text-shadow:none!important; }
+
+@media(max-width:760px){
+  /* Hero com a Emilly como imagem de fundo, mantendo preto/branco/rosa */
+  .hero{
+    position:relative;
+    isolation:isolate;
+    min-height:720px!important;
+    padding:112px 18px 58px!important;
+    justify-content:flex-end!important;
+    overflow:hidden!important;
+    border-bottom:1px solid rgba(255,255,255,.07);
+    background:#070607!important;
+  }
+  .hero::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:-2;
+    background:url('assets/proprietaria-lsh.webp') center 20%/cover no-repeat;
+    transform:scale(1.015);
+  }
+  .hero::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:-1;
+    background:
+      linear-gradient(180deg,rgba(5,5,5,.20) 0%,rgba(5,5,5,.28) 22%,rgba(5,5,5,.72) 66%,#070607 100%),
+      linear-gradient(90deg,rgba(0,0,0,.70) 0%,rgba(0,0,0,.28) 58%,rgba(255,91,158,.10) 100%);
+  }
+  .hero-copy{max-width:560px!important;margin-top:auto!important;padding:18px 0 0!important}
+  .hero-logo{width:168px!important;margin-bottom:20px!important;filter:none!important}
+  .hero h1{font-size:clamp(40px,12.5vw,56px)!important;line-height:.98!important;max-width:360px!important;margin:0 0 16px!important}
+  .hero p{max-width:345px!important;color:#f7edf1!important;font-size:15px!important;line-height:1.62!important}
+  .hero-actions{max-width:390px!important}
+  .hero-icons{display:none!important}
+  .hero-visual{display:none!important}
+
+  /* Sobre: imagem limpa primeiro, texto depois */
+  .about-solo{padding-top:52px!important}
+  .about-gallery-solo{aspect-ratio:4/5!important;border-radius:28px!important;box-shadow:none!important}
+  .about-gallery-solo::after{background:linear-gradient(to top,rgba(0,0,0,.36),transparent 42%)!important}
+  .about-text h2,.section-head.light h2,.section-head h2,.booking-v8-head h2,.my-bookings-copy h2{font-family:Georgia,serif!important;font-weight:500!important;letter-spacing:-.025em!important;text-shadow:none!important}
+
+  /* Serviços mais limpos, sem sombra e sem aparência pesada */
+  .services-premium{padding-top:54px!important}
+  .service-pill-grid{grid-template-columns:1fr 1fr!important;gap:10px!important}
+  .service-pill{
+    min-height:142px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-start!important;
+    justify-content:flex-end!important;
+    text-align:left!important;
+    padding:16px!important;
+    border-radius:22px!important;
+    background:linear-gradient(180deg,#151015,#0d0b0e)!important;
+    border:1px solid rgba(255,255,255,.08)!important;
+    box-shadow:none!important;
+  }
+  .service-pill span{width:42px!important;height:42px!important;margin:0 0 auto!important;background:rgba(255,104,166,.09)!important}
+  .service-pill h3{font-size:16px!important;line-height:1.2!important;margin-top:14px!important;text-shadow:none!important}
+  .service-pill p{font-size:11px!important;margin-top:6px!important}
+
+  /* Portfólio no estilo da referência: foto limpa + nome embaixo */
+  .results-premium{padding:58px 14px!important}
+  .results-premium .section-head{padding:0 4px!important}
+  .album-shell{
+    display:block!important;
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+    max-width:none!important;
+  }
+  .album-preview,.album-copy-card{display:none!important}
+  .album-sidebar{display:block!important}
+  .album-thumbs{
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:12px!important;
+    overflow:visible!important;
+    padding:14px!important;
+    background:linear-gradient(180deg,#151015,#0d0b0e)!important;
+    border:1px solid rgba(255,255,255,.08)!important;
+    border-radius:28px!important;
+  }
+  .album-thumb{
+    width:100%!important;
+    min-width:0!important;
+    display:flex!important;
+    flex-direction:column!important;
+    gap:9px!important;
+    padding:0!important;
+    background:transparent!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    transform:none!important;
+    text-align:center!important;
+    overflow:visible!important;
+  }
+  .album-thumb img{
+    width:100%!important;
+    height:auto!important;
+    aspect-ratio:1/1!important;
+    object-fit:cover!important;
+    border-radius:18px!important;
+    border:1px solid rgba(255,255,255,.08)!important;
+  }
+  .album-thumb>div{width:100%!important;min-width:0!important;padding:0 3px 5px!important}
+  .album-thumb b{font-family:inherit!important;font-size:13px!important;font-weight:600!important;color:#fff!important;margin:0!important;line-height:1.35!important;text-shadow:none!important;overflow-wrap:anywhere!important}
+  .album-thumb span{font-size:10px!important;color:#bda9b2!important;line-height:1.35!important;margin-top:3px!important;text-shadow:none!important}
+  .album-thumb.active{background:transparent!important;border:0!important}
+
+  /* Formulários e cards sem estouro lateral */
+  .booking-v8-shell,.booking-step,.premium-form,.procedure-grid,.procedure-card,.my-bookings-shell,.my-booking-card{min-width:0!important;max-width:100%!important}
+  .procedure-copy{min-width:0!important}
+  .procedure-card strong{white-space:normal!important}
+  .summary-head,.summary-total,.selected-procedure-list>span{min-width:0!important;flex-wrap:wrap!important}
+  .field input,.booking-calendar-box input,.my-bookings-search input{width:100%!important;max-width:100%!important;box-sizing:border-box!important}
+  .btn{max-width:100%!important;white-space:normal!important;text-align:center!important}
+
+  /* Safe areas para iPhone */
+  .topbar{padding-top:env(safe-area-inset-top)!important;height:calc(64px + env(safe-area-inset-top))!important}
+  .mobile-menu{padding-top:calc(80px + env(safe-area-inset-top))!important}
+  .hero{padding-top:calc(96px + env(safe-area-inset-top))!important}
+}
+
+@media(max-width:390px){
+  .hero{min-height:690px!important;padding-left:14px!important;padding-right:14px!important}
+  .hero h1{font-size:39px!important}
+  .service-pill-grid{grid-template-columns:1fr 1fr!important}
+  .album-thumbs{gap:10px!important;padding:11px!important;border-radius:24px!important}
+  .album-thumb img{border-radius:15px!important}
+  .album-thumb b{font-size:12px!important}
+}

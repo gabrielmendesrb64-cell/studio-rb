@@ -29,13 +29,13 @@ async function loadConfig(){
   try{
     const r = await fetch('/api/config');
     cfg = await r.json();
-    const mainMessage = 'Olá! Vim pelo site da LSH Studio RB e gostaria de falar com vocês. 💗';
+    const mainMessage = 'Olá! Vim pelo site da Lash Studio RB e gostaria de falar com vocês. 💗';
     const mainLink = waLink(cfg.whatsapp, mainMessage);
     ['#whatsappFloat','#heroWhatsappBtn','#topWhatsappBtn','#mobileWhatsappBtn','#whatsappLink'].forEach(sel => {
       const el = $(sel); if(el) el.href = mainLink;
     });
     const errorBtn = $('#errorWhatsapp');
-    if(errorBtn) errorBtn.href = waLink(cfg.whatsapp, 'Olá! Tive um problema ao tentar realizar meu agendamento pelo site da LSH Studio RB. Poderia me ajudar?');
+    if(errorBtn) errorBtn.href = waLink(cfg.whatsapp, 'Olá! Tive um problema ao tentar realizar meu agendamento pelo site da Lash Studio RB. Poderia me ajudar?');
     const cW = $('#contactWhatsapp'); if(cW) cW.textContent = cfg.whatsapp || 'Atualizar número';
     const cI = $('#contactInstagram'); if(cI) cI.textContent = cfg.instagram || '@lshstudiorb';
     const cA = $('#contactAddress'); if(cA) cA.textContent = cfg.address || 'Atualizar endereço';
@@ -259,15 +259,15 @@ function renderDynamicGallery(){
   }
   mainImage.style.display='block';
   thumbs.innerHTML=items.map((item,i)=>`<button class="album-thumb ${i===0?'active':''}" type="button" data-i="${i}">
-    <img src="${esc(item.src)}" alt="${esc(item.title||'Resultado LSH')}">
+    <img src="${esc(item.src)}" alt="${esc(item.title||'Resultado Lash')}">
     <div><b>${esc(item.title||`Resultado ${String(i+1).padStart(2,'0')}`)}</b><span>${esc(item.caption||'Trabalho da Emilly')}</span></div>
   </button>`).join('');
   const apply=i=>{
     albumIndex=(i+items.length)%items.length;
     const item=items[albumIndex];
     mainImage.src=item.src;
-    mainImage.alt=item.title||'Resultado LSH Studio RB';
-    $('#albumMainTitle').textContent=item.title||'Resultado LSH Studio RB';
+    mainImage.alt=item.title||'Resultado Lash Studio RB';
+    $('#albumMainTitle').textContent=item.title||'Resultado Lash Studio RB';
     $('#albumMainText').textContent=item.caption||'Trabalho realizado pela Emilly.';
     $('#albumMainTag').textContent=`RESULTADO ${String(albumIndex+1).padStart(2,'0')}`;
     if(current)current.textContent=String(albumIndex+1).padStart(2,'0');

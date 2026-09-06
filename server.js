@@ -214,10 +214,10 @@ async function notifyOwnerNewBooking(b) {
   const services = (b.services || []).map(s => `<li>${escapeHtml(s.name)} — ${moneyBRL(s.price)}</li>`).join('');
   return sendMail({
     to: owner,
-    subject: 'NOVO AGENDAMENTO — LSH STUDIO RB',
+    subject: 'NOVO AGENDAMENTO — LASH STUDIO RB',
     html: `
       <div style="font-family:Arial;background:#0b0b0b;color:#fff;padding:28px;border-radius:16px">
-        <h2 style="color:#ff5b9e">NOVO AGENDAMENTO — LSH STUDIO RB</h2>
+        <h2 style="color:#ff5b9e">NOVO AGENDAMENTO — LASH STUDIO RB</h2>
         <p><b>Cliente:</b> ${escapeHtml(b.name)}</p>
         <p><b>WhatsApp:</b> ${escapeHtml(b.phone)}</p>
         <p><b>E-mail:</b> ${escapeHtml(b.email)}</p>
@@ -231,17 +231,17 @@ async function notifyOwnerNewBooking(b) {
 }
 async function notifyCustomerConfirmed(b) {
   const serviceText = (b.services || []).map(s => s.name).join(', ') || 'Procedimento';
-  const text = `Olá, ${b.name}! 💗 Seu agendamento no LSH Studio RB foi CONFIRMADO. Data: ${b.date} • Horário: ${b.time} • Procedimento(s): ${serviceText} • Total: ${moneyBRL(b.total)}. Até lá!`;
+  const text = `Olá, ${b.name}! 💗 Seu agendamento no Lash Studio RB foi CONFIRMADO. Data: ${b.date} • Horário: ${b.time} • Procedimento(s): ${serviceText} • Total: ${moneyBRL(b.total)}. Até lá!`;
   const results = { email:false, whatsapp:false, errors:[] };
   try {
     const r = await sendMail({
       to: b.email,
-      subject: 'Agendamento confirmado — LSH Studio RB',
+      subject: 'Agendamento confirmado — Lash Studio RB',
       html: `
         <div style="font-family:Arial;background:#0b0b0b;color:#fff;padding:28px;border-radius:16px">
           <h2 style="color:#ff5b9e">Seu agendamento foi confirmado 💗</h2>
           <p>Olá, <b>${escapeHtml(b.name)}</b>!</p>
-          <p>Seu horário no <b>LSH Studio RB</b> está confirmado.</p>
+          <p>Seu horário no <b>Lash Studio RB</b> está confirmado.</p>
           <p><b>Data:</b> ${escapeHtml(b.date)}</p>
           <p><b>Horário:</b> ${escapeHtml(b.time)}</p>
           <p><b>Procedimento(s):</b> ${escapeHtml(serviceText)}</p>
@@ -358,7 +358,7 @@ app.post('/api/bookings', async (req, res) => {
     try {
       const cfg = await getState('config');
       const ownerPhone = process.env.OWNER_WHATSAPP || cfg.whatsapp;
-      const ownerMsg = `Novo agendamento LSH: ${b.name}, ${b.date} às ${b.time}. Total ${moneyBRL(b.total)}.`;
+      const ownerMsg = `Novo agendamento Lash: ${b.name}, ${b.date} às ${b.time}. Total ${moneyBRL(b.total)}.`;
       const wr = await sendWhatsAppCloud(ownerPhone, ownerMsg);
       b.notifications.ownerWhatsApp = !!wr.sent;
     } catch (we) { b.notifications.ownerWhatsApp = false; b.notifications.ownerWhatsAppError = we.message; }
@@ -401,7 +401,7 @@ app.post('/api/my-bookings/:id/cancel', async (req, res) => {
     const cfg = await getState('config');
     await sendMail({
       to: process.env.OWNER_EMAIL || cfg.email,
-      subject:'Agendamento desmarcado — LSH Studio RB',
+      subject:'Agendamento desmarcado — Lash Studio RB',
       html:`<div style="font-family:Arial"><h2>Agendamento desmarcado</h2><p><b>Cliente:</b> ${escapeHtml(b.name)}</p><p><b>Data:</b> ${escapeHtml(b.date)} às ${escapeHtml(b.time)}</p></div>`
     });
   } catch(e) { console.error('Falha ao avisar cancelamento:', e.message); }
@@ -580,7 +580,7 @@ app.post('/api/admin/notifications/test-email', auth, async (req,res) => {
   const cfg = await getState('config');
   const to = process.env.OWNER_EMAIL || cfg.email;
   try {
-    const result = await sendMail({ to, subject:'Teste de e-mail — LSH Studio RB', html:'<h2>LSH Studio RB</h2><p>Seu envio de e-mail está funcionando corretamente. 💗</p>' });
+    const result = await sendMail({ to, subject:'Teste de e-mail — Lash Studio RB', html:'<h2>Lash Studio RB</h2><p>Seu envio de e-mail está funcionando corretamente. 💗</p>' });
     if (!result.sent) return res.status(400).json({ error:result.reason });
     res.json({ ok:true, to });
   } catch (e) { res.status(500).json({ error:e.message }); }
@@ -595,4 +595,4 @@ app.get('/api/health', async (req,res) => res.json({ ok:true, storage:pgPool && 
 
 initDb()
   .catch(err => console.error('Falha ao iniciar PostgreSQL, usando JSON:', err.message))
-  .finally(() => app.listen(PORT, () => console.log(`LSH Studio RB disponível em http://localhost:${PORT}`)));
+  .finally(() => app.listen(PORT, () => console.log(`Lash Studio RB disponível em http://localhost:${PORT}`)));
