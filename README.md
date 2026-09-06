@@ -1,11 +1,11 @@
-VERSÃO V13 — MOBILE POLISH
+VERSÃO V14 — CORREÇÃO DO GERENCIADOR DE FOTOS
 
-Correções principais:
-- remove efeito de “bolha”/cartão estranho acima da imagem inicial no celular;
-- hero agora começa limpo logo abaixo do header e usa a foto em largura total;
-- acabamento lateral padronizado em todas as seções;
-- portfólio, agendamento e contato com margens e cantos consistentes;
-- agendamento sem caixas quadradas/estouradas;
-- campo de data ajustado para iPhone/Safari;
-- barra inferior refinada para cobrir menos conteúdo;
-- mantida a identidade rosa/branco premium da V12.
+- Corrigidos os botões Excluir foto e Mover foto no painel da proprietária.
+- Removida dependência de onclick inline; agora as ações usam eventos JavaScript externos, mais confiáveis no navegador/celular.
+- Botões mostram MOVENDO/EXCLUINDO durante a operação.
+- Exclusão remove a foto imediatamente do painel e atualiza o portfólio.
+- Movimento salva a categoria escolhida e recarrega o painel.
+- Ações de categorias também foram reforçadas.
+- Cache do admin atualizado para v14.
+
+IMPORTANTE: sem DATABASE_URL no Render, alterações em fotos/configurações usam arquivos locais e podem voltar após novo deploy/reinício. Para persistência real, configure PostgreSQL.

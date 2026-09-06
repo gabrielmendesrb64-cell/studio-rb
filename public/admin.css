@@ -531,3 +531,13 @@ dialog h2{
 .gallery-upload-form{grid-template-columns:1.05fr .85fr 1fr 1.15fr auto}
 @media(max-width:900px){.gallery-upload-form{grid-template-columns:1fr 1fr}.gallery-upload-form .upload-drop{grid-column:1/-1}.gallery-category-row{grid-template-columns:1fr auto auto}}
 @media(max-width:620px){.gallery-category-add,.gallery-category-row,.gallery-upload-form{grid-template-columns:1fr!important}.gallery-category-row .mini-btn{width:100%}.gallery-admin-actions{grid-template-columns:1fr 1fr}}
+
+
+/* V14 - ações de fotos mais claras e clicáveis */
+.gallery-admin-item{position:relative;isolation:isolate}
+.gallery-admin-item .mini-btn,.gallery-admin-item select,.gallery-category-row .mini-btn,.gallery-category-row input{position:relative;z-index:2;pointer-events:auto!important}
+.gallery-move-label{display:grid;gap:5px}.gallery-move-label>span{font-size:10px;color:#bfa9b3;text-transform:uppercase;letter-spacing:.08em}
+.gallery-admin-actions .mini-btn{min-height:40px;font-weight:800}
+.gallery-admin-actions .mini-btn:disabled{opacity:.55;cursor:wait}
+.gallery-admin-actions .danger{background:rgba(255,75,105,.10)!important;border-color:rgba(255,75,105,.30)!important}
+@media(max-width:620px){.gallery-editor{grid-template-columns:1fr!important}.gallery-admin-item{padding:12px}.gallery-admin-item img{aspect-ratio:16/10}.gallery-admin-actions{grid-template-columns:1fr 1fr!important}.gallery-admin-actions .mini-btn{min-height:44px}}

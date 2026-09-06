@@ -586,7 +586,7 @@ app.post('/api/admin/gallery', auth, async (req,res) => {
 });
 
 app.delete('/api/admin/gallery/:id', auth, async (req,res) => {
-  const cfg = await getState('config');
+  const cfg = normalizeGalleryConfig(await getState('config'));
   cfg.gallery = Array.isArray(cfg.gallery) ? cfg.gallery : [];
   const before = cfg.gallery.length;
   cfg.gallery = cfg.gallery.filter(x => String(x.id) !== String(req.params.id));
@@ -596,7 +596,7 @@ app.delete('/api/admin/gallery/:id', auth, async (req,res) => {
 });
 
 app.put('/api/admin/gallery/:id', auth, async (req,res) => {
-  const cfg = await getState('config');
+  const cfg = normalizeGalleryConfig(await getState('config'));
   cfg.gallery = Array.isArray(cfg.gallery) ? cfg.gallery : [];
   const item = cfg.gallery.find(x => String(x.id) === String(req.params.id));
   if (!item) return res.status(404).json({ error:'Foto não encontrada.' });
