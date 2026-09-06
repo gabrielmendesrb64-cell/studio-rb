@@ -541,3 +541,76 @@ dialog h2{
 .gallery-admin-actions .mini-btn:disabled{opacity:.55;cursor:wait}
 .gallery-admin-actions .danger{background:rgba(255,75,105,.10)!important;border-color:rgba(255,75,105,.30)!important}
 @media(max-width:620px){.gallery-editor{grid-template-columns:1fr!important}.gallery-admin-item{padding:12px}.gallery-admin-item img{aspect-ratio:16/10}.gallery-admin-actions{grid-template-columns:1fr 1fr!important}.gallery-admin-actions .mini-btn{min-height:44px}}
+
+/* ===== V15 PAINEL PREMIUM CLARO / PRODUÇÃO ===== */
+.admin-v15{
+  --admin-bg:#f8edf2;
+  --admin-card:#fffafc;
+  --admin-card-2:#fff3f8;
+  --admin-text:#251820;
+  --admin-muted:#755f69;
+  --admin-line:rgba(103,47,72,.10);
+  --admin-pink:#e98fb4;
+  --admin-pink-2:#d96898;
+  background:
+    radial-gradient(circle at 90% 8%,rgba(238,155,188,.20),transparent 22%),
+    radial-gradient(circle at 8% 18%,rgba(255,223,235,.65),transparent 24%),
+    linear-gradient(180deg,#fffafd 0%,#f9edf3 100%)!important;
+  color:var(--admin-text)!important;
+}
+.admin-v15 .admin-top{background:rgba(255,250,252,.94)!important;border-color:var(--admin-line)!important;box-shadow:0 10px 30px rgba(91,43,64,.06)!important}
+.admin-v15 .admin-brand b{color:var(--admin-text)!important}.admin-v15 .admin-brand small{color:var(--admin-muted)!important}
+.admin-v15 .admin-main{max-width:1440px}
+.admin-v15 .login-card,.admin-v15 .panel-card,.admin-v15 .stat{
+  background:linear-gradient(180deg,#fffefe 0%,#fff5f9 100%)!important;
+  border:1px solid var(--admin-line)!important;
+  box-shadow:0 18px 50px rgba(100,48,70,.08)!important;
+  color:var(--admin-text)!important;
+}
+.admin-v15 .login-card p,.admin-v15 .dash-sub,.admin-v15 .panel-desc,.admin-v15 .muted{color:var(--admin-muted)!important}
+.admin-v15 .login-card input,.admin-v15 .toolbar input,.admin-v15 .stack input,.admin-v15 #manualForm input,
+.admin-v15 .schedule-add input,.admin-v15 .service-edit-row input,.admin-v15 .gallery-category-add input,.admin-v15 .gallery-upload-form input,.admin-v15 .gallery-upload-form select,.admin-v15 .gallery-admin-item select,.admin-v15 .gallery-category-row input,.admin-v15 .date-time-add input{
+  background:#fff!important;color:var(--admin-text)!important;border:1px solid rgba(105,49,74,.14)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)!important
+}
+.admin-v15 .btn-ghost{background:#fff7fa!important;color:#9f4871!important;border-color:rgba(218,105,153,.22)!important}
+.admin-v15 .btn-pink{background:linear-gradient(180deg,#ffd8e8,#f2adc8 52%,#e98fb4)!important;color:#251820!important;border-color:rgba(211,93,140,.12)!important;box-shadow:0 10px 22px rgba(230,133,174,.18),inset 0 1px 0 #fff!important}
+.admin-v15 .eyebrow{color:#c95684!important}
+.admin-v15 .dash-head h1,.admin-v15 .panel-head h2,.admin-v15 .calendar-title h2,.admin-v15 .calendar-day-manager h2{color:var(--admin-text)!important}
+.admin-v15 .stats{margin-bottom:20px}.admin-v15 .stat b{color:#ce5d89!important}.admin-v15 .stat span{color:#745d67!important}
+.admin-v15 .production-notice{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:18px;margin-bottom:16px;border:1px solid;background:#fff}
+.admin-v15 .production-notice b{white-space:nowrap}.admin-v15 .production-notice span{line-height:1.5}
+.admin-v15 .production-notice.safe{border-color:rgba(63,171,112,.22);background:#f3fff8;color:#26583c}.admin-v15 .production-notice.danger{border-color:rgba(221,138,60,.25);background:#fff8ed;color:#7b4a18}
+.admin-v15 .dash-actions{display:flex;gap:10px;flex-wrap:wrap}
+.admin-v15 .calendar-card-wide{margin-bottom:18px;padding:24px}
+.admin-v15 .calendar-wide-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);gap:24px;align-items:start}
+.admin-v15 .calendar-day-manager{background:linear-gradient(180deg,#fff7fa,#fff1f6);border:1px solid var(--admin-line);border-radius:24px;padding:18px;position:sticky;top:96px}
+.admin-v15 .calendar-day-manager h2{font-family:Georgia,serif;font-size:30px;margin:7px 0 8px;font-weight:500}
+.admin-v15 .date-time-add{display:grid;grid-template-columns:1fr auto;gap:9px;margin:16px 0 12px}.admin-v15 .date-time-add input{border-radius:14px;padding:12px}
+.admin-v15 .date-times-list{display:flex;flex-wrap:wrap;gap:8px;min-height:48px;margin-bottom:12px}.admin-v15 .date-times-list .time-chip:disabled{opacity:1;cursor:default}
+.admin-v15 .day-bookings-box{margin-top:16px;padding-top:16px;border-top:1px solid var(--admin-line)}.admin-v15 .day-bookings-box>b{display:block;margin-bottom:10px}
+.admin-v15 .day-booking-mini{display:grid;grid-template-columns:60px 1fr;gap:3px 10px;padding:10px 0;border-bottom:1px solid rgba(94,42,64,.07)}.admin-v15 .day-booking-mini b{color:#c95784}.admin-v15 .day-booking-mini small{grid-column:2;color:var(--admin-muted)}
+.admin-v15 .calendar-weekdays span{color:#7a626c!important}.admin-v15 .calendar-day{background:#fff!important;color:var(--admin-text)!important;border-color:var(--admin-line)!important;box-shadow:0 6px 16px rgba(90,41,62,.04)}
+.admin-v15 .calendar-day.open-day:after{content:"";position:absolute;left:8px;bottom:8px;width:6px;height:6px;border-radius:50%;background:#df7da6}.admin-v15 .calendar-day.active{background:linear-gradient(180deg,#ffd8e7,#ef9fbe)!important;color:#251820!important;box-shadow:0 10px 24px rgba(228,133,173,.22)!important}.admin-v15 .calendar-day .dot{background:#f6d7e4!important;color:#8f3c65!important}.admin-v15 .calendar-day.active .dot{background:rgba(255,255,255,.55)!important}.admin-v15 .calendar-flags{display:flex;gap:4px;align-items:center;position:absolute;right:7px;top:7px}.admin-v15 .calendar-flags i{font-style:normal;color:#c95784;font-size:10px}.admin-v15 .calendar-flags .dot{position:static!important}
+.admin-v15 .admin-layout-v15{grid-template-columns:minmax(0,1fr) 360px}.admin-v15 .bookings-panel{min-height:520px}
+.admin-v15 .segmented button{background:#fff!important;color:#6e5862!important;border-color:var(--admin-line)!important}.admin-v15 .segmented button.active{background:linear-gradient(180deg,#ffd8e7,#ef9fbe)!important;color:#251820!important}
+.admin-v15 .selected-date{background:#fff0f6!important;color:#a44973!important;border-color:rgba(218,105,153,.16)!important}
+.admin-v15 .booking-card{background:#fff!important;border-color:var(--admin-line)!important;box-shadow:0 9px 24px rgba(91,43,64,.05)!important}.admin-v15 .booking-main b,.admin-v15 .booking-meta{color:var(--admin-text)!important}.admin-v15 .booking-main small,.admin-v15 .booking-main p{color:var(--admin-muted)!important}.admin-v15 .status{color:#684f5a!important;background:#fff2f7!important;border-color:rgba(212,94,142,.12)!important}
+.admin-v15 .mini-btn{background:#fff7fa!important;color:#8c4267!important;border-color:rgba(210,96,144,.16)!important}.admin-v15 .mini-btn.pink{background:#ffe3ee!important;color:#9f3d69!important}.admin-v15 .mini-btn.danger{background:#fff0f1!important;color:#b44959!important;border-color:rgba(187,73,89,.17)!important}
+.admin-v15 .block-item,.admin-v15 .schedule-day,.admin-v15 .service-edit-row,.admin-v15 .gallery-category-manager,.admin-v15 .gallery-admin-item,.admin-v15 .notify-status{background:#fff!important;color:var(--admin-text)!important;border-color:var(--admin-line)!important;box-shadow:0 8px 22px rgba(91,42,63,.04)!important}
+.admin-v15 .block-item{color:var(--admin-text)!important}.admin-v15 h3{color:#6c4f5c!important}
+.admin-v15 .schedule-day-head small,.admin-v15 .service-edit-row label>span,.admin-v15 .gallery-category-manager-head small,.admin-v15 .gallery-admin-item small,.admin-v15 .gallery-move-label>span,.admin-v15 .notify-status span{color:var(--admin-muted)!important}
+.admin-v15 .time-chip{background:#fff0f6!important;color:#9e476f!important;border-color:rgba(214,102,149,.18)!important}.admin-v15 .time-chip span{color:#c84f7f!important}
+.admin-v15 .save-state{display:inline-flex;align-items:center;padding:8px 11px;border-radius:999px;background:#edf9f2;color:#38704e;font-size:12px;font-weight:800}.admin-v15 .save-state.saving{background:#fff4e9;color:#8b5b2d}
+.admin-v15 .service-edit-row{position:relative;grid-template-columns:1.35fr .65fr .55fr auto auto}.admin-v15 .service-hint{grid-column:1/-1;color:#9b627b;padding-top:2px}
+.admin-v15 .gallery-admin-category{background:#fff0f6!important;color:#b64d7b!important}.admin-v15 .upload-drop{background:#fff4f9!important;border-color:rgba(215,100,148,.28)!important}.admin-v15 .upload-drop span{color:#b94e7c!important}.admin-v15 .upload-drop small{color:var(--admin-muted)!important}
+.admin-v15 .compact-notify .notification-status{grid-template-columns:1fr;margin-bottom:12px}
+.admin-v15 dialog{background:#fffafc!important;color:var(--admin-text)!important;border-color:var(--admin-line)!important;box-shadow:0 30px 90px rgba(63,25,43,.25)!important}.admin-v15 dialog::backdrop{background:rgba(50,27,38,.45)}
+.admin-v15 .admin-toast{background:#2b1b23!important;color:#fff!important;border-color:rgba(255,255,255,.12)!important}.admin-v15 .admin-toast.error{background:#5d2633!important}
+
+@media(max-width:1100px){.admin-v15 .calendar-wide-grid{grid-template-columns:1fr}.admin-v15 .calendar-day-manager{position:static}.admin-v15 .admin-layout-v15{grid-template-columns:1fr}.admin-v15 .admin-sidebar{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){
+  .admin-v15 .admin-main{padding:18px 12px 44px}.admin-v15 .dash-actions{display:grid;width:100%;grid-template-columns:1fr 1fr}.admin-v15 .dash-actions .btn{width:100%}.admin-v15 .production-notice{display:grid;gap:5px}.admin-v15 .production-notice b{white-space:normal}
+  .admin-v15 .calendar-card-wide{padding:14px;border-radius:24px}.admin-v15 .calendar-wide-grid{gap:14px}.admin-v15 .calendar-day-manager{padding:14px;border-radius:20px}.admin-v15 .calendar-day-manager h2{font-size:27px}.admin-v15 .calendar-grid,.admin-v15 .calendar-weekdays{gap:4px}.admin-v15 .calendar-day{min-height:50px;padding:6px}.admin-v15 .calendar-day.open-day:after{left:6px;bottom:6px}.admin-v15 .date-time-add{grid-template-columns:1fr}.admin-v15 .date-time-add .btn{width:100%}
+  .admin-v15 .admin-sidebar{grid-template-columns:1fr}.admin-v15 .booking-card-v15{grid-template-columns:1fr!important}.admin-v15 .booking-actions{display:grid!important;grid-template-columns:1fr 1fr}.admin-v15 .service-edit-row{grid-template-columns:1fr!important}.admin-v15 .service-hint{grid-column:auto}.admin-v15 .schedule-day{padding:13px}.admin-v15 .schedule-add{grid-template-columns:1fr!important}.admin-v15 .schedule-add .mini-btn{width:100%}.admin-v15 .gallery-editor{grid-template-columns:1fr!important}.admin-v15 .gallery-admin-actions{grid-template-columns:1fr 1fr!important}
+}
+@media(max-width:390px){.admin-v15 .dash-actions{grid-template-columns:1fr}.admin-v15 .calendar-day{min-height:46px}.admin-v15 .calendar-weekdays span{font-size:7px}.admin-v15 .booking-actions{grid-template-columns:1fr!important}}

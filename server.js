@@ -154,6 +154,11 @@ function galleryDefaults() { return [
   { id:'epilacao', name:'Epilação', active:true }
 ]; }
 function normalizeGalleryConfig(c) {
+  c.dateHours = c.dateHours && typeof c.dateHours === 'object' && !Array.isArray(c.dateHours) ? c.dateHours : {};
+  for (const [date, times] of Object.entries(c.dateHours)) {
+    if (!validDate(date) || !Array.isArray(times)) { delete c.dateHours[date]; continue; }
+    c.dateHours[date] = [...new Set(times.map(String).filter(validTime))].sort();
+  }
   c.galleryCategories = Array.isArray(c.galleryCategories) && c.galleryCategories.length ? c.galleryCategories : galleryDefaults();
   c.galleryCategories = c.galleryCategories.slice(0,12).map((x,i)=>({
     id:String(x.id || `categoria-${i+1}`).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,50) || `categoria-${i+1}`,
@@ -195,9 +200,10 @@ function emailTransport() {
   else opts.host = process.env.SMTP_HOST || 'smtp.gmail.com';
   return nodemailer.createTransport(opts);
 }
-async function sendMail({ to, subject, html }) {
+async function sendMail({ to, subject, html, verify = false }) {
   const transporter = emailTransport();
   if (!transporter || !to) return { sent:false, reason:'SMTP não configurado' };
+  if (verify) await transporter.verify();
   await transporter.sendMail({
     from: process.env.SMTP_FROM || process.env.SMTP_USER,
     to,
@@ -308,7 +314,8 @@ async function getAvailability(date, duration = 60) {
   const d = new Date(date + 'T12:00:00');
   if (Number.isNaN(d.getTime())) return [];
   const day = String(d.getDay());
-  const base = (cfg.weeklyHours && cfg.weeklyHours[day]) || [];
+  const hasSpecificDate = cfg.dateHours && Object.prototype.hasOwnProperty.call(cfg.dateHours, date);
+  const base = hasSpecificDate ? (cfg.dateHours[date] || []) : ((cfg.weeklyHours && cfg.weeklyHours[day]) || []);
   if ((cfg.blockedDates || []).includes(date)) return [];
   return [...new Set(base)].sort().map(time => {
     const start = timeToMinutes(time);
@@ -508,17 +515,57 @@ app.put('/api/admin/schedule', auth, async (req,res) => {
   res.json({ ok:true, weeklyHours:normalized });
 });
 
+app.put('/api/admin/date-schedule', auth, async (req,res) => {
+  const date = String(req.body.date || '');
+  const times = Array.isArray(req.body.times) ? req.body.times : null;
+  if (!validDate(date) || !times) return res.status(400).json({ error:'Data ou horários inválidos.' });
+  const normalized = [...new Set(times.map(String).filter(validTime))].sort();
+  const c = normalizeGalleryConfig(await getState('config'));
+  c.dateHours = c.dateHours || {};
+  c.dateHours[date] = normalized;
+  c.openingHours = 'Agenda definida pela proprietária no painel';
+  await setState('config', c);
+  res.json({ ok:true, date, times:normalized });
+});
+app.delete('/api/admin/date-schedule/:date', auth, async (req,res) => {
+  const date = String(req.params.date || '');
+  if (!validDate(date)) return res.status(400).json({ error:'Data inválida.' });
+  const c = normalizeGalleryConfig(await getState('config'));
+  delete c.dateHours[date];
+  await setState('config', c);
+  res.json({ ok:true });
+});
+
 app.put('/api/admin/services', auth, async (req,res) => {
   const services = Array.isArray(req.body.services) ? req.body.services : null;
   if (!services) return res.status(400).json({ error:'Procedimentos inválidos' });
-  const cleaned = services.slice(0, 30).map((s, i) => ({
-    id: String(s.id || crypto.randomUUID()).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,60) || `servico-${i+1}`,
-    name: String(s.name || '').trim().slice(0,80),
-    price: s.price === null || s.price === '' ? null : Math.max(0, Number(s.price)),
-    duration: Math.max(15, Math.min(480, Number(s.duration || 60))),
-    active: s.active !== false
-  })).filter(s => s.name.length >= 2);
-  const c = await getState('config');
+  const cleaned = [];
+  for (let i = 0; i < Math.min(services.length, 30); i++) {
+    const raw = services[i] || {};
+    const name = String(raw.name || '').trim().slice(0,80);
+    if (name.length < 2) return res.status(400).json({ error:`Preencha o nome do procedimento ${i+1}.` });
+    const active = raw.active !== false;
+    const priceRaw = raw.price;
+    const price = priceRaw === null || priceRaw === '' ? null : Number(priceRaw);
+    if (active && (price === null || !Number.isFinite(price) || price < 0)) {
+      return res.status(400).json({ error:`Defina um valor válido para “${name}” antes de deixá-lo ativo.` });
+    }
+    const duration = Number(raw.duration || 60);
+    if (!Number.isFinite(duration) || duration < 15) return res.status(400).json({ error:`Duração inválida em “${name}”.` });
+    cleaned.push({
+      id: String(raw.id || crypto.randomUUID()).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,60) || `servico-${i+1}`,
+      name,
+      price: price === null ? null : Math.round(Math.max(0, price) * 100) / 100,
+      duration: Math.max(15, Math.min(480, Math.round(duration))),
+      active
+    });
+  }
+  const ids = new Set();
+  for (const item of cleaned) {
+    if (ids.has(item.id)) item.id = crypto.randomUUID();
+    ids.add(item.id);
+  }
+  const c = normalizeGalleryConfig(await getState('config'));
   c.services = cleaned;
   await setState('config', c);
   res.json({ ok:true, services:cleaned });
@@ -645,17 +692,37 @@ app.get('/api/admin/notifications/status', auth, async (req,res) => {
     smtpConfigured: !!emailTransport(),
     ownerEmail: process.env.OWNER_EMAIL || (await getState('config')).email,
     whatsappCloudConfigured: !!(process.env.WHATSAPP_CLOUD_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID),
-    database: pgPool && dbReady ? 'postgres' : 'json'
+    database: pgPool && dbReady ? 'postgres' : 'json',
+    smtpUser: process.env.SMTP_USER ? process.env.SMTP_USER.replace(/(^.).*(@.*$)/,'$1***$2') : '',
+    smtpPort: Number(process.env.SMTP_PORT || 587),
+    smtpSecure: String(process.env.SMTP_SECURE || 'false') === 'true'
   });
 });
 app.post('/api/admin/notifications/test-email', auth, async (req,res) => {
   const cfg = await getState('config');
   const to = process.env.OWNER_EMAIL || cfg.email;
   try {
-    const result = await sendMail({ to, subject:'Teste de e-mail — Lash Studio RB', html:'<h2>Lash Studio RB</h2><p>Seu envio de e-mail está funcionando corretamente. 💗</p>' });
+    const result = await sendMail({ to, subject:'Teste de e-mail — Lash Studio RB', html:'<h2>Lash Studio RB</h2><p>Seu envio de e-mail está funcionando corretamente. 💗</p>', verify:true });
     if (!result.sent) return res.status(400).json({ error:result.reason });
     res.json({ ok:true, to });
-  } catch (e) { res.status(500).json({ error:e.message }); }
+  } catch (e) {
+    const code = String(e.code || '');
+    let msg = e.message || 'Falha ao enviar e-mail.';
+    if (code === 'EAUTH' || /Invalid login|Username and Password not accepted|authentication/i.test(msg)) msg = 'O Gmail recusou o login. Confira SMTP_USER e use uma SENHA DE APP válida em SMTP_PASS.';
+    else if (/ETIMEDOUT|ECONNECTION|ECONNREFUSED|timeout/i.test(code + ' ' + msg)) msg = 'Não foi possível conectar ao Gmail. Confira SMTP_HOST=smtp.gmail.com, SMTP_PORT=587 e SMTP_SECURE=false.';
+    res.status(500).json({ error:msg, code:code || undefined });
+  }
+});
+
+app.get('/api/admin/backup', auth, async (req,res) => {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    config: normalizeGalleryConfig(await getState('config')),
+    bookings: await getState('bookings')
+  };
+  res.setHeader('Content-Type','application/json; charset=utf-8');
+  res.setHeader('Content-Disposition',`attachment; filename=lash-studio-backup-${new Date().toISOString().slice(0,10)}.json`);
+  res.send(JSON.stringify(payload, null, 2));
 });
 
 app.use((err, req, res, next) => {

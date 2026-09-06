@@ -1,13 +1,13 @@
 {
   "name": "lsh-studio-rb",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "private": true,
-  "description": "LSH Studio RB - mobile first, galeria da proprietaria, agenda, notificacoes e seguranca reforcada",
+  "description": "Lash Studio RB - painel V15 production ready com calendario, agenda persistente, notificacoes e mobile first",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "check": "node --check server.js && node --check public/lsh-premium-v9.js && node --check public/admin-v9.js"
+    "check": "node --check server.js && node --check public/lsh-premium-v15.js && node --check public/admin-v15.js"
   },
   "dependencies": {
     "compression": "^1.7.4",
