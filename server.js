@@ -20,9 +20,25 @@ const bookingsPath = path.join(DATA, 'bookings.json');
 const MemoryStore = MemoryStoreFactory(session);
 
 app.set('trust proxy', 1);
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'blob:'],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'", 'data:'],
+      objectSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      baseUri: ["'self'"],
+      formAction: ["'self'"]
+    }
+  },
+  crossOriginResourcePolicy: { policy: 'same-origin' }
+}));
 app.use(compression());
-app.use(express.json({ limit: '200kb' }));
+app.use(express.json({ limit: '900kb' }));
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.set('Pragma', 'no-cache');
@@ -42,9 +58,24 @@ app.use(session({
   }
 }));
 
-app.use('/api/bookings', rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: true, legacyHeaders: false }));
-app.use('/api/my-bookings', rateLimit({ windowMs: 15 * 60 * 1000, limit: 60, standardHeaders: true, legacyHeaders: false }));
-app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1h' }));
+const bookingLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false });
+const lookupLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 40, standardHeaders: true, legacyHeaders: false });
+const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false });
+app.use('/api/bookings', bookingLimiter);
+app.use('/api/my-bookings', lookupLimiter);
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: '1h', etag:true }));
+
+function sameOriginWrite(req, res, next) {
+  if (!['POST','PUT','PATCH','DELETE'].includes(req.method)) return next();
+  const origin = req.get('origin');
+  if (!origin) return next();
+  try {
+    const o = new URL(origin);
+    if (o.host !== req.get('host')) return res.status(403).json({ error:'Origem não permitida' });
+  } catch { return res.status(403).json({ error:'Origem inválida' }); }
+  next();
+}
+app.use('/api/admin', sameOriginWrite);
 
 const pgPool = process.env.DATABASE_URL ? new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -76,6 +107,11 @@ async function initDb() {
       'INSERT INTO lsh_state(key,value) VALUES($1,$2::jsonb) ON CONFLICT (key) DO NOTHING',
       [key, JSON.stringify(value)]
     );
+  }
+  const current = await pgPool.query("SELECT value FROM lsh_state WHERE key='config'");
+  if (current.rows[0] && current.rows[0].value && current.rows[0].value.gallery === undefined) {
+    current.rows[0].value.gallery = defaults.config.gallery || [];
+    await pgPool.query("UPDATE lsh_state SET value=$1::jsonb, updated_at=NOW() WHERE key='config'", [JSON.stringify(current.rows[0].value)]);
   }
   dbReady = true;
 }
@@ -270,6 +306,9 @@ app.get('/api/config', async (req, res) => {
     openingHours: c.openingHours,
     services: (c.services || []).filter(s => s.active !== false).map(s => ({
       id:s.id, name:s.name, price:s.price, duration:s.duration
+    })),
+    gallery: (c.gallery || []).filter(x => x.active !== false).slice(0,20).map(x => ({
+      id:x.id, src:x.src, title:x.title, caption:x.caption
     }))
   });
 });
@@ -316,6 +355,13 @@ app.post('/api/bookings', async (req, res) => {
   try {
     const r = await notifyOwnerNewBooking(b);
     b.notifications.ownerEmail = !!r.sent;
+    try {
+      const cfg = await getState('config');
+      const ownerPhone = process.env.OWNER_WHATSAPP || cfg.whatsapp;
+      const ownerMsg = `Novo agendamento LSH: ${b.name}, ${b.date} às ${b.time}. Total ${moneyBRL(b.total)}.`;
+      const wr = await sendWhatsAppCloud(ownerPhone, ownerMsg);
+      b.notifications.ownerWhatsApp = !!wr.sent;
+    } catch (we) { b.notifications.ownerWhatsApp = false; b.notifications.ownerWhatsAppError = we.message; }
     await setState('bookings', bookings);
   } catch (e) {
     b.notifications.ownerEmail = false;
@@ -344,22 +390,41 @@ app.post('/api/my-bookings/:id/cancel', async (req, res) => {
   const bookings = await getState('bookings');
   const b = bookings.find(x => x.id === req.params.id);
   if (!b) return res.status(404).json({ error:'Agendamento não encontrado.' });
-  const matches = cleanPhone(q) ? cleanPhone(b.phone).endsWith(cleanPhone(q)) : normalizeName(b.name) === normalizeName(q);
-  if (!matches) return res.status(403).json({ error:'Dados não conferem.' });
+  const qPhone = cleanPhone(q);
+  if (qPhone.length < 8 || !cleanPhone(b.phone).endsWith(qPhone)) return res.status(403).json({ error:'Para desmarcar, confirme o WhatsApp usado no agendamento.' });
   if (b.status === 'Concluído') return res.status(409).json({ error:'Esse atendimento já foi concluído.' });
   b.status = 'Cancelado';
   b.cancelledAt = new Date().toISOString();
   b.cancelledBy = 'cliente';
   await setState('bookings', bookings);
+  try {
+    const cfg = await getState('config');
+    await sendMail({
+      to: process.env.OWNER_EMAIL || cfg.email,
+      subject:'Agendamento desmarcado — LSH Studio RB',
+      html:`<div style="font-family:Arial"><h2>Agendamento desmarcado</h2><p><b>Cliente:</b> ${escapeHtml(b.name)}</p><p><b>Data:</b> ${escapeHtml(b.date)} às ${escapeHtml(b.time)}</p></div>`
+    });
+  } catch(e) { console.error('Falha ao avisar cancelamento:', e.message); }
   res.json({ ok:true, booking: publicBooking(b) });
 });
 
-app.post('/api/admin/login', (req, res) => {
+app.post('/api/admin/login', loginLimiter, (req, res) => {
   const user = String(req.body.username || '');
   const pass = String(req.body.password || '');
   const eu = process.env.ADMIN_USER || 'admin';
   const ep = process.env.ADMIN_PASSWORD || 'troque-esta-senha';
-  if (user === eu && pass === ep) { req.session.admin = true; return res.json({ ok:true }); }
+  const safeEqual = (a,b) => {
+    const A=Buffer.from(String(a)), B=Buffer.from(String(b));
+    return A.length === B.length && crypto.timingSafeEqual(A,B);
+  };
+  if (safeEqual(user, eu) && safeEqual(pass, ep)) {
+    req.session.regenerate(err => {
+      if (err) return res.status(500).json({ error:'Falha ao iniciar sessão' });
+      req.session.admin = true;
+      res.json({ ok:true });
+    });
+    return;
+  }
   res.status(401).json({ error:'Credenciais inválidas' });
 });
 app.post('/api/admin/logout', auth, (req,res) => req.session.destroy(() => res.json({ ok:true })));
@@ -434,6 +499,57 @@ app.put('/api/admin/services', auth, async (req,res) => {
   res.json({ ok:true, services:cleaned });
 });
 
+app.post('/api/admin/gallery', auth, async (req,res) => {
+  const src = String(req.body.image || '');
+  if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(src)) return res.status(400).json({ error:'Imagem inválida.' });
+  if (Buffer.byteLength(src, 'utf8') > 750 * 1024) return res.status(413).json({ error:'A foto ficou muito grande. Escolha outra imagem.' });
+  const cfg = await getState('config');
+  cfg.gallery = Array.isArray(cfg.gallery) ? cfg.gallery : [];
+  if (cfg.gallery.length >= 20) return res.status(409).json({ error:'Limite de 20 fotos atingido.' });
+  const item = {
+    id: crypto.randomUUID(),
+    src,
+    title: String(req.body.title || `Resultado ${cfg.gallery.length + 1}`).trim().slice(0,80),
+    caption: String(req.body.caption || 'Trabalho realizado pela Emilly').trim().slice(0,180),
+    active: true
+  };
+  cfg.gallery.push(item);
+  await setState('config', cfg);
+  res.status(201).json({ ok:true, item });
+});
+
+app.delete('/api/admin/gallery/:id', auth, async (req,res) => {
+  const cfg = await getState('config');
+  cfg.gallery = Array.isArray(cfg.gallery) ? cfg.gallery : [];
+  const before = cfg.gallery.length;
+  cfg.gallery = cfg.gallery.filter(x => String(x.id) !== String(req.params.id));
+  if (cfg.gallery.length === before) return res.status(404).json({ error:'Foto não encontrada.' });
+  await setState('config', cfg);
+  res.json({ ok:true });
+});
+
+app.put('/api/admin/gallery/:id', auth, async (req,res) => {
+  const cfg = await getState('config');
+  cfg.gallery = Array.isArray(cfg.gallery) ? cfg.gallery : [];
+  const item = cfg.gallery.find(x => String(x.id) === String(req.params.id));
+  if (!item) return res.status(404).json({ error:'Foto não encontrada.' });
+  item.title = String(req.body.title || item.title || '').trim().slice(0,80);
+  item.caption = String(req.body.caption || item.caption || '').trim().slice(0,180);
+  item.active = req.body.active !== false;
+  await setState('config', cfg);
+  res.json({ ok:true, item });
+});
+
+app.post('/api/admin/bookings/:id/resend-confirmation', auth, async (req,res) => {
+  const arr = await getState('bookings');
+  const b = arr.find(x => x.id === req.params.id);
+  if (!b) return res.status(404).json({ error:'Agendamento não encontrado.' });
+  const notifications = await notifyCustomerConfirmed(b);
+  b.notifications = { ...(b.notifications || {}), confirmation:notifications, confirmationResentAt:new Date().toISOString() };
+  await setState('bookings', arr);
+  res.json({ ok:true, notifications });
+});
+
 app.post('/api/admin/blocks', auth, async (req,res) => {
   const { date, time } = req.body;
   if (!validDate(String(date)) || !validTime(String(time))) return res.status(400).json({ error:'Dados inválidos' });
@@ -468,6 +584,11 @@ app.post('/api/admin/notifications/test-email', auth, async (req,res) => {
     if (!result.sent) return res.status(400).json({ error:result.reason });
     res.json({ ok:true, to });
   } catch (e) { res.status(500).json({ error:e.message }); }
+});
+
+app.use((err, req, res, next) => {
+  console.error('Erro:', err.message);
+  res.status(500).json({ error:'Não foi possível concluir esta ação.' });
 });
 
 app.get('/api/health', async (req,res) => res.json({ ok:true, storage:pgPool && dbReady ? 'postgres' : 'json', email:!!emailTransport() }));

@@ -1,78 +1,71 @@
-# LSH Studio RB — V8 Completo
+# LSH Studio RB — V9 Mobile Pro
 
-Atualização completa do site e painel da proprietária.
+Atualização focada primeiro em celular (iPhone/Android), mantendo desktop e tablet.
 
-## O que mudou
+## Principais mudanças
+- Layout mobile refeito: hero, foto da Emilly, serviços, resultados, agendamento, área da cliente, contato e navegação inferior.
+- Textos do portfólio não ficam mais por cima das fotos no celular.
+- Galeria/portfólio gerenciada pela proprietária no painel: adicionar e excluir fotos.
+- As fotos enviadas pelo painel são reduzidas e comprimidas no navegador antes do envio.
+- Confirmação do agendamento tenta enviar e-mail e WhatsApp automático quando os respectivos provedores estão configurados.
+- Botão "Reenviar confirmação" no painel para testar/repetir a notificação de uma cliente confirmada.
+- Novo agendamento também tenta avisar a proprietária por e-mail e WhatsApp automático.
+- Cancelamento feito pela cliente exige confirmar o WhatsApp usado no agendamento.
+- Login com limitação de tentativas, comparação segura da senha, sessão HTTP-only, SameSite, HTTPS em produção, política CSP, Helmet, bloqueio de origem em ações do painel e rate limits.
+- PostgreSQL continua recomendado para persistir agenda, configurações e fotos no Render.
 
-- Agendamento com 1 ou vários procedimentos.
-- Total dos procedimentos calculado antes de enviar.
-- Duração total calculada para evitar conflito com outro atendimento.
-- E-mail da cliente obrigatório para permitir confirmação automática por e-mail.
-- Área "Meus agendamentos" por WhatsApp ou nome completo.
-- Cliente pode desmarcar agendamento Pendente/Confirmado sem limite de antecedência.
-- Painel da proprietária para cadastrar procedimentos, valores, duração e ativar/desativar.
-- Painel da proprietária para escolher os dias da semana e adicionar/remover cada horário manualmente.
-- Horários padrão removidos: a agenda só abre depois que a proprietária liberar horários.
-- E-mail para a proprietária em novo agendamento.
-- Ao confirmar no painel, o sistema tenta enviar e-mail automático para a cliente.
-- Botão de WhatsApp no painel já monta a mensagem de confirmação.
-- Suporte opcional a envio automático por WhatsApp Cloud API da Meta.
-- Botão "Testar e-mail" no painel.
-- Painel mostra se e-mail, WhatsApp automático e banco persistente estão configurados.
-- Melhorias fortes para celular em agendamento, área da cliente e painel.
-- Sessão admin usa MemoryStore com expiração automática, removendo o alerta antigo do express-session.
-- Suporte opcional a PostgreSQL pelo DATABASE_URL. Sem banco, usa JSON como fallback.
-- Endereço atualizado: Rua Tereza de Oliveira Prado, 145 — Dom Pedro II.
+## Render — variáveis obrigatórias/recomendadas
 
-## Depois de publicar
-
-1. Entre em `/admin.html`.
-2. Vá em "Procedimentos" e coloque os valores reais. Procedimentos sem preço ficam indisponíveis para a cliente.
-3. Vá em "Dias e horários", adicione os horários desejados para cada dia e salve.
-4. Em "Status do sistema", clique em "Testar e-mail".
-
-## Variáveis no Render
-
-Obrigatórias/recomendadas:
-
+### Segurança/admin
 - `NODE_ENV=production`
-- `SESSION_SECRET` = uma chave grande e aleatória
-- `ADMIN_USER`
-- `ADMIN_PASSWORD`
-- `OWNER_WHATSAPP`
-- `OWNER_EMAIL`
+- `SESSION_SECRET=` uma chave longa e aleatória
+- `ADMIN_USER=` usuário do painel
+- `ADMIN_PASSWORD=` senha forte e exclusiva
 
-Para e-mail Gmail:
+### Proprietária
+- `OWNER_EMAIL=` e-mail real da Emilly/proprietária
+- `OWNER_WHATSAPP=` número no formato internacional, somente números, ex.: `5512999999999`
 
+### E-mail automático (Gmail)
 - `SMTP_SERVICE=gmail`
 - `SMTP_HOST=smtp.gmail.com`
 - `SMTP_PORT=587`
 - `SMTP_SECURE=false`
-- `SMTP_USER=seuemail@gmail.com`
-- `SMTP_PASS=SENHA_DE_APP_DO_GMAIL`
+- `SMTP_USER=` seu Gmail
+- `SMTP_PASS=` SENHA DE APP do Google (não é a senha normal)
 - `SMTP_FROM=LSH Studio RB <seuemail@gmail.com>`
 
-Atenção: `SMTP_PASS` precisa ser uma Senha de App do Google quando a conta usa autenticação em duas etapas. Não use a senha normal do Gmail.
+Depois do deploy, entre no painel e use **Status do sistema → Testar e-mail**.
 
-## Banco persistente no Render
-
-Para uso real, configure `DATABASE_URL` de um PostgreSQL. Com isso, agendamentos, procedimentos e horários não dependem do disco temporário do serviço web.
-
-Sem `DATABASE_URL`, o site continua funcionando, porém usa os arquivos `data/*.json` como fallback.
-
-## WhatsApp automático
-
-O botão de WhatsApp no painel funciona sem configuração extra e abre a confirmação pronta para envio.
-
-Para envio 100% automático, configure uma conta Meta WhatsApp Cloud API e as variáveis:
-
-- `WHATSAPP_CLOUD_TOKEN`
-- `WHATSAPP_PHONE_NUMBER_ID`
-- `WHATSAPP_TEMPLATE_NAME` (recomendado para mensagens iniciadas pela empresa)
+### WhatsApp automático
+O site não consegue enviar WhatsApp automático só com um número comum. É necessário configurar a **Meta WhatsApp Cloud API**:
+- `WHATSAPP_CLOUD_TOKEN=`
+- `WHATSAPP_PHONE_NUMBER_ID=`
+- `WHATSAPP_API_VERSION=v23.0`
+- `WHATSAPP_TEMPLATE_NAME=` template aprovado pela Meta, quando necessário
 - `WHATSAPP_TEMPLATE_LANGUAGE=pt_BR`
 
-## Render
+Sem a Cloud API, o botão manual do WhatsApp no painel continua funcionando, mas não existe envio automático pelo WhatsApp.
 
-- Build Command: `npm install`
-- Start Command: `npm start`
-- Root Directory: vazio, se `package.json` estiver na raiz do repositório.
+### Banco de dados
+- `DATABASE_URL=` URL do PostgreSQL.
+
+**Muito importante:** no Render, use PostgreSQL antes de depender da agenda/fotos em produção. Sem `DATABASE_URL`, o fallback é JSON local e alterações podem ser perdidas após reinícios/deploys.
+
+## Atualização no GitHub
+Suba/substitua:
+- `public/`
+- `data/`
+- `server.js`
+- `package.json`
+- `.env.example`
+- `.gitignore`
+- `README.md`
+
+Não envie `.env` nem `node_modules`.
+
+Build no Render: `npm install`
+Start no Render: `npm start`
+
+## Segurança
+Nenhum site conectado à internet pode ser prometido como “impossível de hackear”. Esta versão aplica proteções importantes para um projeto desse porte, mas produção de verdade também depende de senha forte, segredos apenas no Render, PostgreSQL, atualizações de dependências, HTTPS e contas de e-mail/Meta protegidas com 2FA.

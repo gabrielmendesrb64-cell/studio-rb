@@ -18,10 +18,63 @@
   "blockedDates": [],
   "blockedSlots": [],
   "services": [
-    {"id":"cilios","name":"Alongamento de Cílios","price":null,"duration":60,"active":true},
-    {"id":"sobrancelhas","name":"Design de Sobrancelhas","price":null,"duration":45,"active":true},
-    {"id":"lifting","name":"Lifting de Cílios","price":null,"duration":60,"active":true},
-    {"id":"henna","name":"Henna","price":null,"duration":45,"active":true},
-    {"id":"pele","name":"Limpeza de Pele","price":null,"duration":60,"active":true}
+    {
+      "id": "cilios",
+      "name": "Alongamento de Cílios",
+      "price": null,
+      "duration": 60,
+      "active": true
+    },
+    {
+      "id": "sobrancelhas",
+      "name": "Design de Sobrancelhas",
+      "price": null,
+      "duration": 45,
+      "active": true
+    },
+    {
+      "id": "lifting",
+      "name": "Lifting de Cílios",
+      "price": null,
+      "duration": 60,
+      "active": true
+    },
+    {
+      "id": "henna",
+      "name": "Henna",
+      "price": null,
+      "duration": 45,
+      "active": true
+    },
+    {
+      "id": "pele",
+      "name": "Limpeza de Pele",
+      "price": null,
+      "duration": 60,
+      "active": true
+    }
+  ],
+  "gallery": [
+    {
+      "id": "resultado-1",
+      "src": "assets/depois-01.webp",
+      "title": "Resultado 01",
+      "caption": "Acabamento delicado e elegante",
+      "active": true
+    },
+    {
+      "id": "resultado-2",
+      "src": "assets/resultado-02.webp",
+      "title": "Resultado 02",
+      "caption": "Natural e sofisticado",
+      "active": true
+    },
+    {
+      "id": "resultado-3",
+      "src": "assets/resultado-03.webp",
+      "title": "Resultado 03",
+      "caption": "Mais um trabalho da Emilly",
+      "active": true
+    }
   ]
 }

@@ -498,3 +498,24 @@ dialog h2{
 .admin-toast{position:fixed;right:20px;bottom:20px;z-index:100;background:#171318;border:1px solid rgba(255,255,255,.1);color:#fff;padding:14px 18px;border-radius:16px;box-shadow:0 15px 50px rgba(0,0,0,.4);opacity:0;transform:translateY(12px);pointer-events:none;transition:.2s}.admin-toast.show{opacity:1;transform:none}.admin-toast.error{border-color:rgba(255,83,126,.35)}
 @media(max-width:1100px){.schedule-editor{grid-template-columns:1fr}.notification-status{grid-template-columns:1fr}.service-edit-row{grid-template-columns:1fr 1fr 1fr auto}.service-name{grid-column:1/-1}}
 @media(max-width:760px){.settings-card{padding:16px}.settings-card .panel-head{flex-direction:column}.settings-card .panel-head>.btn,.panel-actions{width:100%}.panel-actions .btn{flex:1}.schedule-day-head{align-items:flex-start;flex-direction:column}.schedule-add{width:100%}.schedule-add input{flex:1}.service-edit-row{grid-template-columns:1fr 1fr}.service-name{grid-column:1/-1}.service-toggle{padding:0}.service-edit-row .danger{width:100%}.admin-toast{left:14px;right:14px;bottom:90px}.booking-card-v8{padding:15px}}
+
+/* ===== V9 galeria + painel mobile ===== */
+.gallery-upload-form{display:grid;grid-template-columns:1.2fr 1fr 1.4fr auto;gap:10px;align-items:stretch;margin-bottom:16px}
+.gallery-upload-form>input{background:#0f0d10;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px;color:#fff;min-width:0}
+.upload-drop{position:relative;border:1px dashed rgba(255,111,168,.35);border-radius:16px;padding:11px 14px;display:flex;flex-direction:column;justify-content:center;cursor:pointer;background:rgba(255,111,168,.05)}
+.upload-drop input{position:absolute;opacity:0;inset:0;width:100%;height:100%;cursor:pointer}.upload-drop span{font-weight:800;color:#ffd9e7}.upload-drop small{color:#bfa7b2;margin-top:3px}
+.gallery-editor{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.gallery-admin-item{border:1px solid rgba(255,255,255,.08);background:#0d0b0e;border-radius:18px;padding:10px;display:grid;gap:9px;min-width:0}.gallery-admin-item img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:13px}.gallery-admin-item b,.gallery-admin-item small{display:block;overflow-wrap:anywhere}.gallery-admin-item small{color:#bfa9b3;margin-top:3px;line-height:1.4}.mini-btn.danger{border-color:rgba(255,96,120,.25);color:#ffafbd;background:rgba(255,80,105,.07)}
+@media(max-width:760px){
+  .admin-top{height:64px;padding:0 12px}.admin-brand img{width:58px}.admin-brand b{font-size:13px}.admin-brand small{font-size:9px}
+  .admin-main{padding:22px 12px 50px}.login-card{padding:22px 16px;border-radius:22px}.login-card h1{font-size:37px}
+  .dash-head{align-items:stretch;flex-direction:column}.dash-head h1{font-size:40px}.dash-head .btn{width:100%}
+  .stats{grid-template-columns:1fr 1fr;gap:8px}.stat{padding:14px;border-radius:17px}.stat b{font-size:28px}.stat span{font-size:9px}
+  .admin-layout{grid-template-columns:1fr;gap:12px}.admin-sidebar,.admin-content{gap:12px}.panel-card{padding:14px;border-radius:20px}.panel-head{flex-direction:column;align-items:stretch}.panel-head h2{font-size:24px}.panel-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:8px}.panel-actions .btn{width:100%}
+  .calendar-card{padding:13px}.calendar-top{grid-template-columns:38px 1fr 38px}.circle-btn{width:38px;height:38px}.calendar-weekdays,.calendar-grid{gap:4px}.calendar-weekdays span{font-size:8px}.calendar-day{min-height:46px;border-radius:12px;padding:6px;font-size:11px}.calendar-day .dot{right:4px;bottom:4px}
+  .toolbar{display:grid!important;gap:10px}.segmented{display:flex!important;overflow-x:auto!important;white-space:nowrap;padding-bottom:4px}.segmented button{flex:0 0 auto}.toolbar-right,.toolbar-right input{width:100%}
+  .booking-row{grid-template-columns:1fr!important;gap:10px!important}.booking-actions{display:grid!important;grid-template-columns:1fr 1fr;gap:7px}.booking-actions>*{width:100%;justify-content:center;text-align:center}.booking-main small{overflow-wrap:anywhere}
+  .admin-settings-grid{grid-template-columns:1fr!important;gap:12px!important}.schedule-day-head{display:grid!important;gap:10px}.schedule-add{display:grid!important;grid-template-columns:1fr auto}.schedule-add input{min-width:0}.service-edit-row{grid-template-columns:1fr!important;gap:7px!important}
+  .gallery-upload-form{grid-template-columns:1fr}.gallery-upload-form .btn{width:100%}.upload-drop{min-height:64px}.gallery-editor{grid-template-columns:1fr 1fr;gap:8px}.gallery-admin-item{padding:8px;border-radius:15px}.gallery-admin-item small{font-size:10px}.gallery-admin-item b{font-size:13px}
+  .notification-status{grid-template-columns:1fr!important}
+}
+@media(max-width:390px){.gallery-editor{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.booking-actions{grid-template-columns:1fr}}

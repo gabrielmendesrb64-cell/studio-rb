@@ -9,23 +9,8 @@
   <meta property="og:description" content="Realce sua beleza com quem entende de detalhes."/>
   <title>LSH Studio RB Emilly — Beleza Premium</title>
   <link rel="icon" href="assets/logo-premium-v4.svg?v=4"/>
-  <link rel="stylesheet" href="lsh-premium-v4.css?v=8"/>
-  <script>
-  (function(){
-    try{
-      if('serviceWorker' in navigator){
-        navigator.serviceWorker.getRegistrations().then(function(rs){
-          rs.forEach(function(r){ r.unregister(); });
-        });
-      }
-      if('caches' in window){
-        caches.keys().then(function(keys){
-          keys.forEach(function(k){ caches.delete(k); });
-        });
-      }
-    }catch(e){}
-  })();
-  </script>
+  <link rel="stylesheet" href="lsh-premium-v4.css?v=9"/>
+
 </head>
 <body class="premium">
   <div class="backdrop-eye"></div>
@@ -165,39 +150,12 @@
         <aside class="album-sidebar">
           <div class="album-copy-card">
             <span class="eyebrow">PORTFÓLIO</span>
-            <h3>Pequeno álbum interativo</h3>
-            <p>Agora os resultados ficam organizados em um formato mais leve, bonito e sofisticado, sem aquele destaque rígido de antes e depois.</p>
-            <div class="album-counter"><b id="albumCurrent">01</b><span>/ 03</span></div>
+            <h3>Portfólio da Emilly</h3>
+            <p>Fotos escolhidas e atualizadas pela Emilly. No celular, o foco fica totalmente na imagem e o texto aparece separado para não cobrir o trabalho.</p>
+            <div class="album-counter"><b id="albumCurrent">01</b><span id="albumTotal">/ 00</span></div>
           </div>
 
-          <div class="album-thumbs">
-            <button class="album-thumb active" type="button"
-              data-image="assets/depois-01.webp"
-              data-title="Acabamento delicado e elegante"
-              data-text="Um resultado com visual suave, bonito e bem finalizado."
-              data-tag="RESULTADO 01">
-              <img src="assets/depois-01.webp" alt="Resultado 1">
-              <div><b>Resultado 01</b><span>Toque delicado</span></div>
-            </button>
-
-            <button class="album-thumb" type="button"
-              data-image="assets/resultado-02.webp"
-              data-title="Realce do olhar com naturalidade"
-              data-text="Um olhar mais valorizado, mantendo leveza e sofisticação."
-              data-tag="RESULTADO 02">
-              <img src="assets/resultado-02.webp" alt="Resultado 2">
-              <div><b>Resultado 02</b><span>Natural e sofisticado</span></div>
-            </button>
-
-            <button class="album-thumb" type="button"
-              data-image="assets/resultado-03.webp"
-              data-title="Mais um trabalho da Emilly"
-              data-text="Outro resultado em destaque para reforçar a qualidade do atendimento."
-              data-tag="RESULTADO 03">
-              <img src="assets/resultado-03.webp" alt="Resultado 3">
-              <div><b>Resultado 03</b><span>Estilo premium</span></div>
-            </button>
-          </div>
+          <div class="album-thumbs" id="albumThumbs"><div class="booking-alert">Carregando fotos...</div></div>
         </aside>
       </div>
     </section>
@@ -320,6 +278,6 @@
     <a href="admin.html" class="admin-link">Área da proprietária</a>
   </footer>
 
-  <script src="lsh-premium-v8.js?v=8" defer></script>
+  <script src="lsh-premium-v9.js?v=9" defer></script>
 </body>
 </html>

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Painel • LSH Studio RB</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="admin.css?v=8">
+  <link rel="stylesheet" href="admin.css?v=9">
   <link rel="icon" href="assets/logo-premium-v4.svg">
 </head>
 <body class="admin-body">
@@ -136,6 +136,24 @@
           <div id="servicesEditor" class="services-editor"></div>
         </div>
 
+
+        <div class="panel-card settings-card gallery-settings">
+          <div class="panel-head">
+            <div><span class="eyebrow">PORTFÓLIO</span><h2>Fotos do site</h2><p class="panel-desc">Adicione ou exclua as fotos que aparecem em “Resultados”. No celular elas ficam em um álbum limpo, sem texto cobrindo a imagem.</p></div>
+          </div>
+          <form id="galleryUploadForm" class="gallery-upload-form">
+            <label class="upload-drop">
+              <input id="galleryPhoto" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required>
+              <span>＋ Escolher foto</span>
+              <small>JPG, PNG ou WEBP • máximo 3 MB</small>
+            </label>
+            <input id="galleryTitle" name="title" placeholder="Título da foto (opcional)" maxlength="80">
+            <input id="galleryCaption" name="caption" placeholder="Descrição curta (opcional)" maxlength="180">
+            <button class="btn btn-pink" type="submit">ADICIONAR FOTO</button>
+          </form>
+          <div id="galleryEditor" class="gallery-editor"></div>
+        </div>
+
         <div class="panel-card settings-card notifications-settings">
           <div class="panel-head"><div><span class="eyebrow">NOTIFICAÇÕES</span><h2>Status do sistema</h2><p class="panel-desc">Veja se e-mail, WhatsApp automático e armazenamento persistente estão configurados.</p></div><button id="testEmailBtn" class="btn btn-ghost">Testar e-mail</button></div>
           <div id="notificationStatus" class="notification-status"></div>
@@ -161,6 +179,6 @@
     </form>
   </dialog>
 
-  <script src="admin-v8.js?v=8"></script>
+  <script src="admin-v9.js?v=9"></script>
 </body>
 </html>
