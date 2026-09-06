@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="700" viewBox="0 0 1000 700">
+<defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#0b0b0b"/><stop offset="1" stop-color="#512035"/></linearGradient></defs>
+<rect width="1000" height="700" fill="url(#g)"/><circle cx="790" cy="100" r="180" fill="#ff4f9a" opacity=".13"/>
+<text x="70" y="570" fill="#fff" font-family="Arial" font-size="55" font-weight="700">DEPOIS</text>
+<text x="70" y="630" fill="#ff6faa" font-family="Arial" font-size="28">Imagem de depois</text>
+</svg>
