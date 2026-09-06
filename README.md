@@ -1,15 +1,19 @@
-# Lash Studio RB — V10 Mobile Beauty
+# Lash Studio RB — V11 Categorias + Light Mobile
 
-Versão focada principalmente em celular, mantendo a identidade preto/branco/rosa da versão anterior.
+Atualização sobre a V10.
 
-## Destaques V10
-- Mesmas cores premium da V9.
-- Nome visual atualizado de LSH para Lash.
-- Hero mobile com a foto da Emilly ao fundo, inspirada na referência enviada, mas mantendo a paleta escura/rosa.
-- Portfólio mobile em grade de fotos com título abaixo, sem textos cobrindo as imagens.
-- Títulos e nomes sem text-shadow.
-- Layout otimizado para iPhone/Android e safe-area.
-- Gestão de fotos continua disponível no painel da proprietária.
+## Novidades
+- Visual mais claro mantendo preto, branco e rosa.
+- Portfólio separado em abas/categorias: Cílios, Sobrancelhas, Lábios, Epilação etc.
+- Proprietária pode criar novas abas pelo painel admin.
+- Proprietária pode renomear/excluir abas e mover fotos entre categorias.
+- Ao excluir uma aba, as fotos são preservadas e movidas para outra categoria.
+- Fotos continuam sendo otimizadas antes do upload.
+- Grade mobile com 2 fotos por linha, sem textos cobrindo imagens.
+- Ampliação de foto ao tocar.
+- Migração automática das configurações antigas no PostgreSQL.
 
-## Deploy
-Suba `public/`, `data/`, `server.js`, `package.json`, `package-lock.json`, `.env.example` e `.gitignore` para o GitHub. Não envie `.env` ou `node_modules`.
+## Atualização
+Substitua no GitHub: `public/`, `data/`, `server.js`, `package.json`, `.env.example`, `.gitignore` e `README.md`. Não envie `.env` nem `node_modules`.
+
+Depois faça o deploy no Render.

@@ -242,40 +242,56 @@ $('#myBookingQuery')?.addEventListener('keydown', e => { if(e.key === 'Enter'){ 
 const year = $('#year'); if(year) year.textContent = new Date().getFullYear();
 loadConfig();
 
-/* ===== V9: álbum dinâmico gerenciado pela proprietária ===== */
-let albumIndex = 0;
+/* ===== V11: portfólio por categorias gerenciado pela proprietária ===== */
+let activeGalleryCategory = '';
 function renderDynamicGallery(){
   const items = Array.isArray(cfg?.gallery) ? cfg.gallery : [];
-  const thumbs = $('#albumThumbs');
-  const mainImage = $('#albumMainImage');
-  const current = $('#albumCurrent');
-  const total = $('#albumTotal');
-  if(!thumbs || !mainImage) return;
-  if(!items.length){
-    thumbs.innerHTML='<div class="booking-alert">A Emilly ainda não adicionou fotos ao portfólio.</div>';
-    mainImage.style.display='none';
-    if(total) total.textContent='/ 00';
+  const categories = Array.isArray(cfg?.galleryCategories) ? cfg.galleryCategories : [];
+  const tabs = $('#galleryCategoryTabs');
+  const content = $('#galleryCategoryContent');
+  if(!tabs || !content) return;
+
+  const visibleCats = categories.filter(cat => items.some(item => item.categoryId === cat.id));
+  const effectiveCats = visibleCats.length ? visibleCats : categories;
+  if(!effectiveCats.length){
+    tabs.innerHTML='';
+    content.innerHTML='<div class="booking-alert">A Emilly ainda não criou categorias no portfólio.</div>';
     return;
   }
-  mainImage.style.display='block';
-  thumbs.innerHTML=items.map((item,i)=>`<button class="album-thumb ${i===0?'active':''}" type="button" data-i="${i}">
-    <img src="${esc(item.src)}" alt="${esc(item.title||'Resultado Lash')}">
-    <div><b>${esc(item.title||`Resultado ${String(i+1).padStart(2,'0')}`)}</b><span>${esc(item.caption||'Trabalho da Emilly')}</span></div>
-  </button>`).join('');
-  const apply=i=>{
-    albumIndex=(i+items.length)%items.length;
-    const item=items[albumIndex];
-    mainImage.src=item.src;
-    mainImage.alt=item.title||'Resultado Lash Studio RB';
-    $('#albumMainTitle').textContent=item.title||'Resultado Lash Studio RB';
-    $('#albumMainText').textContent=item.caption||'Trabalho realizado pela Emilly.';
-    $('#albumMainTag').textContent=`RESULTADO ${String(albumIndex+1).padStart(2,'0')}`;
-    if(current)current.textContent=String(albumIndex+1).padStart(2,'0');
-    if(total)total.textContent='/ '+String(items.length).padStart(2,'0');
-    $$('#albumThumbs .album-thumb').forEach((b,j)=>b.classList.toggle('active',j===albumIndex));
+  if(!activeGalleryCategory || !effectiveCats.some(c=>c.id===activeGalleryCategory)) activeGalleryCategory=effectiveCats[0].id;
+
+  tabs.innerHTML=effectiveCats.map(cat=>`<button type="button" class="gallery-tab ${cat.id===activeGalleryCategory?'active':''}" data-category="${esc(cat.id)}" role="tab" aria-selected="${cat.id===activeGalleryCategory}">${esc(cat.name)}</button>`).join('');
+
+  const renderCategory = id => {
+    activeGalleryCategory=id;
+    const cat=effectiveCats.find(c=>c.id===id) || effectiveCats[0];
+    const catItems=items.filter(item=>item.categoryId===cat.id);
+    $$('#galleryCategoryTabs .gallery-tab').forEach(btn=>{
+      const active=btn.dataset.category===cat.id;
+      btn.classList.toggle('active',active); btn.setAttribute('aria-selected',active?'true':'false');
+    });
+    content.innerHTML=`
+      <div class="gallery-category-head"><div><span>RESULTADOS</span><h3>${esc(cat.name)}</h3></div><small>${catItems.length} foto${catItems.length===1?'':'s'}</small></div>
+      ${catItems.length?`<div class="category-photo-grid">${catItems.map((item,i)=>`<article class="category-photo-card">
+        <button type="button" class="category-photo-open" data-src="${esc(item.src)}" data-title="${esc(item.title||cat.name)}" aria-label="Ampliar ${esc(item.title||cat.name)}">
+          <img src="${esc(item.src)}" alt="${esc(item.title||`Resultado de ${cat.name}`)}" loading="lazy">
+        </button>
+        <div class="category-photo-copy"><b>${esc(item.title||cat.name)}</b>${item.caption?`<span>${esc(item.caption)}</span>`:''}</div>
+      </article>`).join('')}</div>`:'<div class="gallery-empty-category">A Emilly ainda não adicionou fotos nesta categoria.</div>'}`;
+    $$('.category-photo-open').forEach(btn=>btn.onclick=()=>openGalleryLightbox(btn.dataset.src,btn.dataset.title));
   };
-  $$('#albumThumbs .album-thumb').forEach(b=>b.onclick=()=>apply(Number(b.dataset.i)));
-  document.querySelector('[data-album] .album-nav.prev')?.addEventListener('click',()=>apply(albumIndex-1));
-  document.querySelector('[data-album] .album-nav.next')?.addEventListener('click',()=>apply(albumIndex+1));
-  apply(0);
+  $$('#galleryCategoryTabs .gallery-tab').forEach(btn=>btn.onclick=()=>renderCategory(btn.dataset.category));
+  renderCategory(activeGalleryCategory);
+}
+
+function openGalleryLightbox(src,title){
+  let modal=$('#galleryLightbox');
+  if(!modal){
+    modal=document.createElement('div'); modal.id='galleryLightbox'; modal.className='gallery-lightbox';
+    modal.innerHTML='<button class="gallery-lightbox-close" type="button" aria-label="Fechar">×</button><div class="gallery-lightbox-inner"><img alt=""><b></b></div>';
+    document.body.appendChild(modal);
+    modal.querySelector('.gallery-lightbox-close').onclick=()=>modal.classList.remove('open');
+    modal.onclick=e=>{if(e.target===modal)modal.classList.remove('open');};
+  }
+  modal.querySelector('img').src=src; modal.querySelector('img').alt=title||'Resultado'; modal.querySelector('b').textContent=title||'Resultado'; modal.classList.add('open');
 }

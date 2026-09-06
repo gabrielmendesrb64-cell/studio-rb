@@ -519,3 +519,15 @@ dialog h2{
   .notification-status{grid-template-columns:1fr!important}
 }
 @media(max-width:390px){.gallery-editor{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.booking-actions{grid-template-columns:1fr}}
+
+
+/* V11 — categorias do portfólio */
+.gallery-category-manager{margin:0 0 18px;padding:16px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:#0d0b0e}
+.gallery-category-manager-head b{display:block;font-size:15px}.gallery-category-manager-head small{display:block;color:#bfa9b3;margin-top:4px;line-height:1.45}
+.gallery-category-add{display:grid;grid-template-columns:1fr auto;gap:9px;margin:13px 0}.gallery-category-add input,.gallery-upload-form select,.gallery-admin-item select,.gallery-category-row input{background:#0f0d10;border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:12px;color:#fff;min-width:0}
+.gallery-categories-editor{display:grid;gap:8px}.gallery-category-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}.gallery-category-row input{width:100%}
+.gallery-admin-category{display:inline-flex;margin-top:7px;padding:5px 8px;border-radius:999px;background:rgba(247,166,197,.10);color:#ffb4d0;font-size:10px;font-weight:700}
+.gallery-move-select{width:100%;font-size:12px}.gallery-admin-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.gallery-upload-form{grid-template-columns:1.05fr .85fr 1fr 1.15fr auto}
+@media(max-width:900px){.gallery-upload-form{grid-template-columns:1fr 1fr}.gallery-upload-form .upload-drop{grid-column:1/-1}.gallery-category-row{grid-template-columns:1fr auto auto}}
+@media(max-width:620px){.gallery-category-add,.gallery-category-row,.gallery-upload-form{grid-template-columns:1fr!important}.gallery-category-row .mini-btn{width:100%}.gallery-admin-actions{grid-template-columns:1fr 1fr}}

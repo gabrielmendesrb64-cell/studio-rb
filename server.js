@@ -109,9 +109,13 @@ async function initDb() {
     );
   }
   const current = await pgPool.query("SELECT value FROM lsh_state WHERE key='config'");
-  if (current.rows[0] && current.rows[0].value && current.rows[0].value.gallery === undefined) {
-    current.rows[0].value.gallery = defaults.config.gallery || [];
-    await pgPool.query("UPDATE lsh_state SET value=$1::jsonb, updated_at=NOW() WHERE key='config'", [JSON.stringify(current.rows[0].value)]);
+  if (current.rows[0] && current.rows[0].value) {
+    const before = JSON.stringify(current.rows[0].value);
+    if (current.rows[0].value.gallery === undefined) current.rows[0].value.gallery = defaults.config.gallery || [];
+    normalizeGalleryConfig(current.rows[0].value);
+    if (JSON.stringify(current.rows[0].value) !== before) {
+      await pgPool.query("UPDATE lsh_state SET value=$1::jsonb, updated_at=NOW() WHERE key='config'", [JSON.stringify(current.rows[0].value)]);
+    }
   }
   dbReady = true;
 }
@@ -143,6 +147,26 @@ function escapeHtml(s) { return String(s).replace(/[&<>"']/g, m => ({ '&':'&amp;
 function auth(req, res, next) { if (req.session.admin) return next(); res.status(401).json({ error: 'Não autorizado' }); }
 function normalizeName(v) { return String(v || '').trim().toLocaleLowerCase('pt-BR').replace(/\s+/g, ' '); }
 function moneyBRL(v) { return Number(v || 0).toLocaleString('pt-BR', { style:'currency', currency:'BRL' }); }
+function galleryDefaults() { return [
+  { id:'cilios', name:'Cílios', active:true },
+  { id:'sobrancelhas', name:'Sobrancelhas', active:true },
+  { id:'labios', name:'Lábios', active:true },
+  { id:'epilacao', name:'Epilação', active:true }
+]; }
+function normalizeGalleryConfig(c) {
+  c.galleryCategories = Array.isArray(c.galleryCategories) && c.galleryCategories.length ? c.galleryCategories : galleryDefaults();
+  c.galleryCategories = c.galleryCategories.slice(0,12).map((x,i)=>({
+    id:String(x.id || `categoria-${i+1}`).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,50) || `categoria-${i+1}`,
+    name:String(x.name || `Categoria ${i+1}`).trim().slice(0,50),
+    active:x.active !== false
+  })).filter(x=>x.name.length>=2);
+  if(!c.galleryCategories.length) c.galleryCategories = galleryDefaults();
+  const ids = new Set(c.galleryCategories.map(x=>x.id));
+  const fallback = ids.has('sobrancelhas') ? 'sobrancelhas' : c.galleryCategories[0].id;
+  c.gallery = Array.isArray(c.gallery) ? c.gallery : [];
+  c.gallery.forEach(x=>{ if(!ids.has(String(x.categoryId||''))) x.categoryId=fallback; });
+  return c;
+}
 function timeToMinutes(t) { const [h,m] = String(t).split(':').map(Number); return h * 60 + m; }
 function bookingDuration(b) { return Math.max(15, Number(b.duration || 60)); }
 function overlaps(aStart, aDur, bStart, bDur) { return aStart < bStart + bDur && bStart < aStart + aDur; }
@@ -295,7 +319,7 @@ async function getAvailability(date, duration = 60) {
 }
 
 app.get('/api/config', async (req, res) => {
-  const c = await getState('config');
+  const c = normalizeGalleryConfig(await getState('config'));
   res.json({
     businessName: c.businessName,
     whatsapp: process.env.OWNER_WHATSAPP || c.whatsapp,
@@ -307,8 +331,9 @@ app.get('/api/config', async (req, res) => {
     services: (c.services || []).filter(s => s.active !== false).map(s => ({
       id:s.id, name:s.name, price:s.price, duration:s.duration
     })),
-    gallery: (c.gallery || []).filter(x => x.active !== false).slice(0,20).map(x => ({
-      id:x.id, src:x.src, title:x.title, caption:x.caption
+    galleryCategories: (c.galleryCategories || []).filter(x => x.active !== false).map(x => ({ id:x.id, name:x.name })),
+    gallery: (c.gallery || []).filter(x => x.active !== false).slice(0,60).map(x => ({
+      id:x.id, src:x.src, title:x.title, caption:x.caption, categoryId:x.categoryId
     }))
   });
 });
@@ -430,7 +455,7 @@ app.post('/api/admin/login', loginLimiter, (req, res) => {
 app.post('/api/admin/logout', auth, (req,res) => req.session.destroy(() => res.json({ ok:true })));
 app.get('/api/admin/me', auth, (req,res) => res.json({ ok:true }));
 app.get('/api/admin/bookings', auth, async (req,res) => res.json({ bookings: await getState('bookings') }));
-app.get('/api/admin/config', auth, async (req,res) => res.json({ config: await getState('config') }));
+app.get('/api/admin/config', auth, async (req,res) => res.json({ config: normalizeGalleryConfig(await getState('config')) }));
 
 app.patch('/api/admin/bookings/:id', auth, async (req,res) => {
   const allowed = ['Pendente','Confirmado','Concluído','Cancelado'];
@@ -499,18 +524,60 @@ app.put('/api/admin/services', auth, async (req,res) => {
   res.json({ ok:true, services:cleaned });
 });
 
+
+app.post('/api/admin/gallery-categories', auth, async (req,res) => {
+  const cfg = normalizeGalleryConfig(await getState('config'));
+  if (cfg.galleryCategories.length >= 12) return res.status(409).json({ error:'Limite de 12 categorias atingido.' });
+  const name = String(req.body.name || '').trim().slice(0,50);
+  if (name.length < 2) return res.status(400).json({ error:'Digite um nome para a categoria.' });
+  if (cfg.galleryCategories.some(x => x.name.toLocaleLowerCase('pt-BR') === name.toLocaleLowerCase('pt-BR'))) return res.status(409).json({ error:'Essa categoria já existe.' });
+  const base = name.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,32) || 'categoria';
+  let id=base, n=2; while(cfg.galleryCategories.some(x=>x.id===id)) id=`${base}-${n++}`;
+  const item={ id, name, active:true };
+  cfg.galleryCategories.push(item);
+  await setState('config', cfg);
+  res.status(201).json({ ok:true, item });
+});
+
+app.put('/api/admin/gallery-categories/:id', auth, async (req,res) => {
+  const cfg = normalizeGalleryConfig(await getState('config'));
+  const item = cfg.galleryCategories.find(x => x.id === req.params.id);
+  if (!item) return res.status(404).json({ error:'Categoria não encontrada.' });
+  const name = String(req.body.name || '').trim().slice(0,50);
+  if (name.length < 2) return res.status(400).json({ error:'Nome inválido.' });
+  item.name=name;
+  await setState('config', cfg);
+  res.json({ ok:true, item });
+});
+
+app.delete('/api/admin/gallery-categories/:id', auth, async (req,res) => {
+  const cfg = normalizeGalleryConfig(await getState('config'));
+  if (cfg.galleryCategories.length <= 1) return res.status(409).json({ error:'Mantenha pelo menos uma categoria.' });
+  const idx=cfg.galleryCategories.findIndex(x=>x.id===req.params.id);
+  if(idx<0) return res.status(404).json({ error:'Categoria não encontrada.' });
+  const removed=cfg.galleryCategories[idx];
+  const fallback=cfg.galleryCategories.find(x=>x.id!==removed.id);
+  cfg.galleryCategories.splice(idx,1);
+  (cfg.gallery||[]).forEach(x=>{ if(x.categoryId===removed.id) x.categoryId=fallback.id; });
+  await setState('config', cfg);
+  res.json({ ok:true, movedTo:fallback.id });
+});
+
 app.post('/api/admin/gallery', auth, async (req,res) => {
   const src = String(req.body.image || '');
   if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(src)) return res.status(400).json({ error:'Imagem inválida.' });
   if (Buffer.byteLength(src, 'utf8') > 750 * 1024) return res.status(413).json({ error:'A foto ficou muito grande. Escolha outra imagem.' });
-  const cfg = await getState('config');
+  const cfg = normalizeGalleryConfig(await getState('config'));
   cfg.gallery = Array.isArray(cfg.gallery) ? cfg.gallery : [];
-  if (cfg.gallery.length >= 20) return res.status(409).json({ error:'Limite de 20 fotos atingido.' });
+  if (cfg.gallery.length >= 60) return res.status(409).json({ error:'Limite de 60 fotos atingido.' });
+  const categoryId = String(req.body.categoryId || '').trim();
+  if (!cfg.galleryCategories.some(x => x.id === categoryId)) return res.status(400).json({ error:'Escolha uma categoria válida.' });
   const item = {
     id: crypto.randomUUID(),
     src,
     title: String(req.body.title || `Resultado ${cfg.gallery.length + 1}`).trim().slice(0,80),
     caption: String(req.body.caption || 'Trabalho realizado pela Emilly').trim().slice(0,180),
+    categoryId,
     active: true
   };
   cfg.gallery.push(item);
@@ -535,6 +602,11 @@ app.put('/api/admin/gallery/:id', auth, async (req,res) => {
   if (!item) return res.status(404).json({ error:'Foto não encontrada.' });
   item.title = String(req.body.title || item.title || '').trim().slice(0,80);
   item.caption = String(req.body.caption || item.caption || '').trim().slice(0,180);
+  if (req.body.categoryId !== undefined) {
+    const categoryId = String(req.body.categoryId || '').trim();
+    if (!cfg.galleryCategories.some(x => x.id === categoryId)) return res.status(400).json({ error:'Categoria inválida.' });
+    item.categoryId = categoryId;
+  }
   item.active = req.body.active !== false;
   await setState('config', cfg);
   res.json({ ok:true, item });

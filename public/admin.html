@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Painel • Lash Studio RB</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="admin.css?v=9">
+  <link rel="stylesheet" href="admin.css?v=11">
   <link rel="icon" href="assets/logo-premium-v4.svg">
 </head>
 <body class="admin-body">
@@ -141,12 +141,21 @@
           <div class="panel-head">
             <div><span class="eyebrow">PORTFÓLIO</span><h2>Fotos do site</h2><p class="panel-desc">Adicione ou exclua as fotos que aparecem em “Resultados”. No celular elas aparecem em uma grade premium, com a foto limpa e o nome abaixo. Você pode adicionar e excluir quando quiser.</p></div>
           </div>
+          <div class="gallery-category-manager">
+            <div class="gallery-category-manager-head"><div><b>Abas / categorias</b><small>Crie, renomeie ou exclua categorias como Cílios, Sobrancelhas, Lábios e outras.</small></div></div>
+            <form id="addGalleryCategoryForm" class="gallery-category-add">
+              <input id="newGalleryCategoryName" maxlength="50" placeholder="Nome da nova aba, ex.: Limpeza de Pele">
+              <button class="btn btn-ghost" type="submit">＋ CRIAR ABA</button>
+            </form>
+            <div id="galleryCategoriesEditor" class="gallery-categories-editor"></div>
+          </div>
           <form id="galleryUploadForm" class="gallery-upload-form">
             <label class="upload-drop">
               <input id="galleryPhoto" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required>
               <span>＋ Escolher foto</span>
               <small>JPG, PNG ou WEBP • máximo 3 MB</small>
             </label>
+            <select id="galleryCategory" name="category" required><option value="">Escolha a categoria</option></select>
             <input id="galleryTitle" name="title" placeholder="Título da foto (opcional)" maxlength="80">
             <input id="galleryCaption" name="caption" placeholder="Descrição curta (opcional)" maxlength="180">
             <button class="btn btn-pink" type="submit">ADICIONAR FOTO</button>
@@ -179,6 +188,6 @@
     </form>
   </dialog>
 
-  <script src="admin-v9.js?v=9"></script>
+  <script src="admin-v9.js?v=11"></script>
 </body>
 </html>

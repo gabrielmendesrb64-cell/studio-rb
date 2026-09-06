@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <meta name="theme-color" content="#090909"/>
+  <meta name="theme-color" content="#f8edf2"/>
   <meta name="description" content="Lash Studio RB Emilly — Lash design, beleza, cuidado e resultados que transformam."/>
   <meta property="og:title" content="Lash Studio RB Emilly"/>
   <meta property="og:description" content="Realce sua beleza com quem entende de detalhes."/>
   <title>Lash Studio RB Emilly — Beleza Premium</title>
   <link rel="icon" href="assets/logo-premium-v4.svg?v=4"/>
-  <link rel="stylesheet" href="lsh-premium-v4.css?v=10"/>
+  <link rel="stylesheet" href="lsh-premium-v4.css?v=11"/>
 
 </head>
 <body class="premium">
@@ -127,36 +127,18 @@
       </div>
     </section>
 
-    <section class="section results-premium" id="resultados">
+    <section class="section results-premium results-categories" id="resultados">
       <div class="section-head center light reveal">
-        <h2>Resultados reais</h2>
-        <p>Uma apresentação mais delicada e bonita, em formato de álbum interativo.</p>
+        <span class="eyebrow">PORTFÓLIO DA EMILLY</span>
+        <h2>Conheça meus trabalhos</h2>
+        <p>Escolha uma categoria e veja os resultados organizados por procedimento.</p>
       </div>
 
-      <div class="album-shell reveal" data-album>
-        <div class="album-preview">
-          <div class="album-main-frame">
-            <img id="albumMainImage" src="assets/depois-01.webp" alt="Resultado Lash Studio RB">
-            <button class="album-nav prev" type="button" aria-label="Foto anterior">‹</button>
-            <button class="album-nav next" type="button" aria-label="Próxima foto">›</button>
-            <div class="album-main-overlay">
-              <span class="album-mini-tag" id="albumMainTag">ÁLBUM LASH</span>
-              <h3 id="albumMainTitle">Acabamento delicado e elegante</h3>
-              <p id="albumMainText">Selecione uma foto abaixo para navegar pelo álbum de resultados da Emilly.</p>
-            </div>
-          </div>
-        </div>
-
-        <aside class="album-sidebar">
-          <div class="album-copy-card">
-            <span class="eyebrow">PORTFÓLIO</span>
-            <h3>Portfólio da Emilly</h3>
-            <p>Fotos escolhidas e atualizadas pela Emilly. No celular, o foco fica totalmente na imagem e o texto aparece separado para não cobrir o trabalho.</p>
-            <div class="album-counter"><b id="albumCurrent">01</b><span id="albumTotal">/ 00</span></div>
-          </div>
-
-          <div class="album-thumbs" id="albumThumbs"><div class="booking-alert">Carregando fotos...</div></div>
-        </aside>
+      <div class="gallery-tabs-wrap reveal">
+        <div class="gallery-category-tabs" id="galleryCategoryTabs" role="tablist" aria-label="Categorias do portfólio"></div>
+      </div>
+      <div class="gallery-category-content reveal" id="galleryCategoryContent">
+        <div class="booking-alert">Carregando portfólio...</div>
       </div>
     </section>
 
@@ -278,6 +260,6 @@
     <a href="admin.html" class="admin-link">Área da proprietária</a>
   </footer>
 
-  <script src="lsh-premium-v9.js?v=10" defer></script>
+  <script src="lsh-premium-v9.js?v=11" defer></script>
 </body>
 </html>

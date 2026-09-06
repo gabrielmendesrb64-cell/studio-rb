@@ -60,20 +60,45 @@
       "src": "assets/depois-01.webp",
       "title": "Resultado 01",
       "caption": "Acabamento delicado e elegante",
-      "active": true
+      "active": true,
+      "categoryId": "sobrancelhas"
     },
     {
       "id": "resultado-2",
       "src": "assets/resultado-02.webp",
       "title": "Resultado 02",
       "caption": "Natural e sofisticado",
-      "active": true
+      "active": true,
+      "categoryId": "sobrancelhas"
     },
     {
       "id": "resultado-3",
       "src": "assets/resultado-03.webp",
       "title": "Resultado 03",
       "caption": "Mais um trabalho da Emilly",
+      "active": true,
+      "categoryId": "sobrancelhas"
+    }
+  ],
+  "galleryCategories": [
+    {
+      "id": "cilios",
+      "name": "Cílios",
+      "active": true
+    },
+    {
+      "id": "sobrancelhas",
+      "name": "Sobrancelhas",
+      "active": true
+    },
+    {
+      "id": "labios",
+      "name": "Lábios",
+      "active": true
+    },
+    {
+      "id": "epilacao",
+      "name": "Epilação",
       "active": true
     }
   ]

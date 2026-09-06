@@ -161,14 +161,48 @@ check();
 
 
 function renderGallery(){
-  const box=$('#galleryEditor'); if(!box||!adminConfig) return;
+  const box=$('#galleryEditor'), catBox=$('#galleryCategoriesEditor'), select=$('#galleryCategory'); if(!adminConfig) return;
+  const cats=Array.isArray(adminConfig.galleryCategories)?adminConfig.galleryCategories:[];
   const items=Array.isArray(adminConfig.gallery)?adminConfig.gallery:[];
-  box.innerHTML=items.length?items.map(x=>`<article class="gallery-admin-item">
-    <img src="${esc(x.src)}" alt="${esc(x.title||'Foto do portfólio')}">
-    <div><b>${esc(x.title||'Resultado')}</b><small>${esc(x.caption||'')}</small></div>
-    <button type="button" class="mini-btn danger" onclick="deleteGalleryPhoto('${esc(x.id)}')">Excluir</button>
-  </article>`).join(''):'<div class="booking-alert">Nenhuma foto cadastrada.</div>';
+  const catName=id=>cats.find(c=>c.id===id)?.name||'Sem categoria';
+  if(select){
+    const value=select.value;
+    select.innerHTML='<option value="">Escolha a categoria</option>'+cats.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+    if(cats.some(c=>c.id===value))select.value=value;
+  }
+  if(catBox){
+    catBox.innerHTML=cats.map(c=>`<div class="gallery-category-row">
+      <input value="${esc(c.name)}" maxlength="50" aria-label="Nome da categoria ${esc(c.name)}">
+      <button type="button" class="mini-btn" onclick="renameGalleryCategory('${esc(c.id)}',this)">Salvar nome</button>
+      <button type="button" class="mini-btn danger" onclick="deleteGalleryCategory('${esc(c.id)}')">Excluir aba</button>
+    </div>`).join('')||'<div class="booking-alert">Nenhuma categoria criada.</div>';
+  }
+  if(box){
+    box.innerHTML=items.length?items.map(x=>`<article class="gallery-admin-item">
+      <img src="${esc(x.src)}" alt="${esc(x.title||'Foto do portfólio')}">
+      <div><b>${esc(x.title||'Resultado')}</b><small>${esc(x.caption||'')}</small><span class="gallery-admin-category">${esc(catName(x.categoryId))}</span></div>
+      <select class="gallery-move-select" data-id="${esc(x.id)}">${cats.map(c=>`<option value="${esc(c.id)}" ${c.id===x.categoryId?'selected':''}>${esc(c.name)}</option>`).join('')}</select>
+      <div class="gallery-admin-actions"><button type="button" class="mini-btn" onclick="moveGalleryPhoto('${esc(x.id)}',this)">Mover</button><button type="button" class="mini-btn danger" onclick="deleteGalleryPhoto('${esc(x.id)}')">Excluir</button></div>
+    </article>`).join(''):'<div class="booking-alert">Nenhuma foto cadastrada.</div>';
+  }
 }
+
+$('#addGalleryCategoryForm')?.addEventListener('submit',async e=>{
+  e.preventDefault(); const input=$('#newGalleryCategoryName'); const name=input.value.trim(); if(name.length<2){toast('Digite o nome da nova aba.','error');return;}
+  try{await api('/api/admin/gallery-categories',{method:'POST',body:JSON.stringify({name})});input.value='';toast('Nova aba criada.');await refresh();}catch(err){toast(err.message,'error');}
+});
+window.renameGalleryCategory=async(id,btn)=>{
+  const input=btn.closest('.gallery-category-row').querySelector('input');
+  try{await api('/api/admin/gallery-categories/'+encodeURIComponent(id),{method:'PUT',body:JSON.stringify({name:input.value.trim()})});toast('Nome da aba atualizado.');await refresh();}catch(e){toast(e.message,'error');}
+};
+window.deleteGalleryCategory=async id=>{
+  if(!confirm('Excluir esta aba? As fotos dela serão movidas para outra categoria.'))return;
+  try{await api('/api/admin/gallery-categories/'+encodeURIComponent(id),{method:'DELETE'});toast('Aba excluída.');await refresh();}catch(e){toast(e.message,'error');}
+};
+window.moveGalleryPhoto=async(id,btn)=>{
+  const select=btn.closest('.gallery-admin-item').querySelector('.gallery-move-select');
+  try{await api('/api/admin/gallery/'+encodeURIComponent(id),{method:'PUT',body:JSON.stringify({categoryId:select.value})});toast('Foto movida para outra aba.');await refresh();}catch(e){toast(e.message,'error');}
+};
 
 async function compressPhoto(file){
   if(!['image/jpeg','image/png','image/webp'].includes(file.type)) throw new Error('Envie JPG, PNG ou WEBP.');
@@ -191,7 +225,7 @@ $('#galleryUploadForm')?.addEventListener('submit', async e=>{
   btn.disabled=true; btn.textContent='OTIMIZANDO...';
   try{
     const image=await compressPhoto(file); btn.textContent='ENVIANDO...';
-    const d=await api('/api/admin/gallery',{method:'POST',body:JSON.stringify({image,title:$('#galleryTitle')?.value||'',caption:$('#galleryCaption')?.value||''})});
+    const d=await api('/api/admin/gallery',{method:'POST',body:JSON.stringify({image,categoryId:$('#galleryCategory')?.value||'',title:$('#galleryTitle')?.value||'',caption:$('#galleryCaption')?.value||''})});
     e.currentTarget.reset(); toast('Foto otimizada e adicionada ao site.'); await refresh();
   }catch(err){toast(err.message,'error');}
   finally{btn.disabled=false;btn.textContent='ADICIONAR FOTO';}

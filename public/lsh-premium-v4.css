@@ -1189,3 +1189,71 @@ img{height:auto}
   .album-thumb img{border-radius:15px!important}
   .album-thumb b{font-size:12px!important}
 }
+
+
+/* ===== V11 LIGHT BEAUTY + PORTFÓLIO POR CATEGORIAS ===== */
+:root{
+  --bg:#f9f1f4;--bg-2:#fff9fb;--card:#ffffff;--card-2:#f7e9ef;--text:#21181c;--muted:#755f69;
+  --pink:#e992b2;--pink-2:#df709b;--pink-3:#f8cfe0;--line:rgba(60,25,39,.10);--shadow:0 18px 55px rgba(90,45,65,.10);
+}
+body.premium{
+  background:linear-gradient(180deg,#fffafd 0%,#f8eef2 46%,#fff 100%)!important;color:var(--text)!important;
+}
+.page-glow{opacity:.11!important}.backdrop-eye{display:none!important}
+.topbar{background:rgba(255,249,251,.90)!important;border-bottom:1px solid rgba(65,29,43,.08)!important;box-shadow:0 8px 28px rgba(72,34,50,.05)}
+.desktop-nav{color:#3a2930!important}.menu-btn{color:#25191e!important}.top-actions .btn-wa{color:#fff!important}
+.mobile-menu{background:rgba(255,247,250,.98)!important;color:#21181c!important}.close-menu{color:#21181c!important}
+.hero:not(:has(.hero-visual)){color:#fff}
+.about-premium-dark,.services-premium,.results-premium,.booking-premium,.my-bookings-section,.contact-premium{background:transparent!important;color:#21181c!important}
+.section-head.light h2,.section-head h2,.booking-v8-head h2,.my-bookings-copy h2{color:#21181c!important}
+.section-head p,.booking-v8-head p,.my-bookings-copy p{color:#765e68!important}
+.eyebrow{color:#c95884!important}
+.service-pill{background:#fff!important;color:#21181c!important;border:1px solid rgba(78,32,49,.09)!important;box-shadow:0 12px 32px rgba(79,38,55,.07)!important}
+.service-pill h3{color:#21181c!important}.service-pill p{color:#806a73!important}.service-pill span{background:#fae3ec!important;color:#cb5d87!important}
+.booking-v8-shell,.booking-step,.my-bookings-shell,.contact-bottom{background:#fff!important;border-color:rgba(67,30,44,.08)!important;box-shadow:0 18px 60px rgba(86,44,61,.07)!important;color:#21181c!important}
+.step-title b,.booking-summary,.summary-head,.summary-total,.my-booking-card{color:#21181c!important}.step-title small,.privacy-note{color:#806a73!important}
+.booking-calendar-box,.booking-summary,.my-booking-card{background:#fff8fb!important;border-color:rgba(91,38,59,.08)!important}
+.field input,.booking-calendar-box input,.my-bookings-search input{background:#fff!important;color:#21181c!important;border:1px solid rgba(76,32,49,.13)!important}
+.time-slot{background:#fff!important;color:#3d2b33!important;border-color:rgba(79,36,52,.12)!important}.time-slot.active{background:#e992b2!important;color:#fff!important}
+.procedure-card{background:#fff8fb!important;border-color:rgba(80,34,51,.10)!important;color:#21181c!important}.procedure-card.active{background:#fce5ee!important;border-color:#df709b!important}
+.contact-meta,.contact-meta p,.contact-quote p,.contact-branding span{color:#4a363e!important}
+.simple-footer{color:#715c65!important;background:#fff!important}
+.bottom-nav{background:rgba(255,252,253,.94)!important;border:1px solid rgba(65,28,42,.10)!important;box-shadow:0 15px 45px rgba(66,31,44,.15)!important;color:#2d2025!important}
+.bottom-nav a{color:#59464e!important}.bottom-nav .bottom-main{background:linear-gradient(180deg,#f3acc5,#e98daf)!important;color:#23181d!important}
+
+.results-categories{padding-top:76px!important}
+.gallery-tabs-wrap{position:sticky;top:82px;z-index:12;margin:0 auto 22px;max-width:960px;padding:10px 0;background:linear-gradient(180deg,rgba(249,241,244,.98),rgba(249,241,244,.90),transparent)}
+.gallery-category-tabs{display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding:4px 3px 9px}.gallery-category-tabs::-webkit-scrollbar{display:none}
+.gallery-tab{flex:0 0 auto;border:1px solid rgba(70,31,46,.11);background:#fff;color:#4b3640;border-radius:999px;padding:11px 18px;font-weight:700;cursor:pointer;transition:.2s;box-shadow:0 8px 22px rgba(73,36,50,.05)}
+.gallery-tab.active{background:#21181c;color:#fff;border-color:#21181c;box-shadow:0 10px 24px rgba(33,24,28,.15)}
+.gallery-category-content{max-width:1060px;margin:0 auto;background:#fff;border:1px solid rgba(70,30,45,.08);border-radius:34px;padding:24px;box-shadow:0 22px 70px rgba(89,45,61,.08)}
+.gallery-category-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:20px;padding:4px 4px 16px;border-bottom:1px solid rgba(74,33,48,.08)}
+.gallery-category-head span{font-size:10px;letter-spacing:.18em;font-weight:800;color:#cc638b}.gallery-category-head h3{font-family:Georgia,serif;font-size:38px;font-weight:500;margin:4px 0 0;color:#21181c}.gallery-category-head small{color:#8a727c}
+.category-photo-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.category-photo-card{min-width:0}.category-photo-open{display:block;width:100%;border:0;background:none;padding:0;cursor:zoom-in}.category-photo-open img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:22px;border:1px solid rgba(70,32,46,.08);box-shadow:0 12px 28px rgba(76,37,52,.08)}
+.category-photo-copy{text-align:center;padding:11px 6px 5px}.category-photo-copy b{display:block;color:#281b20;font-size:15px}.category-photo-copy span{display:block;color:#806a73;font-size:12px;line-height:1.45;margin-top:4px}
+.gallery-empty-category{padding:42px 20px;text-align:center;color:#856f78;background:#fff8fb;border-radius:22px}
+.gallery-lightbox{position:fixed;inset:0;background:rgba(25,17,21,.86);backdrop-filter:blur(12px);z-index:120;display:none;align-items:center;justify-content:center;padding:24px}.gallery-lightbox.open{display:flex}.gallery-lightbox-inner{max-width:min(92vw,760px);max-height:86vh;text-align:center}.gallery-lightbox-inner img{max-height:76vh;max-width:100%;border-radius:24px;box-shadow:0 30px 90px rgba(0,0,0,.45)}.gallery-lightbox-inner b{display:block;color:#fff;margin-top:12px}.gallery-lightbox-close{position:absolute;right:18px;top:max(18px,env(safe-area-inset-top));width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.10);color:#fff;font-size:28px}
+
+@media(max-width:760px){
+  body.premium{background:#f8edf2!important}
+  .topbar{background:rgba(255,247,250,.93)!important}
+  .brand img{filter:none!important}.menu-btn{color:#21181c!important}
+  .hero{background:#181216!important;color:#fff!important}
+  .hero::after{background:linear-gradient(180deg,rgba(18,12,15,.10) 0%,rgba(18,12,15,.18) 26%,rgba(18,12,15,.60) 66%,#181216 100%)!important}
+  .hero p{color:#fff4f8!important}.hero .eyebrow{color:#ffc2d8!important}
+  .about-premium-dark{background:#fff8fb!important}.about-text h2,.about-text p{color:#281c21!important}.about-points div{background:#fff!important;border-color:rgba(65,29,43,.08)!important}.about-points b{color:#2c1e24!important}.about-points span{color:#806a73!important}
+  .services-premium,.results-premium,.booking-premium,.my-bookings-section,.contact-premium{background:#f8edf2!important}
+  .service-pill-grid{grid-template-columns:1fr 1fr!important}
+  .service-pill{background:#fff!important;border-color:rgba(79,34,51,.08)!important}
+  .gallery-tabs-wrap{top:calc(64px + env(safe-area-inset-top));margin-left:-14px;margin-right:-14px;padding:10px 14px 6px;background:rgba(248,237,242,.96)!important;backdrop-filter:blur(10px)}
+  .gallery-category-tabs{padding-bottom:8px}.gallery-tab{padding:10px 15px;font-size:12px}
+  .gallery-category-content{padding:14px;border-radius:28px;box-shadow:none;border-color:rgba(71,30,46,.07)}
+  .gallery-category-head{margin-bottom:14px}.gallery-category-head h3{font-size:32px}.gallery-category-head small{font-size:11px}
+  .category-photo-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .category-photo-open img{border-radius:18px}.category-photo-copy{padding:9px 3px 4px}.category-photo-copy b{font-size:13px}.category-photo-copy span{font-size:10px}
+  .booking-v8-shell,.booking-step,.my-bookings-shell{box-shadow:none!important}
+  .bottom-nav{background:rgba(255,252,253,.96)!important}
+  .whatsapp-float{box-shadow:0 10px 28px rgba(77,35,51,.16)!important}
+}
+@media(max-width:380px){.gallery-category-content{padding:10px}.category-photo-grid{gap:9px}.gallery-category-head h3{font-size:28px}.gallery-tab{padding:9px 13px}}
