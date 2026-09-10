@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#fff7fb">
+  <title>Painel • Lash Studio RB</title>
+  <link rel="stylesheet" href="styles.css?v=17">
+  <link rel="stylesheet" href="admin.css?v=17">
+  <link rel="icon" href="assets/logo-premium-v4.svg?v=17">
+</head>
+<body class="admin-body admin-v15">
+  <header class="admin-top">
+    <a class="admin-brand" href="/">
+      <img src="assets/logo-premium-v4.svg?v=17" alt="Lash Studio RB">
+      <div><b>Lash Studio RB</b><small>Painel da Emilly</small></div>
+    </a>
+    <button id="logoutBtn" class="btn btn-ghost hidden" type="button">Sair</button>
+  </header>
+
+  <main class="admin-main">
+    <section id="loginView" class="login-wrap">
+      <div class="login-card">
+        <img src="assets/logo-premium-v4.svg?v=17" alt="Lash Studio RB">
+        <span class="eyebrow">ÁREA DA PROPRIETÁRIA</span>
+        <h1>Entrar no painel</h1>
+        <p>Gerencie agenda, procedimentos, fotos e confirmações em um só lugar.</p>
+        <form id="loginForm">
+          <input name="username" autocomplete="username" placeholder="Usuário" required>
+          <input name="password" type="password" autocomplete="current-password" placeholder="Senha" required>
+          <button class="btn btn-pink full" type="submit">ENTRAR</button>
+        </form>
+        <p id="loginMsg" class="muted"></p>
+      </div>
+    </section>
+
+    <section id="dashboard" class="hidden">
+      <div class="dash-head">
+        <div>
+          <span class="eyebrow">PAINEL LASH</span>
+          <h1>Agenda da Emilly</h1>
+          <p class="dash-sub">Calendário, horários, procedimentos, fotos e notificações.</p>
+        </div>
+        <div class="dash-actions">
+          <button id="backupBtn" class="btn btn-ghost" type="button">↓ Baixar backup</button>
+          <button id="manualBtn" class="btn btn-pink" type="button">＋ Agendamento manual</button>
+        </div>
+      </div>
+
+      <div class="stats" id="stats"></div>
+
+      <section class="panel-card calendar-card calendar-card-wide">
+        <div class="calendar-wide-grid">
+          <div>
+            <div class="calendar-top">
+              <button id="prevMonth" class="circle-btn" type="button">‹</button>
+              <div class="calendar-title"><span class="eyebrow">CALENDÁRIO</span><h2 id="calendarMonthLabel">Mês</h2></div>
+              <button id="nextMonth" class="circle-btn" type="button">›</button>
+            </div>
+            <div class="calendar-weekdays"><span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span><span>Qui</span><span>Sex</span><span>Sáb</span></div>
+            <div id="calendarGrid" class="calendar-grid"></div>
+            <div class="calendar-actions">
+              <button id="todayBtn" class="btn btn-ghost" type="button">Hoje</button>
+              <button id="clearDateBtn" class="btn btn-ghost" type="button">Mostrar todos</button>
+            </div>
+          </div>
+          <aside class="calendar-day-manager">
+            <span class="eyebrow">HORÁRIOS DO DIA</span>
+            <h2 id="calendarSelectedDate">Selecione um dia</h2>
+            <p id="calendarScheduleSource" class="panel-desc">Clique em um dia para liberar horários específicos.</p>
+            <div class="date-time-add">
+              <input id="dateTimeInput" type="time" aria-label="Horário">
+              <button id="addDateTimeBtn" class="btn btn-pink" type="button">＋ Adicionar</button>
+            </div>
+            <div id="dateTimesList" class="date-times-list"></div>
+            <button id="clearDateScheduleBtn" class="btn btn-ghost full" type="button">Usar agenda semanal neste dia</button>
+            <div class="day-bookings-box"><b>Agendamentos desse dia</b><div id="calendarDayBookings"></div></div>
+          </aside>
+        </div>
+      </section>
+
+      <div class="admin-layout admin-layout-v15">
+        <section class="admin-content">
+          <div class="toolbar">
+            <div class="segmented">
+              <button class="active" data-filter="all" type="button">Todos</button>
+              <button data-filter="Pendente" type="button">Pendentes</button>
+              <button data-filter="Confirmado" type="button">Confirmados</button>
+              <button data-filter="Concluído" type="button">Concluídos</button>
+              <button data-filter="Cancelado" type="button">Cancelados</button>
+            </div>
+            <div class="toolbar-right"><input type="date" id="filterDate" aria-label="Filtrar data"></div>
+          </div>
+          <div class="panel-card bookings-panel">
+            <div class="panel-head"><div><span class="eyebrow">AGENDA</span><h2>Agendamentos</h2></div><div class="selected-date" id="selectedDateLabel">Todos os dias</div></div>
+            <div id="bookingList" class="booking-list"></div>
+          </div>
+        </section>
+
+        <aside class="admin-sidebar">
+          <div class="panel-card">
+            <div class="panel-head"><div><span class="eyebrow">BLOQUEIOS</span><h2>Bloquear horário</h2><p class="panel-desc">Use para uma exceção pontual sem apagar sua agenda.</p></div></div>
+            <div class="stack"><input type="date" id="blockDate"><input type="time" id="blockTime"><button id="blockBtn" class="btn btn-pink" type="button">Bloquear horário</button></div>
+            <h3>Bloqueios ativos</h3><div id="blocksList" class="blocks-list"></div>
+          </div>
+
+          <div class="panel-card notifications-settings compact-notify">
+            <div class="panel-head"><div><span class="eyebrow">SISTEMA</span><h2>Notificações</h2></div></div>
+            <div id="notificationStatus" class="notification-status"></div>
+            <button id="testEmailBtn" class="btn btn-pink full" type="button">Testar e-mail agora</button>
+          </div>
+        </aside>
+      </div>
+
+      <section class="admin-settings-grid">
+        <div class="panel-card settings-card schedule-settings">
+          <div class="panel-head"><div><span class="eyebrow">AGENDA SEMANAL</span><h2>Horários padrão</h2><p class="panel-desc">São os horários que se repetem toda semana. Ao adicionar ou remover, o painel já salva automaticamente.</p></div><span id="scheduleSaveState" class="save-state">Salvo</span></div>
+          <div id="scheduleEditor" class="schedule-editor"></div>
+        </div>
+
+        <div class="panel-card settings-card services-settings">
+          <div class="panel-head">
+            <div><span class="eyebrow">PROCEDIMENTOS</span><h2>Serviços e valores</h2><p class="panel-desc">Para aparecer e poder ser escolhido no site, o procedimento precisa estar ativo e ter um valor definido.</p></div>
+            <div class="panel-actions"><button id="addServiceBtn" class="btn btn-ghost" type="button">＋ Procedimento</button><button id="saveServicesBtn" class="btn btn-pink" type="button">Salvar procedimentos</button></div>
+          </div>
+          <div id="servicesEditor" class="services-editor"></div>
+        </div>
+
+        <div class="panel-card settings-card gallery-settings">
+          <div class="panel-head"><div><span class="eyebrow">PORTFÓLIO</span><h2>Fotos do site</h2><p class="panel-desc">Adicione, mova e exclua fotos. Adicione, mova e exclua fotos do portfólio.</p></div></div>
+          <div class="gallery-category-manager">
+            <div class="gallery-category-manager-head"><div><b>Abas / categorias</b><small>Cílios, Sobrancelhas, Lábios e qualquer outra categoria que quiser criar.</small></div></div>
+            <form id="addGalleryCategoryForm" class="gallery-category-add"><input id="newGalleryCategoryName" maxlength="50" placeholder="Nova categoria"><button class="btn btn-ghost" type="submit">＋ CRIAR ABA</button></form>
+            <div id="galleryCategoriesEditor" class="gallery-categories-editor"></div>
+          </div>
+          <form id="galleryUploadForm" class="gallery-upload-form">
+            <label class="upload-drop"><input id="galleryPhoto" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required><span>＋ Escolher foto</span><small>JPG, PNG ou WEBP</small></label>
+            <select id="galleryCategory" required><option value="">Escolha a categoria</option></select>
+            <input id="galleryTitle" placeholder="Título da foto (opcional)" maxlength="80">
+            <input id="galleryCaption" placeholder="Descrição curta (opcional)" maxlength="180">
+            <button class="btn btn-pink" type="submit">ADICIONAR FOTO</button>
+          </form>
+          <div id="galleryEditor" class="gallery-editor"></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div id="adminToast" class="admin-toast" role="status"></div>
+
+  <dialog id="manualDialog">
+    <form id="manualForm">
+      <h2>Novo agendamento</h2>
+      <input name="name" placeholder="Nome da cliente" required>
+      <input name="phone" placeholder="Telefone / WhatsApp" required>
+      <input name="email" type="email" placeholder="E-mail da cliente (opcional)">
+      <input name="date" type="date" required>
+      <input name="time" type="time" required>
+      <div class="dialog-actions"><button id="cancelManual" type="button" class="btn btn-ghost">Cancelar</button><button class="btn btn-pink" id="saveManual" type="submit">Salvar</button></div>
+    </form>
+  </dialog>
+
+  <script src="admin-v17.js?v=17" defer></script>
+</body>
+</html>

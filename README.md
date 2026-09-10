@@ -1,26 +1,47 @@
-# Lash Studio RB — V15 Production Ready
+# Lash Studio RB — V17 DATABASE PRODUCTION
 
-Versão revisada para começar a usar com clientes.
+Versão preparada para produção com PostgreSQL persistente.
 
-## Correções principais
-- Horários semanais: o botão **+ Horário** agora salva imediatamente no servidor; não depende de um segundo botão.
-- Calendário grande no painel: clique em qualquer dia e libere horários específicos daquela data.
-- Horários específicos por data substituem o padrão semanal apenas naquele dia.
-- Procedimentos: novo procedimento só é salvo como ativo quando nome, valor e duração são válidos. Após salvar, já fica disponível para seleção no site.
-- Teste de e-mail: verifica a conexão SMTP antes do envio e mostra mensagens mais claras para senha de app/login/porta.
-- Painel admin redesenhado em rosa/branco, no mesmo padrão visual da área das clientes.
-- Galeria: mover/excluir fotos e categorias com o novo JS do painel, evitando cache antigo.
-- Cache/PWA antigo é removido para evitar o navegador carregar scripts velhos.
-- Backup manual: botão **Baixar backup** exporta agenda, configurações, procedimentos e fotos.
-- Aviso de produção no painel mostra claramente se o armazenamento está em PostgreSQL ou JSON temporário.
+## O que mudou
+- PostgreSQL relacional para agendamentos, procedimentos, horários semanais, horários por data, bloqueios, categorias e fotos.
+- Migração automática dos dados antigos da tabela `lsh_state` ou dos JSON locais quando o banco estiver vazio.
+- Em produção, se o PostgreSQL não estiver conectado, o painel NÃO finge que salvou: alterações retornam erro e nada é gravado em arquivo temporário.
+- Removido do painel o aviso visual sobre database/JSON.
+- Corrigido falso “horário salvo” quando a gravação falhava.
+- Tratamento melhor de erros assíncronos.
+- Upload de foto com limite maior e até 100 fotos.
+- Cache do painel atualizado para V17.
+- SMTP mantido, com mensagem de diagnóstico compatível com a porta configurada.
 
-## IMPORTANTE antes de usar com clientes
-No Render, configure `DATABASE_URL` com PostgreSQL. Sem PostgreSQL o Render pode perder alterações feitas em JSON após reinício ou novo deploy.
+## Render
+Variável obrigatória para persistência:
+`DATABASE_URL=<Internal Database URL do PostgreSQL do Render>`
 
-O e-mail automático usa `SMTP_USER`, `SMTP_PASS`, `OWNER_EMAIL` e demais variáveis do `.env.example` configuradas no Render.
+Também mantenha:
+- NODE_ENV=production
+- SESSION_SECRET
+- ADMIN_USER
+- ADMIN_PASSWORD
+- OWNER_EMAIL
+- OWNER_WHATSAPP
+- SMTP_HOST
+- SMTP_PORT
+- SMTP_SECURE
+- SMTP_SERVICE
+- SMTP_USER
+- SMTP_PASS
+- SMTP_FROM
 
-WhatsApp automático exige Meta WhatsApp Cloud API. Sem ela, o botão manual de WhatsApp continua disponível no painel.
+## Banco
+O arquivo `database.sql` está na raiz. O `server.js` cria as tabelas automaticamente ao iniciar.
+Não é necessário executar o SQL manualmente se `DATABASE_URL` estiver correta.
 
 ## Deploy
-Suba o conteúdo desta pasta no mesmo repositório GitHub e faça novo deploy no Render.
-Não envie `.env` nem `node_modules`.
+Build: `npm install`
+Start: `npm start`
+
+Depois do deploy, confira os Logs. Deve aparecer:
+`[DATABASE] PostgreSQL conectado e pronto.`
+
+## Segurança
+Nunca envie `.env`, SMTP_PASS, ADMIN_PASSWORD ou DATABASE_URL para GitHub público.

@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const express = require('express');
+require('express-async-errors');
 const session = require('express-session');
 const MemoryStoreFactory = require('memorystore');
 const helmet = require('helmet');
@@ -38,7 +39,7 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'same-origin' }
 }));
 app.use(compression());
-app.use(express.json({ limit: '900kb' }));
+app.use(express.json({ limit: '2mb' }));
 app.use((req, res, next) => {
   res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.set('Pragma', 'no-cache');
@@ -79,8 +80,12 @@ app.use('/api/admin', sameOriginWrite);
 
 const pgPool = process.env.DATABASE_URL ? new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: 8,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000
 }) : null;
+
 let dbReady = false;
 
 function readJson(p, fallback) {
@@ -89,55 +94,303 @@ function readJson(p, fallback) {
 function writeJson(p, data) {
   fs.writeFileSync(p, JSON.stringify(data, null, 2), 'utf8');
 }
-async function initDb() {
-  if (!pgPool) return;
-  await pgPool.query(`
-    CREATE TABLE IF NOT EXISTS lsh_state (
-      key TEXT PRIMARY KEY,
-      value JSONB NOT NULL,
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
-  `);
-  const defaults = {
-    config: readJson(cfgPath, {}),
-    bookings: readJson(bookingsPath, [])
-  };
-  for (const [key, value] of Object.entries(defaults)) {
-    await pgPool.query(
-      'INSERT INTO lsh_state(key,value) VALUES($1,$2::jsonb) ON CONFLICT (key) DO NOTHING',
-      [key, JSON.stringify(value)]
-    );
-  }
-  const current = await pgPool.query("SELECT value FROM lsh_state WHERE key='config'");
-  if (current.rows[0] && current.rows[0].value) {
-    const before = JSON.stringify(current.rows[0].value);
-    if (current.rows[0].value.gallery === undefined) current.rows[0].value.gallery = defaults.config.gallery || [];
-    normalizeGalleryConfig(current.rows[0].value);
-    if (JSON.stringify(current.rows[0].value) !== before) {
-      await pgPool.query("UPDATE lsh_state SET value=$1::jsonb, updated_at=NOW() WHERE key='config'", [JSON.stringify(current.rows[0].value)]);
-    }
-  }
-  dbReady = true;
-}
-async function getState(key) {
-  if (pgPool && dbReady) {
-    const r = await pgPool.query('SELECT value FROM lsh_state WHERE key=$1', [key]);
-    if (r.rows[0]) return r.rows[0].value;
-  }
-  return key === 'config' ? readJson(cfgPath, {}) : readJson(bookingsPath, []);
-}
-async function setState(key, value) {
-  if (pgPool && dbReady) {
-    await pgPool.query(
-      `INSERT INTO lsh_state(key,value,updated_at) VALUES($1,$2::jsonb,NOW())
-       ON CONFLICT (key) DO UPDATE SET value=EXCLUDED.value, updated_at=NOW()`,
-      [key, JSON.stringify(value)]
-    );
-    return;
-  }
-  writeJson(key === 'config' ? cfgPath : bookingsPath, value);
+
+async function dbTableExists(client, name) {
+  const r = await client.query('SELECT to_regclass($1) AS table_name', [name]);
+  return !!r.rows[0]?.table_name;
 }
 
+async function readRelationalConfig(client = pgPool) {
+  const defaults = normalizeGalleryConfig(readJson(cfgPath, {}));
+  const cfg = { ...defaults };
+
+  const settings = await client.query('SELECT key, value FROM lsh_settings');
+  for (const row of settings.rows) cfg[row.key] = row.value;
+
+  const services = await client.query(
+    'SELECT id,name,price,duration,active FROM lsh_services ORDER BY position,id'
+  );
+  cfg.services = services.rows.map(x => ({
+    id: String(x.id),
+    name: x.name,
+    price: x.price === null ? null : Number(x.price),
+    duration: Number(x.duration || 60),
+    active: x.active !== false
+  }));
+
+  cfg.weeklyHours = { '0':[], '1':[], '2':[], '3':[], '4':[], '5':[], '6':[] };
+  const weekly = await client.query('SELECT weekday,time_value FROM lsh_weekly_hours ORDER BY weekday,time_value');
+  for (const row of weekly.rows) cfg.weeklyHours[String(row.weekday)].push(row.time_value);
+
+  cfg.dateHours = {};
+  const dates = await client.query("SELECT date_value::text AS date_value,time_value FROM lsh_date_hours ORDER BY date_value,time_value");
+  for (const row of dates.rows) (cfg.dateHours[row.date_value] ||= []).push(row.time_value);
+
+  const blockedDates = await client.query("SELECT date_value::text AS date_value FROM lsh_blocked_dates ORDER BY date_value");
+  cfg.blockedDates = blockedDates.rows.map(x => x.date_value);
+
+  const blockedSlots = await client.query("SELECT date_value::text AS date_value,time_value FROM lsh_blocked_slots ORDER BY date_value,time_value");
+  cfg.blockedSlots = blockedSlots.rows.map(x => ({ date:x.date_value, time:x.time_value }));
+
+  const categories = await client.query('SELECT id,name,active FROM lsh_gallery_categories ORDER BY position,id');
+  cfg.galleryCategories = categories.rows.map(x => ({ id:String(x.id), name:x.name, active:x.active !== false }));
+
+  const gallery = await client.query('SELECT id,src,title,caption,category_id,active FROM lsh_gallery ORDER BY position,id');
+  cfg.gallery = gallery.rows.map(x => ({
+    id:String(x.id), src:x.src, title:x.title || '', caption:x.caption || '',
+    categoryId:x.category_id || '', active:x.active !== false
+  }));
+
+  return normalizeGalleryConfig(cfg);
+}
+
+async function writeRelationalConfig(cfg, client = pgPool) {
+  const ownClient = client === pgPool ? await pgPool.connect() : null;
+  const c = ownClient || client;
+  const normalized = normalizeGalleryConfig({ ...cfg });
+
+  try {
+    if (ownClient) await c.query('BEGIN');
+
+    const settingsKeys = ['businessName','whatsapp','email','instagram','tiktok','address','openingHours'];
+    for (const key of settingsKeys) {
+      await c.query(
+        `INSERT INTO lsh_settings(key,value,updated_at) VALUES($1,$2::jsonb,NOW())
+         ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=NOW()`,
+        [key, JSON.stringify(normalized[key] ?? '')]
+      );
+    }
+
+    await c.query('DELETE FROM lsh_services');
+    for (let i=0; i<(normalized.services || []).length; i++) {
+      const s = normalized.services[i];
+      await c.query(
+        `INSERT INTO lsh_services(id,name,price,duration,active,position,updated_at)
+         VALUES($1,$2,$3,$4,$5,$6,NOW())`,
+        [String(s.id), String(s.name), s.price === null || s.price === '' ? null : Number(s.price),
+         Math.max(15, Number(s.duration || 60)), s.active !== false, i]
+      );
+    }
+
+    await c.query('DELETE FROM lsh_weekly_hours');
+    for (let day=0; day<7; day++) {
+      const times = [...new Set(((normalized.weeklyHours || {})[String(day)] || []).map(String).filter(validTime))].sort();
+      for (const time of times) await c.query('INSERT INTO lsh_weekly_hours(weekday,time_value) VALUES($1,$2)', [day,time]);
+    }
+
+    await c.query('DELETE FROM lsh_date_hours');
+    for (const [date, times] of Object.entries(normalized.dateHours || {})) {
+      if (!validDate(date)) continue;
+      for (const time of [...new Set((times || []).map(String).filter(validTime))].sort()) {
+        await c.query('INSERT INTO lsh_date_hours(date_value,time_value) VALUES($1,$2)', [date,time]);
+      }
+    }
+
+    await c.query('DELETE FROM lsh_blocked_dates');
+    for (const date of [...new Set((normalized.blockedDates || []).map(String).filter(validDate))]) {
+      await c.query('INSERT INTO lsh_blocked_dates(date_value) VALUES($1)', [date]);
+    }
+
+    await c.query('DELETE FROM lsh_blocked_slots');
+    for (const slot of normalized.blockedSlots || []) {
+      if (!validDate(String(slot.date)) || !validTime(String(slot.time))) continue;
+      await c.query(
+        'INSERT INTO lsh_blocked_slots(date_value,time_value) VALUES($1,$2) ON CONFLICT DO NOTHING',
+        [slot.date, slot.time]
+      );
+    }
+
+    // gallery first because categories can be renamed/deleted.
+    await c.query('DELETE FROM lsh_gallery');
+    await c.query('DELETE FROM lsh_gallery_categories');
+    for (let i=0; i<(normalized.galleryCategories || []).length; i++) {
+      const cat = normalized.galleryCategories[i];
+      await c.query(
+        `INSERT INTO lsh_gallery_categories(id,name,active,position,updated_at)
+         VALUES($1,$2,$3,$4,NOW())`,
+        [String(cat.id), String(cat.name), cat.active !== false, i]
+      );
+    }
+    for (let i=0; i<(normalized.gallery || []).length; i++) {
+      const item = normalized.gallery[i];
+      await c.query(
+        `INSERT INTO lsh_gallery(id,src,title,caption,category_id,active,position,updated_at)
+         VALUES($1,$2,$3,$4,$5,$6,$7,NOW())`,
+        [String(item.id), String(item.src), String(item.title || ''), String(item.caption || ''),
+         String(item.categoryId || ''), item.active !== false, i]
+      );
+    }
+
+    if (ownClient) await c.query('COMMIT');
+  } catch (err) {
+    if (ownClient) await c.query('ROLLBACK').catch(()=>{});
+    throw err;
+  } finally {
+    ownClient?.release();
+  }
+}
+
+async function readRelationalBookings(client = pgPool) {
+  const br = await client.query(`
+    SELECT id,name,phone,email,date_value::text AS date,time_value AS time,total,duration,status,source,
+           created_at,updated_at,cancelled_at,cancelled_by,notifications
+    FROM lsh_bookings
+    ORDER BY created_at ASC
+  `);
+  const sr = await client.query(`
+    SELECT booking_id,service_id,name,price,duration,position
+    FROM lsh_booking_services
+    ORDER BY booking_id,position
+  `);
+  const servicesByBooking = new Map();
+  for (const row of sr.rows) {
+    if (!servicesByBooking.has(row.booking_id)) servicesByBooking.set(row.booking_id, []);
+    servicesByBooking.get(row.booking_id).push({
+      id: row.service_id || '',
+      name: row.name,
+      price: Number(row.price || 0),
+      duration: Number(row.duration || 60)
+    });
+  }
+  return br.rows.map(row => ({
+    id:String(row.id),
+    name:row.name,
+    phone:row.phone,
+    email:row.email || '',
+    date:row.date,
+    time:row.time,
+    services:servicesByBooking.get(row.id) || [],
+    total:Number(row.total || 0),
+    duration:Number(row.duration || 60),
+    status:row.status,
+    source:row.source,
+    createdAt:row.created_at ? new Date(row.created_at).toISOString() : new Date().toISOString(),
+    ...(row.updated_at ? { updatedAt:new Date(row.updated_at).toISOString() } : {}),
+    ...(row.cancelled_at ? { cancelledAt:new Date(row.cancelled_at).toISOString() } : {}),
+    ...(row.cancelled_by ? { cancelledBy:row.cancelled_by } : {}),
+    notifications:row.notifications || {}
+  }));
+}
+
+async function upsertRelationalBookings(bookings, client = pgPool) {
+  const ownClient = client === pgPool ? await pgPool.connect() : null;
+  const c = ownClient || client;
+  try {
+    if (ownClient) await c.query('BEGIN');
+
+    for (const b of bookings || []) {
+      await c.query(`
+        INSERT INTO lsh_bookings(
+          id,name,phone,email,date_value,time_value,total,duration,status,source,
+          created_at,updated_at,cancelled_at,cancelled_by,notifications
+        ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb)
+        ON CONFLICT(id) DO UPDATE SET
+          name=EXCLUDED.name,phone=EXCLUDED.phone,email=EXCLUDED.email,
+          date_value=EXCLUDED.date_value,time_value=EXCLUDED.time_value,
+          total=EXCLUDED.total,duration=EXCLUDED.duration,status=EXCLUDED.status,
+          source=EXCLUDED.source,updated_at=EXCLUDED.updated_at,
+          cancelled_at=EXCLUDED.cancelled_at,cancelled_by=EXCLUDED.cancelled_by,
+          notifications=EXCLUDED.notifications
+      `, [
+        String(b.id), String(b.name || ''), String(b.phone || ''), String(b.email || ''),
+        String(b.date), String(b.time), Number(b.total || 0), Math.max(15,Number(b.duration || 60)),
+        String(b.status || 'Pendente'), String(b.source || 'site'),
+        b.createdAt || new Date().toISOString(), b.updatedAt || null, b.cancelledAt || null,
+        b.cancelledBy || null, JSON.stringify(b.notifications || {})
+      ]);
+
+      await c.query('DELETE FROM lsh_booking_services WHERE booking_id=$1', [String(b.id)]);
+      for (let i=0; i<(b.services || []).length; i++) {
+        const s = b.services[i];
+        await c.query(`
+          INSERT INTO lsh_booking_services(booking_id,service_id,name,price,duration,position)
+          VALUES($1,$2,$3,$4,$5,$6)
+        `, [
+          String(b.id), String(s.id || ''), String(s.name || 'Procedimento'),
+          Number(s.price || 0), Math.max(15,Number(s.duration || 60)), i
+        ]);
+      }
+    }
+
+    if (ownClient) await c.query('COMMIT');
+  } catch (err) {
+    if (ownClient) await c.query('ROLLBACK').catch(()=>{});
+    throw err;
+  } finally {
+    ownClient?.release();
+  }
+}
+
+async function migrateLegacyData(client) {
+  const already = await client.query("SELECT 1 FROM lsh_migrations WHERE name='v17_relational_import'");
+  if (already.rowCount) return;
+
+  const count = await client.query('SELECT COUNT(*)::int AS count FROM lsh_bookings');
+  const serviceCount = await client.query('SELECT COUNT(*)::int AS count FROM lsh_services');
+
+  let legacyConfig = null;
+  let legacyBookings = null;
+
+  if (await dbTableExists(client, 'lsh_state')) {
+    const old = await client.query("SELECT key,value FROM lsh_state WHERE key IN ('config','bookings')");
+    for (const row of old.rows) {
+      if (row.key === 'config') legacyConfig = row.value;
+      if (row.key === 'bookings') legacyBookings = row.value;
+    }
+  }
+
+  if (!legacyConfig) legacyConfig = readJson(cfgPath, {});
+  if (!legacyBookings) legacyBookings = readJson(bookingsPath, []);
+
+  if (Number(serviceCount.rows[0].count) === 0) await writeRelationalConfig(normalizeGalleryConfig(legacyConfig || {}), client);
+  if (Number(count.rows[0].count) === 0 && Array.isArray(legacyBookings) && legacyBookings.length) {
+    await upsertRelationalBookings(legacyBookings, client);
+  }
+
+  await client.query("INSERT INTO lsh_migrations(name) VALUES('v17_relational_import') ON CONFLICT DO NOTHING");
+}
+
+async function initDb() {
+  if (!pgPool) {
+    console.warn('[DATABASE] DATABASE_URL não configurada. Em produção, alterações não serão aceitas até conectar o PostgreSQL.');
+    return;
+  }
+  const client = await pgPool.connect();
+  try {
+    await client.query('SELECT 1');
+    const ddl = fs.readFileSync(path.join(__dirname, 'database.sql'), 'utf8');
+    await client.query(ddl);
+    await migrateLegacyData(client);
+    dbReady = true;
+    console.log('[DATABASE] PostgreSQL conectado e pronto.');
+  } finally {
+    client.release();
+  }
+}
+
+async function getState(key) {
+  if (pgPool && dbReady) {
+    if (key === 'config') return readRelationalConfig();
+    if (key === 'bookings') return readRelationalBookings();
+  }
+  return key === 'config' ? normalizeGalleryConfig(readJson(cfgPath, {})) : readJson(bookingsPath, []);
+}
+
+async function setState(key, value) {
+  if (pgPool && dbReady) {
+    if (key === 'config') return writeRelationalConfig(value);
+    if (key === 'bookings') return upsertRelationalBookings(value);
+    throw new Error('Estado desconhecido.');
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    const err = new Error('O banco de dados não está conectado. Nenhuma alteração foi salva. Configure DATABASE_URL no Render.');
+    err.code = 'DB_REQUIRED';
+    throw err;
+  }
+
+  writeJson(key === 'config' ? cfgPath : bookingsPath, value);
+}
 function cleanPhone(v) { return String(v || '').replace(/\D/g, ''); }
 function cleanEmail(v) { return String(v || '').trim().toLowerCase(); }
 function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
@@ -194,7 +447,10 @@ function emailTransport() {
   const opts = {
     port: Number(process.env.SMTP_PORT || 587),
     secure: String(process.env.SMTP_SECURE || 'false') === 'true',
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 12000
   };
   if (process.env.SMTP_SERVICE) opts.service = process.env.SMTP_SERVICE;
   else opts.host = process.env.SMTP_HOST || 'smtp.gmail.com';
@@ -211,6 +467,39 @@ async function sendMail({ to, subject, html, verify = false }) {
     html
   });
   return { sent:true };
+}
+function withTimeout(promise, ms, label = 'Operação') {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${label} demorou demais e foi interrompida.`)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
+async function processConfirmationNotification(bookingId) {
+  try {
+    const current = await getState('bookings');
+    const booking = current.find(x => x.id === bookingId);
+    if (!booking || booking.status !== 'Confirmado') return;
+    const notifications = await withTimeout(notifyCustomerConfirmed(booking), 15000, 'Envio da confirmação');
+    const latest = await getState('bookings');
+    const target = latest.find(x => x.id === bookingId);
+    if (!target) return;
+    target.notifications = { ...(target.notifications || {}), confirmation: notifications, confirmedAt: target.notifications?.confirmedAt || new Date().toISOString(), notificationFinishedAt:new Date().toISOString() };
+    await setState('bookings', latest);
+  } catch (e) {
+    console.error('[confirmation-notification]', bookingId, e && e.message ? e.message : e);
+    try {
+      const latest = await getState('bookings');
+      const target = latest.find(x => x.id === bookingId);
+      if (target) {
+        target.notifications = { ...(target.notifications || {}), confirmation: { email:false, whatsapp:false, errors:[String(e && e.message || e)] }, notificationFinishedAt:new Date().toISOString() };
+        await setState('bookings', latest);
+      }
+    } catch (persistErr) {
+      console.error('[confirmation-notification-persist]', persistErr);
+    }
+  }
 }
 async function sendWhatsAppCloud(phone, message) {
   const token = process.env.WHATSAPP_CLOUD_TOKEN;
@@ -339,7 +628,7 @@ app.get('/api/config', async (req, res) => {
       id:s.id, name:s.name, price:s.price, duration:s.duration
     })),
     galleryCategories: (c.galleryCategories || []).filter(x => x.active !== false).map(x => ({ id:x.id, name:x.name })),
-    gallery: (c.gallery || []).filter(x => x.active !== false).slice(0,60).map(x => ({
+    gallery: (c.gallery || []).filter(x => x.active !== false).slice(0,100).map(x => ({
       id:x.id, src:x.src, title:x.title, caption:x.caption, categoryId:x.categoryId
     }))
   });
@@ -473,13 +762,19 @@ app.patch('/api/admin/bookings/:id', auth, async (req,res) => {
   const previous = b.status;
   b.status = req.body.status;
   b.updatedAt = new Date().toISOString();
-  let notifications = null;
-  if (previous !== 'Confirmado' && b.status === 'Confirmado') {
-    notifications = await notifyCustomerConfirmed(b);
-    b.notifications = { ...(b.notifications || {}), confirmation: notifications, confirmedAt:new Date().toISOString() };
+  const shouldNotify = previous !== 'Confirmado' && b.status === 'Confirmado';
+  if (shouldNotify) {
+    b.notifications = { ...(b.notifications || {}), confirmedAt:new Date().toISOString(), notificationPending:true };
   }
+
+  // Salva o status PRIMEIRO. Falha/lentidão do Gmail nunca mais impede a confirmação.
   await setState('bookings', arr);
-  res.json({ booking:b, notifications });
+  res.json({ booking:b, notificationQueued:shouldNotify });
+
+  // O envio acontece depois da resposta do painel.
+  if (shouldNotify) {
+    setImmediate(() => processConfirmationNotification(b.id));
+  }
 });
 
 app.post('/api/admin/bookings', auth, async (req,res) => {
@@ -613,10 +908,10 @@ app.delete('/api/admin/gallery-categories/:id', auth, async (req,res) => {
 app.post('/api/admin/gallery', auth, async (req,res) => {
   const src = String(req.body.image || '');
   if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(src)) return res.status(400).json({ error:'Imagem inválida.' });
-  if (Buffer.byteLength(src, 'utf8') > 750 * 1024) return res.status(413).json({ error:'A foto ficou muito grande. Escolha outra imagem.' });
+  if (Buffer.byteLength(src, 'utf8') > 1400 * 1024) return res.status(413).json({ error:'A foto ficou muito grande. Escolha outra imagem.' });
   const cfg = normalizeGalleryConfig(await getState('config'));
   cfg.gallery = Array.isArray(cfg.gallery) ? cfg.gallery : [];
-  if (cfg.gallery.length >= 60) return res.status(409).json({ error:'Limite de 60 fotos atingido.' });
+  if (cfg.gallery.length >= 100) return res.status(409).json({ error:'Limite de 100 fotos atingido.' });
   const categoryId = String(req.body.categoryId || '').trim();
   if (!cfg.galleryCategories.some(x => x.id === categoryId)) return res.status(400).json({ error:'Escolha uma categoria válida.' });
   const item = {
@@ -692,7 +987,6 @@ app.get('/api/admin/notifications/status', auth, async (req,res) => {
     smtpConfigured: !!emailTransport(),
     ownerEmail: process.env.OWNER_EMAIL || (await getState('config')).email,
     whatsappCloudConfigured: !!(process.env.WHATSAPP_CLOUD_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID),
-    database: pgPool && dbReady ? 'postgres' : 'json',
     smtpUser: process.env.SMTP_USER ? process.env.SMTP_USER.replace(/(^.).*(@.*$)/,'$1***$2') : '',
     smtpPort: Number(process.env.SMTP_PORT || 587),
     smtpSecure: String(process.env.SMTP_SECURE || 'false') === 'true'
@@ -709,7 +1003,7 @@ app.post('/api/admin/notifications/test-email', auth, async (req,res) => {
     const code = String(e.code || '');
     let msg = e.message || 'Falha ao enviar e-mail.';
     if (code === 'EAUTH' || /Invalid login|Username and Password not accepted|authentication/i.test(msg)) msg = 'O Gmail recusou o login. Confira SMTP_USER e use uma SENHA DE APP válida em SMTP_PASS.';
-    else if (/ETIMEDOUT|ECONNECTION|ECONNREFUSED|timeout/i.test(code + ' ' + msg)) msg = 'Não foi possível conectar ao Gmail. Confira SMTP_HOST=smtp.gmail.com, SMTP_PORT=587 e SMTP_SECURE=false.';
+    else if (/ETIMEDOUT|ECONNECTION|ECONNREFUSED|timeout/i.test(code + ' ' + msg)) msg = `Não foi possível conectar ao Gmail. Confira SMTP_HOST, SMTP_PORT e SMTP_SECURE no Render (porta atual: ${process.env.SMTP_PORT || '587'}).`;
     res.status(500).json({ error:msg, code:code || undefined });
   }
 });
@@ -726,12 +1020,18 @@ app.get('/api/admin/backup', auth, async (req,res) => {
 });
 
 app.use((err, req, res, next) => {
-  console.error('Erro:', err.message);
-  res.status(500).json({ error:'Não foi possível concluir esta ação.' });
+  console.error('Erro:', err.stack || err.message);
+  if (err.code === 'DB_REQUIRED') return res.status(503).json({ error:err.message });
+  if (err.code === '23505') return res.status(409).json({ error:'Esse registro já existe.' });
+  if (err.code === '22P02') return res.status(400).json({ error:'Algum dado enviado é inválido.' });
+  res.status(500).json({ error:'Não foi possível concluir esta ação. Tente novamente.' });
 });
 
-app.get('/api/health', async (req,res) => res.json({ ok:true, storage:pgPool && dbReady ? 'postgres' : 'json', email:!!emailTransport() }));
+app.get('/api/health', async (req,res) => res.json({ ok:true, database:!!(pgPool && dbReady), email:!!emailTransport() }));
 
 initDb()
-  .catch(err => console.error('Falha ao iniciar PostgreSQL, usando JSON:', err.message))
+  .catch(err => {
+    dbReady = false;
+    console.error('[DATABASE] Falha ao iniciar PostgreSQL:', err.stack || err.message);
+  })
   .finally(() => app.listen(PORT, () => console.log(`Lash Studio RB disponível em http://localhost:${PORT}`)));
