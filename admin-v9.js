@@ -52,7 +52,7 @@ function renderList(){
   const list=bookings.filter(b=>(currentFilter==='all'||b.status===currentFilter)&&(!date||b.date===date)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
   $('#bookingList').innerHTML=list.length?list.map(b=>{
     const services=(b.services||[]).map(s=>s.name).join(' + ')||'Sem procedimento informado';
-    const confirmMsg=`Olá, ${b.name}! 💗 Seu agendamento no Lash Studio RB foi confirmado para ${fmtDate(b.date)} às ${b.time}. Procedimento(s): ${services}. Total: ${money(b.total)}.`;
+    const confirmMsg=`Olá, ${b.name}! 💗 Seu agendamento no Studio RB foi confirmado para ${fmtDate(b.date)} às ${b.time}. Procedimento(s): ${services}. Total: ${money(b.total)}.`;
     return `<div class="booking-card booking-card-v8">
       <div class="booking-main"><b>${esc(b.name)}</b><small>${esc(b.phone)}${b.email?` • ${esc(b.email)}`:''}</small><p>${esc(services)}</p></div>
       <div class="booking-meta"><div><b>Data:</b> ${fmtDate(b.date)}</div><div><b>Horário:</b> ${esc(b.time)}</div><div><b>Total:</b> ${money(b.total)}</div></div>

@@ -7,7 +7,36 @@ function toast(msg){const el=$('#toast');el.textContent=msg;el.classList.add('sh
 async function api(url,opts={}){const r=await fetch(url,{cache:'no-store',...opts,headers:{...(opts.body instanceof FormData?{}:{'Content-Type':'application/json'}),...(opts.headers||{})}});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||`Erro ${r.status}`);return d}
 function duration(){return (cfg.services||[]).filter(s=>selectedServices.has(s.id)).reduce((a,s)=>a+Number(s.duration||60),0)}
 function total(){return (cfg.services||[]).filter(s=>selectedServices.has(s.id)).reduce((a,s)=>a+Number(s.price||0),0)}
-function renderServices(){const all=cfg.services||[];$('#servicesGrid').innerHTML=all.map(s=>`<article class="service-card" data-service="${esc(s.id)}"><span class="kicker">STUDIO RB</span><h3>${esc(s.name)}</h3><p>${Number(s.duration||60)} min • toque para selecionar</p><div class="price">${money(s.price)}</div></article>`).join('')||'<div class="loading-card">Nenhum procedimento cadastrado.</div>';$('#bookingServices').innerHTML=all.map(s=>`<label class="booking-service"><input type="checkbox" value="${esc(s.id)}"><span><strong>${esc(s.name)}</strong><small>${money(s.price)} • ${Number(s.duration||60)} min</small></span></label>`).join('');}
+function serviceVisual(s){
+  const n=String(s.name||'').toLowerCase();
+  const rules=[
+    [/volume brasileiro/,['assets/services/volume-brasileiro.webp','Entrega volume e delicadeza ao olhar.']],
+    [/volume (bela|3d)/,['assets/services/volume-3d.webp','Olhar preenchido, delicado e apaixonante.']],
+    [/lash lifting/,['assets/services/lash-lifting.webp','Curva, alonga e levanta os cílios naturais.']],
+    [/volume (ruby|5d)/,['assets/services/volume-5d.webp','Efeito volumoso e marcante no olhar.']],
+    [/volume (diva|8d)/,['assets/services/volume-8d.webp','Olhar alongado, sensual e bem definido.']],
+    [/volume fox/,['assets/services/volume-fox.webp','Olhar alongado e marcante.']],
+    [/mega brasileiro/,['assets/services/mega-brasileiro.webp','Olhar dramático e volumoso.']],
+    [/volume luxo/,['assets/services/volume-luxo.webp','Olhar marcante e volumoso.']],
+    [/mega fox/,['assets/services/mega-fox.webp','Alongado nos cantos externos, com efeito puxado.']],
+    [/design.*henna|henna/,['assets/services/henna.webp','Realça o formato da sobrancelha e corrige pequenas falhas.']],
+    [/design.*sobrancelha/,['assets/services/design.webp','Valoriza o olhar e harmoniza o rosto.']],
+    [/brow lamination/,['assets/services/brow-lamination.webp','Alinha os fios e dá volume com efeito penteado.']],
+    [/shadow/,['assets/services/micro-shadow.webp','Efeito sombreado suave e sofisticado.']],
+    [/fio a fio|fio.*fio/,['assets/services/micro-fio.webp','Simula fios naturais para corrigir falhas com naturalidade.']],
+    [/micropigmentação labial|micro.*labial/,['assets/services/micro-labial.webp','Realça a cor natural dos lábios e melhora o contorno.']],
+    [/hidraglos/,['assets/services/hidraglos.webp','Hidratação profunda e aparência renovada para os lábios.']],
+    [/spa labial/,['assets/services/spa-labial.webp','Esfoliação, hidratação e pigmentação temporária.']],
+    [/buço|depilação/,['assets/services/depilacao-buco.webp','Depilação de buço com acabamento delicado.']]
+  ];
+  for(const [re,v] of rules) if(re.test(n)) return {image:v[0],description:v[1]};
+  return {image:'assets/service-placeholder.svg',description:'Procedimento realizado com cuidado e técnica no Studio RB.'};
+}
+function renderServices(){
+  const all=(cfg.services||[]).filter(s=>s.active!==false);
+  $('#servicesGrid').innerHTML=all.map(s=>{const v=serviceVisual(s);return `<article class="service-card" data-service="${esc(s.id)}"><img class="service-photo" src="${esc(v.image)}" alt="${esc(s.name)}" loading="lazy"><div class="service-info"><span class="kicker">STUDIO RB</span><h3>${esc(s.name)}</h3><p>${esc(v.description)}</p><div class="service-bottom"><div class="price">${money(s.price)}</div><span class="service-select-hint">Selecionar</span></div></div></article>`}).join('')||'<div class="loading-card">Nenhum procedimento cadastrado.</div>';
+  $('#bookingServices').innerHTML=all.map(s=>`<label class="booking-service"><input type="checkbox" value="${esc(s.id)}"><span><strong>${esc(s.name)}</strong></span></label>`).join('');
+}
 function syncServiceUI(){$$('[data-service]').forEach(x=>x.classList.toggle('selected',selectedServices.has(x.dataset.service)));$$('#bookingServices input').forEach(x=>x.checked=selectedServices.has(x.value));$('#bookingTotal').textContent=money(total())}
 document.addEventListener('click',e=>{const card=e.target.closest('[data-service]');if(card){const id=card.dataset.service;selectedServices.has(id)?selectedServices.delete(id):selectedServices.add(id);syncServiceUI();document.querySelector('#agendar')?.scrollIntoView({behavior:'smooth',block:'start'})}});
 $('#bookingServices')?.addEventListener('change',e=>{if(!e.target.matches('input[type=checkbox]'))return;e.target.checked?selectedServices.add(e.target.value):selectedServices.delete(e.target.value);syncServiceUI()});
@@ -20,5 +49,5 @@ function openPayment(){if(!currentBooking)return;$('#dialogDeposit').textContent
 $('#closePayment')?.addEventListener('click',()=>$('#paymentDialog').close());$('#copyPix')?.addEventListener('click',async()=>{if(!cfg.pixKey)return toast('A chave PIX ainda não foi configurada.');await navigator.clipboard.writeText(cfg.pixKey);toast('Chave PIX copiada.')});
 $('#proofForm')?.addEventListener('submit',async e=>{e.preventDefault();if(!currentBooking)return;const file=$('#proofFile').files?.[0];if(!file)return toast('Escolha a imagem do comprovante.');const btn=$('#proofSubmit');btn.disabled=true;btn.textContent='ENVIANDO...';const fd=new FormData();fd.append('proof',file);fd.append('phone',currentBooking.phone);try{const r=await fetch(`/api/bookings/${encodeURIComponent(currentBooking.id)}/proof`,{method:'POST',body:fd});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||'Não foi possível enviar o comprovante.');$('#paymentStatus').textContent='✓ Comprovante enviado. Agora aguarde a aprovação da Emilly.';$('#proofForm').style.display='none';toast('Comprovante enviado com sucesso.')}catch(err){toast(err.message)}finally{btn.disabled=false;btn.textContent='ENVIAR COMPROVANTE'}});
 $('#lookupForm')?.addEventListener('submit',async e=>{e.preventDefault();const q=$('#lookupQuery').value.trim();if(!q)return;try{const d=await api(`/api/my-bookings?q=${encodeURIComponent(q)}`);$('#lookupResults').innerHTML=(d.bookings||[]).map(b=>`<div class="lookup-item"><b>${esc((b.services||[]).map(s=>s.name).join(' + '))}</b><div>${esc(b.date)} • ${esc(b.time)}</div><div class="status">${esc(b.status)}</div><small>${b.paymentStatus?`Pagamento: ${esc(b.paymentStatus)}`:''}</small></div>`).join('')||'<p class="muted">Nenhum agendamento encontrado.</p>'}catch(err){toast(err.message)}});
-async function init(){try{cfg=await api('/api/config');$('#heroDeposit').textContent=$('#pixValue').textContent=money(cfg.depositAmount||20);renderServices();renderGallery();const phone=String(cfg.whatsapp||'').replace(/\D/g,'');$('#floatingWhatsapp').href=`https://wa.me/${phone}`;$('#footerContact').innerHTML=`<span>${esc(cfg.address||'')}</span><span>${esc(cfg.instagram||'')}</span>`;const today=new Date();$('#bookingDate').min=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`}catch(e){toast('Não foi possível carregar o site.')}}
+async function init(){try{cfg=await api('/api/config');const dep=money(cfg.depositAmount||20);if($('#heroDeposit'))$('#heroDeposit').textContent=dep;if($('#pixValue'))$('#pixValue').textContent=dep;renderServices();renderGallery();const phone=String(cfg.whatsapp||'').replace(/\D/g,'');$('#floatingWhatsapp').href=`https://wa.me/${phone}`;$('#footerContact').innerHTML=`<span>${esc(cfg.address||'')}</span><span>${esc(cfg.instagram||'')}</span>`;const today=new Date();$('#bookingDate').min=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`}catch(e){toast('Não foi possível carregar o site.')}}
 init();
