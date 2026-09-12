@@ -83,10 +83,16 @@ app.use('/api/admin', sameOriginWrite);
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024, files: 1 },
+  limits: { fileSize: 40 * 1024 * 1024, files: 1 },
   fileFilter: (req, file, cb) => {
-    const ok = /^image\/(jpeg|jpg|png|webp|heic|heif)$/i.test(file.mimetype || '');
-    cb(ok ? null : new Error('Envie uma imagem JPG, PNG, WEBP ou HEIC.'), ok);
+    const mime = String(file.mimetype || '').toLowerCase();
+    const name = String(file.originalname || '').toLowerCase();
+    const extOk = /\.(jpe?g|png|webp|heic|heif)$/i.test(name);
+    const mimeOk = /^image\/(jpeg|jpg|png|webp|heic|heif)$/i.test(mime);
+    // iPhone/Safari can send HEIC as application/octet-stream or with an empty MIME.
+    const mobileFallback = (!mime || mime === 'application/octet-stream') && extOk;
+    const ok = mimeOk || extOk || mobileFallback;
+    cb(ok ? null : new Error('Envie uma foto JPG, PNG, WEBP, HEIC ou HEIF.'), ok);
   }
 });
 

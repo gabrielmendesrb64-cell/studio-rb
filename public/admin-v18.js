@@ -90,9 +90,9 @@ function renderServices(){
   $('#servicesEditor').innerHTML=services.length?services.map((s,i)=>`<div class="service-edit-row service-edit-v23" data-i="${i}" data-id="${esc(s.id)}">
     <div class="service-image-admin">
       <img src="${esc(s.image||'assets/service-placeholder.svg')}" alt="${esc(s.name||'Procedimento')}">
-      <label class="mini-btn service-image-pick">Trocar imagem<input class="service-image-file" type="file" accept="image/*,.heic,.heif" hidden></label>
+      <button type="button" class="mini-btn service-image-pick">Trocar imagem</button><input class="service-image-file" type="file" accept="image/*" capture="environment">
       ${s.image?'<button type="button" class="mini-btn danger js-remove-service-image">Remover imagem</button>':''}
-      <small class="service-image-help">JPG, PNG, WEBP ou foto do celular • até 20 MB</small>
+      <small class="service-image-help">Foto da galeria ou câmera do celular • JPG, PNG, WEBP, HEIC/HEIF • até 40 MB</small>
     </div>
     <div class="service-fields-admin">
       <input class="service-name" value="${esc(s.name)}" placeholder="Nome do procedimento">
@@ -116,6 +116,17 @@ function collectServices(){return $$('.service-edit-row').map((row,i)=>({
   active:row.querySelector('.service-active').checked
 }));}
 $('#addServiceBtn')?.addEventListener('click',()=>{adminConfig.services=collectServices();adminConfig.services.push({id:`servico-${Date.now()}`,name:'',description:'',image:'',price:null,duration:60,active:true});renderServices();const rows=$$('.service-edit-row');rows.at(-1)?.querySelector('.service-name')?.focus();});
+$('#servicesEditor')?.addEventListener('click',e=>{
+  const pick=e.target.closest('.service-image-pick');
+  if(!pick)return;
+  const row=pick.closest('.service-edit-row');
+  const input=row?.querySelector('.service-image-file');
+  if(!input)return;
+  // iPhone/Safari: clear previous choice so selecting the same photo fires change again.
+  input.value='';
+  input.click();
+});
+
 $('#servicesEditor')?.addEventListener('click',async e=>{
   const row=e.target.closest('.service-edit-row'); if(!row)return;
   const i=Number(row.dataset.i);
@@ -129,7 +140,7 @@ $('#servicesEditor')?.addEventListener('change',async e=>{
   const row=input.closest('.service-edit-row'),file=input.files?.[0]; if(!file)return;
   const i=Number(row.dataset.i),id=row.dataset.id;
   const btn=row.querySelector('.service-image-pick');
-  if(file.size>20*1024*1024){toast('A imagem passou de 20 MB. Escolha outra foto.','error');input.value='';return;}
+  if(file.size>40*1024*1024){toast('A imagem passou de 40 MB. Escolha outra foto.','error');input.value='';return;}
   setBusy(btn,true,'ENVIANDO...');
   try{
     const fd=new FormData(); fd.append('image',file);

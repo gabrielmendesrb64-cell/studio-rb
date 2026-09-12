@@ -677,3 +677,24 @@ dialog h2{
 
 /* V25 - upload de imagem de procedimentos */
 .service-image-help{display:block;color:rgba(255,255,255,.62);font-size:12px;line-height:1.35}.service-image-pick{display:flex!important;align-items:center;justify-content:center;min-height:44px;background:linear-gradient(135deg,#ff4fa3,#e94891)!important;color:#130911!important;font-weight:800;border-radius:14px!important}.service-image-file{display:none!important}@media(max-width:720px){.service-image-admin{grid-template-columns:96px 1fr!important}.service-image-admin img{width:96px!important;height:96px!important;aspect-ratio:1!important}.service-image-help{grid-column:1/-1}}
+
+/* V26 — seletor de imagem confiável no iPhone/Android */
+.service-image-file{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  opacity:0!important;
+  pointer-events:none!important;
+  overflow:hidden!important;
+  clip:rect(0 0 0 0)!important;
+  white-space:nowrap!important;
+}
+.service-image-pick{
+  -webkit-appearance:none!important;
+  appearance:none!important;
+  touch-action:manipulation!important;
+  cursor:pointer!important;
+}
+@media(max-width:720px){
+  .service-image-pick{min-height:50px!important;font-size:15px!important}
+}
