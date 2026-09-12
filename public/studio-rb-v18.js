@@ -105,23 +105,18 @@ $('#bookingServices')?.addEventListener('click',e=>{
   if(b){window.bookingMode=b.dataset.bookingMode;selectedServices.clear();renderBookingMenu();syncServiceUI();return}
   if(e.target.closest('#bookingModeBack')){window.bookingMode='';selectedServices.clear();renderBookingMenu();syncServiceUI()}
 });
-$('#bookingServices')?.addEventListener('change',e=>{
-  if(!e.target.matches('input[type=checkbox]'))return;
-  const input=e.target;
-  const group=input.closest('.booking-service-group');
-  if(input.checked&&group){
-    if(group.classList.contains('compact-service-choice') && !group.classList.contains('single-choice')){
-      group.querySelectorAll('input[type=checkbox]').forEach(other=>{
-        if(other!==input){other.checked=false;selectedServices.delete(other.value);}
-      });
-    }
-    selectedServices.add(input.value);
-  }else selectedServices.delete(input.value);
-  syncServiceUI();
-});
+
 function renderGallery(){const cats=cfg.galleryCategories||[];if(!activeCategory)activeCategory=cats[0]?.id||'';$('#galleryTabs').innerHTML=cats.map(c=>`<button type="button" class="${c.id===activeCategory?'active':''}" data-cat="${esc(c.id)}">${esc(c.name)}</button>`).join('');const items=(cfg.gallery||[]).filter(x=>!activeCategory||x.categoryId===activeCategory);$('#galleryGrid').innerHTML=items.map(x=>`<figure class="gallery-item"><img src="${esc(x.src)}" alt="${esc(x.title||'Resultado Studio RB')}" loading="lazy"><figcaption><b>${esc(x.title||'Resultado')}</b><small>${esc(x.caption||'')}</small></figcaption></figure>`).join('')||'<div class="loading-card">Em breve novos resultados nesta categoria.</div>'}
 $('#galleryTabs')?.addEventListener('click',e=>{const b=e.target.closest('[data-cat]');if(!b)return;activeCategory=b.dataset.cat;renderGallery()});
 async function loadAvailability(){const date=$('#bookingDate').value;$('#bookingTime').value='';if(!date){$('#timeSlots').innerHTML='<span class="muted">Escolha uma data.</span>';return}if(!selectedServices.size){$('#timeSlots').innerHTML='<span class="muted">Selecione pelo menos um procedimento primeiro.</span>';return}try{const d=await api(`/api/availability?date=${encodeURIComponent(date)}&duration=${duration()}`);$('#timeSlots').innerHTML=d.slots.length?d.slots.map(x=>`<button type="button" data-time="${x.time}" ${x.available?'':'disabled'}>${x.time}</button>`).join(''):'<span class="muted">Nenhum horário liberado para este dia.</span>'}catch(e){$('#timeSlots').innerHTML=`<span class="muted">${esc(e.message)}</span>`}}
+$('#bookingServices')?.addEventListener('change',e=>{
+  const input=e.target;
+  if(!input.matches('.booking-simple-list input[type="checkbox"]'))return;
+  if(input.checked) selectedServices.add(String(input.value));
+  else selectedServices.delete(String(input.value));
+  syncServiceUI();
+  if($('#bookingDate').value) loadAvailability();
+});
 $('#bookingDate')?.addEventListener('change',loadAvailability);$('#bookingServices')?.addEventListener('change',()=>{$('#bookingDate').value&&loadAvailability()});$('#timeSlots')?.addEventListener('click',e=>{const b=e.target.closest('[data-time]');if(!b||b.disabled)return;$$('#timeSlots button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#bookingTime').value=b.dataset.time});
 $('#bookingForm')?.addEventListener('submit',async e=>{e.preventDefault();const btn=$('#bookingSubmit');if(!selectedServices.size)return toast('Escolha pelo menos um procedimento.');if(!$('#bookingTime').value)return toast('Escolha um horário.');btn.disabled=true;btn.textContent='CRIANDO RESERVA...';try{const fd=new FormData(e.currentTarget);const payload={name:fd.get('name'),phone:fd.get('phone'),email:fd.get('email'),date:$('#bookingDate').value,time:$('#bookingTime').value,services:[...selectedServices]};const d=await api('/api/bookings',{method:'POST',body:JSON.stringify(payload)});currentBooking={id:d.id,phone:payload.phone};$('#proofPhone').value=payload.phone;openPayment()}catch(err){toast(err.message)}finally{btn.disabled=false;btn.textContent='CONTINUAR PARA O PIX'}});
 function openPayment(){if(!currentBooking)return;$('#dialogDeposit').textContent=money(cfg.depositAmount||20);$('#pixKeyText').textContent=cfg.pixKey||'Configure a chave PIX no painel';$('#pixRecipientText').textContent=[cfg.pixRecipient,cfg.pixCity].filter(Boolean).join(' • ');const msg=`Olá! Fiz o sinal de ${money(cfg.depositAmount||20)} para meu agendamento no Studio RB. Meu código de reserva é ${currentBooking.id}. Vou enviar o comprovante aqui.`;$('#whatsappProof').href=`https://wa.me/${String(cfg.whatsapp||'').replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;$('#paymentStatus').textContent='';$('#paymentDialog').showModal()}
@@ -131,11 +126,3 @@ $('#lookupForm')?.addEventListener('submit',async e=>{e.preventDefault();const q
 async function init(){try{cfg=await api('/api/config');const dep=money(cfg.depositAmount||20);if($('#heroDeposit'))$('#heroDeposit').textContent=dep;if($('#pixValue'))$('#pixValue').textContent=dep;renderServices();renderGallery();const phone=String(cfg.whatsapp||'').replace(/\D/g,'');$('#floatingWhatsapp').href=`https://wa.me/${phone}`;$('#footerContact').innerHTML=`<span>${esc(cfg.address||'')}</span><span>${esc(cfg.instagram||'')}</span>`;const today=new Date();$('#bookingDate').min=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`}catch(e){toast('Não foi possível carregar o site.')}}
 init();
 
-// V34: garante seleção no menu novo sem interferir nos demais controles
-document.getElementById('bookingServices')?.addEventListener('change', function(e){
-  const input=e.target;
-  if(!input || !input.matches('.booking-simple-list input[type="checkbox"]')) return;
-  if(input.checked) selectedServices.add(String(input.value));
-  else selectedServices.delete(String(input.value));
-  syncServiceUI();
-}, true);
