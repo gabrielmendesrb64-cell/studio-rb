@@ -130,3 +130,12 @@ $('#proofForm')?.addEventListener('submit',async e=>{e.preventDefault();if(!curr
 $('#lookupForm')?.addEventListener('submit',async e=>{e.preventDefault();const q=$('#lookupQuery').value.trim();if(!q)return;try{const d=await api(`/api/my-bookings?q=${encodeURIComponent(q)}`);$('#lookupResults').innerHTML=(d.bookings||[]).map(b=>`<div class="lookup-item"><b>${esc((b.services||[]).map(s=>s.name).join(' + '))}</b><div>${esc(b.date)} • ${esc(b.time)}</div><div class="status">${esc(b.status)}</div><small>${b.paymentStatus?`Pagamento: ${esc(b.paymentStatus)}`:''}</small></div>`).join('')||'<p class="muted">Nenhum agendamento encontrado.</p>'}catch(err){toast(err.message)}});
 async function init(){try{cfg=await api('/api/config');const dep=money(cfg.depositAmount||20);if($('#heroDeposit'))$('#heroDeposit').textContent=dep;if($('#pixValue'))$('#pixValue').textContent=dep;renderServices();renderGallery();const phone=String(cfg.whatsapp||'').replace(/\D/g,'');$('#floatingWhatsapp').href=`https://wa.me/${phone}`;$('#footerContact').innerHTML=`<span>${esc(cfg.address||'')}</span><span>${esc(cfg.instagram||'')}</span>`;const today=new Date();$('#bookingDate').min=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`}catch(e){toast('Não foi possível carregar o site.')}}
 init();
+
+// V34: garante seleção no menu novo sem interferir nos demais controles
+document.getElementById('bookingServices')?.addEventListener('change', function(e){
+  const input=e.target;
+  if(!input || !input.matches('.booking-simple-list input[type="checkbox"]')) return;
+  if(input.checked) selectedServices.add(String(input.value));
+  else selectedServices.delete(String(input.value));
+  syncServiceUI();
+}, true);

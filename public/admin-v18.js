@@ -38,7 +38,7 @@ async function showDash(){$('#loginView')?.classList.add('hidden');$('#dashboard
 async function refresh(){
   const [b,c,n]=await Promise.all([api('/api/admin/bookings'),api('/api/admin/config'),api('/api/admin/notifications/status')]);
   bookings=b.bookings||[];adminConfig=c.config||{};adminConfig.weeklyHours=adminConfig.weeklyHours||{};adminConfig.dateHours=adminConfig.dateHours||{};adminConfig.services=adminConfig.services||[];
-  renderStats();renderCalendar();renderDayManager();renderList();renderBlocks();renderSchedule();renderServices();renderNotificationStatus(n);renderGallery();renderPaymentSettings();
+  renderStats();renderCalendar();renderDayManager();renderList();renderBlocks();renderSchedule();renderServices();renderGallery();renderPaymentSettings();
 }
 function renderStats(){const rows=[['Pendentes',bookings.filter(b=>b.status==='Pendente').length],['Confirmados',bookings.filter(b=>b.status==='Confirmado').length],['Hoje',bookings.filter(b=>b.date===todayISO()&&b.status!=='Cancelado').length],['Total',bookings.length]];$('#stats').innerHTML=rows.map(([l,n])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('');}
 
@@ -85,43 +85,112 @@ function renderSchedule(){const weekly=adminConfig?.weeklyHours||{};$('#schedule
 async function saveWeekly(){const state=$('#scheduleSaveState');state.textContent='Salvando...';state.classList.add('saving');try{const d=await api('/api/admin/schedule',{method:'PUT',body:JSON.stringify({weeklyHours:adminConfig.weeklyHours})});adminConfig.weeklyHours=d.weeklyHours;state.textContent='Salvo ✓';state.classList.remove('saving');renderSchedule();renderCalendar();renderDayManager();return true;}catch(e){state.textContent='Erro ao salvar';state.classList.remove('saving');toast(e.message,'error');return false;}}
 $('#scheduleEditor')?.addEventListener('click',async e=>{const row=e.target.closest('[data-day]');if(!row)return;const day=row.dataset.day;const add=e.target.closest('.js-add-week-time');if(add){const input=row.querySelector('.day-time-input'),t=input.value;if(!t){toast('Escolha um horário.','error');return;}const before=[...(adminConfig.weeklyHours[day]||[])],arr=[...before];if(!arr.includes(t))arr.push(t);adminConfig.weeklyHours[day]=arr.sort();input.value='';const ok=await saveWeekly();if(ok)toast('Horário adicionado e salvo.');else adminConfig.weeklyHours[day]=before;return;}const remove=e.target.closest('.js-remove-week-time');if(remove){const before=[...(adminConfig.weeklyHours[day]||[])];adminConfig.weeklyHours[day]=before.filter(t=>t!==remove.dataset.time);const ok=await saveWeekly();if(ok)toast('Horário removido e salvo.');else adminConfig.weeklyHours[day]=before;}});
 
-function renderServices(){
-  const services=adminConfig?.services||[];
-  $('#servicesEditor').innerHTML=services.length?services.map((s,i)=>`<div class="service-edit-row service-edit-v23" data-i="${i}" data-id="${esc(s.id)}">
-    <div class="service-image-admin">
-      <img src="${esc(s.image||'assets/service-placeholder.svg')}" alt="${esc(s.name||'Procedimento')}">
-      <label class="mini-btn service-image-pick"><span>Trocar imagem</span><input class="service-image-file" type="file" accept="image/*,.heic,.heif"></label>
-      ${s.image?'<button type="button" class="mini-btn danger js-remove-service-image">Remover imagem</button>':''}
-      <small class="service-image-help">Foto da galeria ou câmera do celular • JPG, PNG, WEBP, HEIC/HEIF • até 40 MB</small>
-    </div>
-    <div class="service-fields-admin">
-      <input class="service-name" value="${esc(s.name)}" placeholder="Nome do procedimento">
-      <textarea class="service-description" maxlength="220" placeholder="Descrição curta que aparece no catálogo">${esc(s.description||'')}</textarea>
-      <div class="service-inline-fields">
-        <label><span>Valor (R$)</span><input class="service-price" type="number" min="0" step="0.01" value="${s.price===null?'':Number(s.price)}"></label>
-        <label><span>Duração (min)</span><input class="service-duration" type="number" min="15" step="15" value="${Number(s.duration||60)}"></label>
-      </div>
-      <label class="service-toggle"><input class="service-active" type="checkbox" ${s.active!==false?'checked':''}><span>Visível no site</span></label>
-      <button type="button" class="mini-btn danger js-remove-service">Excluir procedimento</button>
-    </div>
-  </div>`).join(''):'<div class="empty-state">Nenhum procedimento cadastrado.</div>';
+
+function isMaintenanceServiceAdmin(s){
+  return /^manut/i.test(String(s?.id||'')) || /^manuten[cç][aã]o\b/i.test(String(s?.name||'').trim());
 }
-function collectServices(){return $$('.service-edit-row').map((row,i)=>({
-  id:adminConfig.services[i]?.id||`servico-${Date.now()}-${i}`,
-  name:row.querySelector('.service-name').value.trim(),
-  description:row.querySelector('.service-description').value.trim(),
-  image:adminConfig.services[i]?.image||'',
-  price:row.querySelector('.service-price').value===''?null:Number(row.querySelector('.service-price').value),
-  duration:Number(row.querySelector('.service-duration').value||60),
-  active:row.querySelector('.service-active').checked
-}));}
+function normalizeServiceNameAdmin(v){
+  return String(v||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/^manutencao\s*[-—:]?\s*/,'')
+    .replace(/[^a-z0-9]+/g,' ')
+    .trim();
+}
+function findMaintenanceAdmin(base, all){
+  const baseId=String(base.id||'').toLowerCase();
+  const baseName=normalizeServiceNameAdmin(base.name);
+  return (all||[]).find(m=>{
+    if(!isMaintenanceServiceAdmin(m))return false;
+    const mid=String(m.id||'').toLowerCase();
+    const mn=normalizeServiceNameAdmin(m.name);
+    return mid===`manut-${baseId}` || mid.replace(/^manut-/,'')===baseId ||
+           mn===baseName || mn.includes(baseName) || baseName.includes(mn);
+  }) || null;
+}
+
+function renderServices(){
+  const all=adminConfig?.services||[];
+  const bases=all.filter(s=>!isMaintenanceServiceAdmin(s));
+  $('#servicesEditor').innerHTML=bases.length?bases.map((s,i)=>{
+    const maintenance=findMaintenanceAdmin(s,all);
+    return `<div class="service-edit-row service-edit-v23" data-i="${i}" data-id="${esc(s.id)}" data-maint-id="${esc(maintenance?.id||'')}">
+      <div class="service-image-admin">
+        <img src="${esc(s.image||'assets/service-placeholder.svg')}" alt="${esc(s.name||'Procedimento')}">
+        <label class="mini-btn service-image-pick"><span>Trocar imagem</span><input class="service-image-file" type="file" accept="image/*,.heic,.heif"></label>
+        ${s.image?'<button type="button" class="mini-btn danger js-remove-service-image">Remover imagem</button>':''}
+        <small class="service-image-help">Foto da galeria ou câmera do celular • até 40 MB</small>
+      </div>
+      <div class="service-fields-admin">
+        <input class="service-name" value="${esc(s.name)}" placeholder="Nome do procedimento">
+        <textarea class="service-description" maxlength="220" placeholder="Descrição curta que aparece no catálogo">${esc(s.description||'')}</textarea>
+
+        <div class="service-inline-fields service-values-grid">
+          <label><span>Valor do procedimento (R$)</span><input class="service-price" type="number" min="0" step="0.01" value="${s.price===null?'':Number(s.price)}"></label>
+          <label><span>Valor da manutenção (R$)</span><input class="service-maint-price" type="number" min="0" step="0.01" value="${maintenance?.price===null||maintenance?.price===undefined?'':Number(maintenance.price)}"></label>
+        </div>
+
+        <div class="service-inline-fields service-values-grid">
+          <label><span>Duração procedimento (min)</span><input class="service-duration" type="number" min="15" step="15" value="${Number(s.duration||60)}"></label>
+          <label><span>Duração manutenção (min)</span><input class="service-maint-duration" type="number" min="15" step="15" value="${Number(maintenance?.duration||90)}"></label>
+        </div>
+
+        <label class="service-toggle"><input class="service-active" type="checkbox" ${s.active!==false?'checked':''}><span>Visível no site</span></label>
+        <button type="button" class="mini-btn danger js-remove-service">Excluir procedimento</button>
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty-state">Nenhum procedimento cadastrado.</div>';
+}
+
+function collectServices(){
+  const oldAll=adminConfig?.services||[];
+  const result=[];
+  $$('.service-edit-row').forEach((row,i)=>{
+    const oldBase=oldAll.find(s=>String(s.id)===String(row.dataset.id))||{};
+    const name=row.querySelector('.service-name').value.trim();
+    const active=row.querySelector('.service-active').checked;
+    const base={
+      ...oldBase,
+      id:oldBase.id||`servico-${Date.now()}-${i}`,
+      name,
+      description:row.querySelector('.service-description').value.trim(),
+      image:oldBase.image||'',
+      price:row.querySelector('.service-price').value===''?null:Number(row.querySelector('.service-price').value),
+      duration:Number(row.querySelector('.service-duration').value||60),
+      active
+    };
+    result.push(base);
+
+    const maintValue=row.querySelector('.service-maint-price').value;
+    if(maintValue!==''){
+      const oldMaint=findMaintenanceAdmin(oldBase,oldAll) || {};
+      result.push({
+        ...oldMaint,
+        id:oldMaint.id||`manut-${base.id}`,
+        name:`Manutenção — ${name}`,
+        description:`Manutenção de ${name}`,
+        image:'',
+        price:Number(maintValue),
+        duration:Number(row.querySelector('.service-maint-duration').value||90),
+        active
+      });
+    }
+  });
+  return result;
+}
 $('#addServiceBtn')?.addEventListener('click',()=>{adminConfig.services=collectServices();adminConfig.services.push({id:`servico-${Date.now()}`,name:'',description:'',image:'',price:null,duration:60,active:true});renderServices();const rows=$$('.service-edit-row');rows.at(-1)?.querySelector('.service-name')?.focus();});
 
 $('#servicesEditor')?.addEventListener('click',async e=>{
   const row=e.target.closest('.service-edit-row'); if(!row)return;
-  const i=Number(row.dataset.i);
+  const i=adminConfig.services.findIndex(s=>String(s.id)===String(row.dataset.id));
   const remove=e.target.closest('.js-remove-service');
-  if(remove){adminConfig.services=collectServices();adminConfig.services.splice(i,1);renderServices();return;}
+  if(remove){
+      adminConfig.services=collectServices();
+      const baseId=row.dataset.id;
+      const base=adminConfig.services.find(s=>String(s.id)===String(baseId));
+      const maintenance=findMaintenanceAdmin(base,adminConfig.services);
+      adminConfig.services=adminConfig.services.filter(s=>String(s.id)!==String(baseId)&&String(s.id)!==String(maintenance?.id||''));
+      renderServices();return;
+    }
   const removeImage=e.target.closest('.js-remove-service-image');
   if(removeImage){try{await api('/api/admin/services/'+encodeURIComponent(row.dataset.id)+'/image',{method:'DELETE'});adminConfig.services[i].image='';renderServices();toast('Imagem removida.');}catch(err){toast(err.message,'error');}}
 });
@@ -150,7 +219,6 @@ $('#servicesEditor')?.addEventListener('change',async e=>{
 });
 $('#saveServicesBtn')?.addEventListener('click',async()=>{const btn=$('#saveServicesBtn');setBusy(btn,true,'SALVANDO...');try{const services=collectServices();for(const s of services){if(s.name.length<2)throw new Error('Preencha o nome de todos os procedimentos.');if(s.active&&(s.price===null||!Number.isFinite(s.price)||s.price<0))throw new Error(`Defina o valor de “${s.name||'novo procedimento'}” para liberar no site.`);}const d=await api('/api/admin/services',{method:'PUT',body:JSON.stringify({services})});adminConfig.services=d.services;renderServices();await refresh();toast('Procedimentos atualizados no catálogo e no agendamento.');}catch(e){toast(e.message,'error');}finally{setBusy(btn,false);}});
 
-function renderNotificationStatus(n){$('#notificationStatus').innerHTML=`<div class="notify-status ${n.smtpConfigured?'ok':'warn'}"><b>E-mail automático</b><span>${n.smtpConfigured?'Configurado com '+esc(n.smtpUser||'Gmail'):'Falta configurar SMTP no Render'}</span></div><div class="notify-status ${n.whatsappCloudConfigured?'ok':'warn'}"><b>WhatsApp automático</b><span>${n.whatsappCloudConfigured?'Meta Cloud API configurada':'Ainda não configurado (opcional)'}</span></div>`;}
 $('#backupBtn')?.addEventListener('click',async()=>{const btn=$('#backupBtn');setBusy(btn,true,'GERANDO...');try{const r=await fetch('/api/admin/backup',{credentials:'same-origin',cache:'no-store'});if(!r.ok){let d={};try{d=await r.json();}catch{}throw new Error(d.error||'Falha ao gerar backup.');}const blob=await r.blob(),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`studio-rb-backup-${todayISO()}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Backup baixado.');}catch(e){toast(e.message,'error');}finally{setBusy(btn,false);}});
 
 const dlg=$('#manualDialog');$('#manualBtn')?.addEventListener('click',()=>dlg?.showModal());$('#cancelManual')?.addEventListener('click',()=>dlg?.close());$('#manualForm')?.addEventListener('submit',async e=>{e.preventDefault();if(!e.currentTarget.reportValidity())return;const btn=$('#saveManual');setBusy(btn,true,'SALVANDO...');try{const d=Object.fromEntries(new FormData(e.currentTarget));await api('/api/admin/bookings',{method:'POST',body:JSON.stringify(d)});dlg.close();e.currentTarget.reset();await refresh();toast('Agendamento manual criado.');}catch(err){toast(err.message,'error');}finally{setBusy(btn,false);}});

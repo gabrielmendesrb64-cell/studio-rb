@@ -738,3 +738,13 @@ dialog h2{
     min-width:0!important;
   }
 }
+
+/* V35 — procedimento e manutenção no mesmo cadastro */
+.service-values-grid{
+  grid-template-columns:1fr 1fr!important;
+}
+@media(max-width:700px){
+  .service-values-grid{
+    grid-template-columns:1fr!important;
+  }
+}
