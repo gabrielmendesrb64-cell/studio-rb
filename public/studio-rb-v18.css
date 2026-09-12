@@ -130,3 +130,13 @@
   footer .footer-admin{font-size:13px;padding:8px 0}
   body{padding-bottom:env(safe-area-inset-bottom)}
 }
+
+/* V30 — valor de manutenção junto ao procedimento */
+.price-wrap{display:grid;gap:3px;min-width:0}
+.maintenance-price{display:flex;align-items:center;gap:6px;font-size:12px;color:#d9c3cf;line-height:1.2}
+.maintenance-price span{opacity:.78}
+.maintenance-price strong{color:#ff8fc2;font-size:13px;white-space:nowrap}
+@media(max-width:560px){
+  .maintenance-price{font-size:11px}
+  .maintenance-price strong{font-size:12px}
+}

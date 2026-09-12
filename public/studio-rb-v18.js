@@ -33,9 +33,36 @@ function serviceVisual(s){
   for(const [re,v] of rules) if(re.test(n)) return {image:v[0],description:v[1]};
   return {image:'assets/service-placeholder.svg',description:'Procedimento realizado com cuidado e técnica no Studio RB.'};
 }
+function isMaintenanceService(s){
+  return /^manut/i.test(String(s.id||'')) || /^manuten[cç][aã]o\b/i.test(String(s.name||'').trim());
+}
+function normalizeServiceName(v){
+  return String(v||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/^manutencao\s*[-—:]?\s*/,'')
+    .replace(/[^a-z0-9]+/g,' ')
+    .trim();
+}
+function findMaintenance(base, all){
+  const baseId=String(base.id||'').toLowerCase();
+  const baseName=normalizeServiceName(base.name);
+  return all.find(m=>{
+    if(!isMaintenanceService(m))return false;
+    const mid=String(m.id||'').toLowerCase();
+    const mname=normalizeServiceName(m.name);
+    if(mid===`manut-${baseId}`)return true;
+    if(mid.replace(/^manut-/,'')===baseId.replace(/^volume-/,'').replace(/^mega-/,'mega-'))return true;
+    return mname===baseName || mname.includes(baseName) || baseName.includes(mname);
+  }) || null;
+}
 function renderServices(){
   const all=(cfg.services||[]).filter(s=>s.active!==false);
-  $('#servicesGrid').innerHTML=all.map(s=>{const v=serviceVisual(s);return `<article class="service-card" data-service="${esc(s.id)}"><img class="service-photo" src="${esc(v.image)}" alt="${esc(s.name)}" loading="lazy"><div class="service-info"><span class="kicker">STUDIO RB</span><h3>${esc(s.name)}</h3><p>${esc(v.description)}</p><div class="service-bottom"><div class="price">${money(s.price)}</div><span class="service-select-hint">Selecionar</span></div></div></article>`}).join('')||'<div class="loading-card">Nenhum procedimento cadastrado.</div>';
+  const catalog=all.filter(s=>!isMaintenanceService(s));
+  $('#servicesGrid').innerHTML=catalog.map(s=>{
+    const v=serviceVisual(s),maintenance=findMaintenance(s,all);
+    const maintenanceHtml=maintenance?`<div class="maintenance-price"><span>Manutenção</span><strong>${money(maintenance.price)}</strong></div>`:'';
+    return `<article class="service-card" data-service="${esc(s.id)}"><img class="service-photo" src="${esc(v.image)}" alt="${esc(s.name)}" loading="lazy"><div class="service-info"><span class="kicker">STUDIO RB</span><h3>${esc(s.name)}</h3><p>${esc(v.description)}</p><div class="service-bottom"><div class="price-wrap"><div class="price">${money(s.price)}</div>${maintenanceHtml}</div><span class="service-select-hint">Selecionar</span></div></div></article>`;
+  }).join('')||'<div class="loading-card">Nenhum procedimento cadastrado.</div>';
   $('#bookingServices').innerHTML=all.map(s=>`<label class="booking-service"><input type="checkbox" value="${esc(s.id)}"><span><strong>${esc(s.name)}</strong></span></label>`).join('');
 }
 function syncServiceUI(){$$('[data-service]').forEach(x=>x.classList.toggle('selected',selectedServices.has(x.dataset.service)));$$('#bookingServices input').forEach(x=>x.checked=selectedServices.has(x.value));$('#bookingTotal').textContent=money(total())}
