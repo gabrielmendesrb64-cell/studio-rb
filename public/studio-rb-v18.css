@@ -325,3 +325,33 @@
   line-height:1.35;
   text-align:center;
 }
+
+/* V40 — Nosso espaço */
+.space-section{
+  padding-top:22px;
+}
+.space-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
+}
+.space-card{
+  border:1px solid rgba(255,92,164,.24);
+  background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,86,166,.025));
+  border-radius:20px;
+  padding:18px;
+}
+.space-card>span{
+  width:42px;height:42px;border-radius:50%;
+  display:grid;place-items:center;
+  background:rgba(255,79,163,.10);
+  color:#ff78b8;
+  font-size:20px;
+  margin-bottom:12px;
+}
+.space-card h3{margin:0 0 6px;color:#fff;font-size:17px}
+.space-card p{margin:0;color:#cdbec5;font-size:13px;line-height:1.45}
+@media(max-width:700px){
+  .space-grid{grid-template-columns:1fr}
+  .space-card{padding:15px}
+}

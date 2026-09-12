@@ -458,6 +458,33 @@ async function migrateV32Maintenance(client) {
   await client.query("INSERT INTO lsh_migrations(name) VALUES('v32_maintenance_seed') ON CONFLICT DO NOTHING");
 }
 
+
+async function migrateV40BusinessInfo(client) {
+  const already = await client.query("SELECT 1 FROM lsh_migrations WHERE name='v40_business_info'");
+  if (already.rowCount) return;
+
+  const values = {
+    businessName:'Studio RB',
+    whatsapp:'5512997940880',
+    email:'emilly.vivi124@icloud.com',
+    instagram:'@studio.__rb',
+    tiktok:'',
+    address:'Rua Tereza de Oliveira Prado, 145 — Dom Pedro II',
+    openingHours:'Horários definidos pela proprietária no painel'
+  };
+
+  for (const [key,value] of Object.entries(values)) {
+    await client.query(
+      `INSERT INTO lsh_settings(key,value,updated_at)
+       VALUES($1,$2::jsonb,NOW())
+       ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=NOW()`,
+      [key, JSON.stringify(value)]
+    );
+  }
+
+  await client.query("INSERT INTO lsh_migrations(name) VALUES('v40_business_info') ON CONFLICT DO NOTHING");
+}
+
 async function initDb() {
   if (!pgPool) {
     console.warn('[DATABASE] DATABASE_URL não configurada. Em produção, alterações não serão aceitas até conectar o PostgreSQL.');
@@ -472,6 +499,7 @@ async function initDb() {
     await migrateV18Catalog(client);
     await migrateV23ServiceMedia(client);
     await migrateV32Maintenance(client);
+    await migrateV40BusinessInfo(client);
     dbReady = true;
     console.log('[DATABASE] PostgreSQL conectado e pronto.');
   } finally {
@@ -710,10 +738,9 @@ async function resolveSelectedServices(ids) {
 
 async function slotTaken(date, time, duration, excludeId = null) {
   const bookings = await getState('bookings');
-  const start = timeToMinutes(time);
   return bookings.some(b => {
-    if (b.id === excludeId || b.date !== date || b.status === 'Cancelado') return false;
-    return overlaps(start, duration, timeToMinutes(b.time), bookingDuration(b));
+    if (b.id === excludeId || b.date !== date || b.status === 'Cancelado' || b.status === 'Concluído') return false;
+    return String(b.time) === String(time);
   });
 }
 async function getAvailability(date, duration = 60) {
@@ -726,8 +753,12 @@ async function getAvailability(date, duration = 60) {
   const base = hasSpecificDate ? (cfg.dateHours[date] || []) : ((cfg.weeklyHours && cfg.weeklyHours[day]) || []);
   if ((cfg.blockedDates || []).includes(date)) return [];
   return [...new Set(base)].sort().map(time => {
-    const start = timeToMinutes(time);
-    const occupied = bookings.some(b => b.date === date && b.status !== 'Cancelado' && overlaps(start, duration, timeToMinutes(b.time), bookingDuration(b)));
+    const occupied = bookings.some(b =>
+      b.date === date &&
+      b.status !== 'Cancelado' &&
+      b.status !== 'Concluído' &&
+      String(b.time) === String(time)
+    );
     const blocked = (cfg.blockedSlots || []).some(x => x.date === date && x.time === time);
     return { time, available: !occupied && !blocked };
   });
@@ -784,7 +815,7 @@ app.post('/api/bookings', async (req, res) => {
   const total = selected.reduce((sum, s) => sum + s.price, 0);
   const slots = await getAvailability(date, duration);
   const slot = slots.find(s => s.time === time);
-  if (!slot || !slot.available) return res.status(409).json({ error:'Horário indisponível para a duração dos procedimentos escolhidos.' });
+  if (!slot || !slot.available) return res.status(409).json({ error:'Esse horário já está ocupado.' });
   const bookings = await getState('bookings');
   const b = {
     id: crypto.randomUUID(),
