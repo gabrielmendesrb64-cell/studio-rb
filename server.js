@@ -804,23 +804,6 @@ app.post('/api/bookings', async (req, res) => {
   };
   bookings.push(b);
   await setState('bookings', bookings);
-  try {
-    const r = await notifyOwnerNewBooking(b);
-    b.notifications.ownerEmail = !!r.sent;
-    try {
-      const cfg = await getState('config');
-      const ownerPhone = process.env.OWNER_WHATSAPP || cfg.whatsapp;
-      const ownerMsg = `Novo agendamento Studio RB: ${b.name}, ${b.date} às ${b.time}. Total ${moneyBRL(b.total)}.`;
-      const wr = await sendWhatsAppCloud(ownerPhone, ownerMsg);
-      b.notifications.ownerWhatsApp = !!wr.sent;
-    } catch (we) { b.notifications.ownerWhatsApp = false; b.notifications.ownerWhatsAppError = we.message; }
-    await setState('bookings', bookings);
-  } catch (e) {
-    b.notifications.ownerEmail = false;
-    b.notifications.ownerEmailError = e.message;
-    await setState('bookings', bookings);
-    console.error('Falha ao enviar e-mail para proprietária:', e.message);
-  }
   res.status(201).json({ ok:true, id:b.id, status:b.status });
 });
 
@@ -840,7 +823,6 @@ app.post('/api/bookings/:id/proof', upload.single('proof'), async (req,res) => {
   b.status='Comprovante enviado';
   b.proofUploadedAt=new Date().toISOString();
   await setState('bookings', bookings);
-  try { await notifyOwnerNewBooking({...b, name:`${b.name} — comprovante enviado`}); } catch(e) { console.error('Aviso comprovante:',e.message); }
   res.json({ ok:true, status:b.status });
 });
 
@@ -878,14 +860,6 @@ app.post('/api/my-bookings/:id/cancel', async (req, res) => {
   b.cancelledAt = new Date().toISOString();
   b.cancelledBy = 'cliente';
   await setState('bookings', bookings);
-  try {
-    const cfg = await getState('config');
-    await sendMail({
-      to: process.env.OWNER_EMAIL || cfg.email,
-      subject:'Agendamento desmarcado — Studio RB',
-      html:`<div style="font-family:Arial"><h2>Agendamento desmarcado</h2><p><b>Cliente:</b> ${escapeHtml(b.name)}</p><p><b>Data:</b> ${escapeHtml(b.date)} às ${escapeHtml(b.time)}</p></div>`
-    });
-  } catch(e) { console.error('Falha ao avisar cancelamento:', e.message); }
   res.json({ ok:true, booking: publicBooking(b) });
 });
 
@@ -919,24 +893,13 @@ app.patch('/api/admin/bookings/:id', auth, async (req,res) => {
   const arr = await getState('bookings');
   const b = arr.find(x => x.id === req.params.id);
   if (!b) return res.status(404).json({ error:'Não encontrado' });
-  const previous = b.status;
   b.status = req.body.status;
   if (req.body.status === 'Confirmado') { b.paymentStatus='Aprovado'; b.paymentReviewedAt=new Date().toISOString(); }
   if (req.body.status === 'Pagamento recusado') { b.paymentStatus='Recusado'; b.paymentReviewedAt=new Date().toISOString(); }
   b.updatedAt = new Date().toISOString();
-  const shouldNotify = previous !== 'Confirmado' && b.status === 'Confirmado';
-  if (shouldNotify) {
-    b.notifications = { ...(b.notifications || {}), confirmedAt:new Date().toISOString(), notificationPending:true };
-  }
 
-  // Salva o status PRIMEIRO. Falha/lentidão do Gmail nunca mais impede a confirmação.
   await setState('bookings', arr);
-  res.json({ booking:b, notificationQueued:shouldNotify });
-
-  // O envio acontece depois da resposta do painel.
-  if (shouldNotify) {
-    setImmediate(() => processConfirmationNotification(b.id));
-  }
+  res.json({ booking:b });
 });
 
 app.post('/api/admin/bookings', auth, async (req,res) => {
@@ -1149,15 +1112,6 @@ app.put('/api/admin/gallery/:id', auth, async (req,res) => {
   res.json({ ok:true, item });
 });
 
-app.post('/api/admin/bookings/:id/resend-confirmation', auth, async (req,res) => {
-  const arr = await getState('bookings');
-  const b = arr.find(x => x.id === req.params.id);
-  if (!b) return res.status(404).json({ error:'Agendamento não encontrado.' });
-  const notifications = await notifyCustomerConfirmed(b);
-  b.notifications = { ...(b.notifications || {}), confirmation:notifications, confirmationResentAt:new Date().toISOString() };
-  await setState('bookings', arr);
-  res.json({ ok:true, notifications });
-});
 
 app.post('/api/admin/blocks', auth, async (req,res) => {
   const { date, time } = req.body;
@@ -1177,31 +1131,6 @@ app.delete('/api/admin/blocks/:i', auth, async (req,res) => {
   res.json({ ok:true });
 });
 
-app.get('/api/admin/notifications/status', auth, async (req,res) => {
-  res.json({
-    smtpConfigured: !!emailTransport(),
-    ownerEmail: process.env.OWNER_EMAIL || (await getState('config')).email,
-    whatsappCloudConfigured: !!(process.env.WHATSAPP_CLOUD_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID),
-    smtpUser: process.env.SMTP_USER ? process.env.SMTP_USER.replace(/(^.).*(@.*$)/,'$1***$2') : '',
-    smtpPort: Number(process.env.SMTP_PORT || 587),
-    smtpSecure: String(process.env.SMTP_SECURE || 'false') === 'true'
-  });
-});
-app.post('/api/admin/notifications/test-email', auth, async (req,res) => {
-  const cfg = await getState('config');
-  const to = process.env.OWNER_EMAIL || cfg.email;
-  try {
-    const result = await sendMail({ to, subject:'Teste de e-mail — Studio RB', html:'<h2>Studio RB</h2><p>Seu envio de e-mail está funcionando corretamente. 💗</p>', verify:true });
-    if (!result.sent) return res.status(400).json({ error:result.reason });
-    res.json({ ok:true, to });
-  } catch (e) {
-    const code = String(e.code || '');
-    let msg = e.message || 'Falha ao enviar e-mail.';
-    if (code === 'EAUTH' || /Invalid login|Username and Password not accepted|authentication/i.test(msg)) msg = 'O Gmail recusou o login. Confira SMTP_USER e use uma SENHA DE APP válida em SMTP_PASS.';
-    else if (/ETIMEDOUT|ECONNECTION|ECONNREFUSED|timeout/i.test(code + ' ' + msg)) msg = `Não foi possível conectar ao Gmail. Confira SMTP_HOST, SMTP_PORT e SMTP_SECURE no Render (porta atual: ${process.env.SMTP_PORT || '587'}).`;
-    res.status(500).json({ error:msg, code:code || undefined });
-  }
-});
 
 app.get('/api/admin/backup', auth, async (req,res) => {
   const payload = {
@@ -1224,7 +1153,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error:'Não foi possível concluir esta ação. Tente novamente.' });
 });
 
-app.get('/api/health', async (req,res) => res.json({ ok:true, database:!!(pgPool && dbReady), email:!!emailTransport() }));
+app.get('/api/health', async (req,res) => res.json({ ok:true, database:!!(pgPool && dbReady) }));
 
 initDb()
   .catch(err => {
