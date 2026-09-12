@@ -107,3 +107,26 @@
   .booking-services{gap:7px}
   .booking-service{min-height:52px!important;border-radius:14px!important}
 }
+
+
+/* V22 — MOBILE: remove sinal do topo + acesso admin + correções de largura */
+.admin-link{border:1px solid var(--line)!important;background:rgba(255,79,163,.06);font-weight:800}
+.admin-link-icon{display:none}
+.footer-admin{margin-top:10px;color:var(--pink2);font-size:12px;text-decoration:none;width:max-content}
+.footer-admin:hover{text-decoration:underline}
+#bookingDate,.field-grid input,.booking-form input{width:100%;max-width:100%;min-width:0}
+.booking-form,.form-block,.booking-shell{min-width:0;max-width:100%}
+
+@media(max-width:600px){
+  .topbar nav{gap:6px;align-items:center}
+  .topbar nav .admin-link{display:grid!important;place-items:center;width:38px;height:38px;min-width:38px;padding:0!important;border-radius:50%!important}
+  .admin-link-text{display:none}
+  .admin-link-icon{display:inline;font-size:16px;line-height:1}
+  .topbar .nav-cta{padding:0 16px}
+  .hero-copy .signal-card{display:none!important}
+  #bookingDate{display:block;appearance:auto;-webkit-appearance:auto;box-sizing:border-box}
+  .booking-section{overflow:hidden}
+  .booking-form{overflow:hidden}
+  footer .footer-admin{font-size:13px;padding:8px 0}
+  body{padding-bottom:env(safe-area-inset-bottom)}
+}
