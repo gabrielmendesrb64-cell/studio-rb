@@ -29,13 +29,13 @@ async function loadConfig(){
   try{
     const r = await fetch('/api/config');
     cfg = await r.json();
-    const mainMessage = 'Olá! Vim pelo site da Lash Studio RB e gostaria de falar com vocês. 💗';
+    const mainMessage = 'Olá! Vim pelo site da Studio RB e gostaria de falar com vocês. 💗';
     const mainLink = waLink(cfg.whatsapp, mainMessage);
     ['#whatsappFloat','#heroWhatsappBtn','#topWhatsappBtn','#mobileWhatsappBtn','#whatsappLink'].forEach(sel => {
       const el = $(sel); if(el) el.href = mainLink;
     });
     const errorBtn = $('#errorWhatsapp');
-    if(errorBtn) errorBtn.href = waLink(cfg.whatsapp, 'Olá! Tive um problema ao tentar realizar meu agendamento pelo site da Lash Studio RB. Poderia me ajudar?');
+    if(errorBtn) errorBtn.href = waLink(cfg.whatsapp, 'Olá! Tive um problema ao tentar realizar meu agendamento pelo site da Studio RB. Poderia me ajudar?');
     const cW = $('#contactWhatsapp'); if(cW) cW.textContent = cfg.whatsapp || 'Atualizar número';
     const cI = $('#contactInstagram'); if(cI) cI.textContent = cfg.instagram || '@lshstudiorb';
     const cA = $('#contactAddress'); if(cA) cA.textContent = cfg.address || 'Atualizar endereço';

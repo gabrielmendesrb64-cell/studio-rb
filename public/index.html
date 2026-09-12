@@ -1,265 +1,82 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
-  <meta name="theme-color" content="#f8edf2"/>
-  <meta name="description" content="Lash Studio RB Emilly — Lash design, beleza, cuidado e resultados que transformam."/>
-  <meta property="og:title" content="Lash Studio RB Emilly"/>
-  <meta property="og:description" content="Realce sua beleza com quem entende de detalhes."/>
-  <title>Lash Studio RB Emilly — Beleza Premium</title>
-  <link rel="icon" href="assets/logo-premium-v4.svg?v=4"/>
-  <link rel="stylesheet" href="lsh-premium-v4.css?v=15"/>
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08050a">
+  <title>Studio RB • Emilly Ribeiro</title>
+  <meta name="description" content="Studio RB — cílios, sobrancelhas, lábios e beleza com atendimento da Emilly Ribeiro.">
+  <link rel="icon" href="assets/logo-premium-v4.svg?v=19">
+  <link rel="stylesheet" href="studio-rb-v18.css?v=19">
 </head>
-<body class="premium">
-  <div class="backdrop-eye"></div>
-  <div class="page-glow glow-a"></div>
-  <div class="page-glow glow-b"></div>
-
+<body>
   <header class="topbar">
-    <a class="brand" href="#inicio" aria-label="Lash Studio RB Emilly">
-      <img src="assets/logo-premium-v4.svg?v=4" alt="Logo Lash Studio RB Emilly"/>
-    </a>
-
-    <nav class="desktop-nav">
-      <a href="#inicio">Início</a>
-      <a href="#sobre">Sobre</a>
-      <a href="#servicos">Serviços</a>
-      <a href="#resultados">Resultados</a>
-      <a href="#agendamento">Agendar</a>
-      <a href="#meus-agendamentos">Meus agendamentos</a>
-      <a href="#contato">Contato</a>
-    </nav>
-
-    <div class="top-actions">
-      <a class="btn btn-wa mini" id="topWhatsappBtn" target="_blank" rel="noopener">Falar no WhatsApp</a>
-    </div>
-
-    <button class="menu-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
+    <a href="#inicio" class="brand"><span class="brand-mark">RB</span><span><b>Studio RB</b><small>Emilly Ribeiro</small></span></a>
+    <nav><a href="#catalogo">Serviços</a><a href="#portfolio">Resultados</a><a href="#agendar" class="nav-cta">Agendar</a></nav>
   </header>
 
-  <aside class="mobile-menu" id="mobileMenu">
-    <button class="close-menu" id="closeMenu">×</button>
-    <a href="#inicio">Início</a>
-    <a href="#sobre">Sobre</a>
-    <a href="#servicos">Serviços</a>
-    <a href="#resultados">Resultados</a>
-    <a href="#agendamento">Agendar</a>
-    <a href="#meus-agendamentos">Meus agendamentos</a>
-    <a href="#contato">Contato</a>
-    <a class="btn btn-pink" id="mobileWhatsappBtn" target="_blank" rel="noopener">Falar no WhatsApp</a>
-  </aside>
-
   <main>
-    <section class="hero section" id="inicio">
-      <div class="hero-copy reveal">
-        <img src="assets/logo-premium-v4.svg?v=4" class="hero-logo" alt="Logo Lash Studio RB Emilly"/>
-        <h1>Realce o que te faz <em>única.</em></h1>
-        <p>Olhares mais expressivos, beleza em cada detalhe e um atendimento pensado para valorizar você.</p>
-
-        <div class="hero-actions">
-          <a class="btn btn-pink btn-lg" href="#agendamento">AGENDAR HORÁRIO</a>
-          <a class="btn btn-outline btn-lg" id="heroWhatsappBtn" target="_blank" rel="noopener">FALAR NO WHATSAPP</a>
-        </div>
-
-        <div class="hero-icons">
-          <div><span>◇</span><small>Atendimento<br>personalizado</small></div>
-          <div><span>🛡</span><small>Produtos de<br>alta qualidade</small></div>
-          <div><span>♡</span><small>Ambiente<br>confortável</small></div>
-          <div><span>★</span><small>Resultados<br>naturais</small></div>
-        </div>
+    <section id="inicio" class="hero section-dark">
+      <div class="neon-orbit orbit-a"></div><div class="neon-orbit orbit-b"></div>
+      <div class="hero-copy">
+        <span class="kicker">CATÁLOGO • STUDIO RB</span>
+        <h1>Beleza que <em>valoriza</em> o seu olhar.</h1>
+        <p>Atendimento pensado para realçar sua beleza natural com cuidado, técnica e personalidade.</p>
+        <div class="hero-actions"><a class="btn btn-hot" href="#agendar">Agendar horário</a><a class="btn btn-line" href="#catalogo">Ver catálogo</a></div>
+        <div class="signal-card"><span>Sinal de reserva</span><strong id="heroDeposit">R$ 20,00</strong><small>descontado do valor no dia do atendimento</small></div>
       </div>
+      <div class="hero-photo-wrap"><div class="blob-frame"><img src="assets/proprietaria-lsh.webp" alt="Emilly Ribeiro, Studio RB"></div><span class="spark s1">✦</span><span class="spark s2">✦</span></div>
+    </section>
 
-      <div class="hero-visual reveal">
-        <div class="hero-photo">
-          <img src="assets/proprietaria-lsh.webp" alt="Emilly, proprietária do Lash Studio RB"/>
-          <div class="neon-box">
-            <strong>Beleza<br>Confiança<br>Autoestima</strong>
-            <small>todos os dias ♡</small>
-          </div>
-          <div class="hero-signature">
-            <span>Emilly♡</span>
-            <small>Lash Designer</small>
-          </div>
-        </div>
+    <section class="about section-dark">
+      <div class="about-photo"><img src="assets/proprietaria-lsh.webp" alt="Emilly Ribeiro"></div>
+      <div class="about-copy"><span class="kicker">PRAZER, ME CHAMO</span><h2>Emilly Ribeiro <span>✦</span></h2><p>Sou lash designer apaixonada por realçar a beleza e a autoestima através do olhar. Trabalho com dedicação, cuidado e técnicas que valorizam cada cliente de forma única.</p><div class="mini-tags"><span>Cílios</span><span>Sobrancelhas</span><span>Lábios</span><span>Beleza</span></div></div>
+    </section>
+
+    <section id="catalogo" class="catalog section-dark">
+      <div class="section-head"><span class="kicker">TABELA DE VALORES</span><h2>Escolha seu procedimento</h2><p>Todos os valores e procedimentos podem ser atualizados pela proprietária no painel.</p></div>
+      <div id="servicesGrid" class="services-grid"><div class="loading-card">Carregando serviços...</div></div>
+    </section>
+
+    <section id="portfolio" class="portfolio section-dark">
+      <div class="section-head"><span class="kicker">RESULTADOS</span><h2>Trabalhos do Studio RB</h2></div>
+      <div id="galleryTabs" class="gallery-tabs"></div>
+      <div id="galleryGrid" class="gallery-grid"></div>
+    </section>
+
+    <section class="procedure-info section-dark">
+      <div class="info-card"><span class="kicker">SOBRE O PROCEDIMENTO</span><h2>Venha confortável.</h2><p>Os procedimentos podem levar em torno de 1h30 a 2h, dependendo da técnica escolhida e da quantidade de fios naturais.</p><div class="rules"><div><b>01</b><span>Venha sem maquiagem, principalmente sem rímel.</span></div><div><b>02</b><span>Se usar lentes de contato, retire antes do procedimento.</span></div><div><b>03</b><span>Reserve seu horário com o sinal PIX e envie o comprovante.</span></div></div></div>
+    </section>
+
+    <section id="agendar" class="booking-section section-dark">
+      <div class="section-head"><span class="kicker">AGENDE SEU HORÁRIO</span><h2>Reserva rápida e segura</h2><p>Escolha o procedimento, a data e o horário. Depois faça o sinal PIX e envie o comprovante.</p></div>
+      <div class="booking-shell">
+        <form id="bookingForm" class="booking-form">
+          <div class="form-block"><div class="block-title"><span>1</span><div><b>Procedimentos</b><small>Você pode selecionar mais de um</small></div></div><div id="bookingServices" class="booking-services"></div><div class="total-row"><span>Total estimado</span><strong id="bookingTotal">R$ 0,00</strong></div></div>
+          <div class="form-block"><div class="block-title"><span>2</span><div><b>Data e horário</b><small>Horários liberados pela Emilly</small></div></div><input id="bookingDate" type="date" required><div id="timeSlots" class="time-slots"><span class="muted">Escolha uma data.</span></div><input id="bookingTime" type="hidden" required></div>
+          <div class="form-block"><div class="block-title"><span>3</span><div><b>Seus dados</b><small>Usados para confirmar a reserva</small></div></div><div class="field-grid"><input name="name" placeholder="Seu nome" required><input name="phone" inputmode="tel" placeholder="WhatsApp com DDD" required><input name="email" type="email" placeholder="E-mail" required></div></div>
+          <button class="btn btn-hot full" type="submit" id="bookingSubmit">CONTINUAR PARA O PIX</button>
+        </form>
+
+        <aside class="pix-card" id="pixPreview"><span class="kicker">SINAL OBRIGATÓRIO</span><div class="pix-value" id="pixValue">R$ 20,00</div><p>Seu horário só fica confirmado após o envio e aprovação do comprovante.</p><ul><li>O sinal é descontado do valor final.</li><li>Você pode enviar o comprovante pelo site ou WhatsApp.</li><li>A aprovação será feita pela Emilly.</li></ul></aside>
       </div>
     </section>
 
-    <section class="section about-premium-dark about-solo" id="sobre">
-      <div class="about-shell reveal">
-        <div class="about-text">
-          <span class="eyebrow">SOBRE MIM</span>
-          <h2>Olá, eu sou a <br><strong>Emilly♡</strong></h2>
-          <p>Sou lash designer e minha missão é realçar a beleza do seu olhar, proporcionando mais autoestima e confiança. No Lash Studio RB, cada atendimento é feito com muito carinho, técnica e dedicação, sempre pensando no que há de melhor para você.</p>
-
-          <div class="about-points">
-            <div><b>Atendimento</b><span>Cuidadoso e personalizado</span></div>
-            <div><b>Beleza</b><span>Acabamento delicado e sofisticado</span></div>
-            <div><b>Objetivo</b><span>Valorizar seu olhar com elegância</span></div>
-          </div>
-
-          <a class="btn btn-pink soft" href="#resultados">CONHEÇA MEU TRABALHO</a>
-        </div>
-
-        <div class="about-gallery-solo">
-          <div class="about-photo-feature">
-            <img src="assets/proprietaria-lsh.webp" alt="Emilly do Lash Studio RB">
-          </div>
-          <div class="about-badge">Emilly • Lash Designer</div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section services-premium" id="servicos">
-      <div class="section-head center light reveal">
-        <h2>Meus serviços</h2>
-        <p>Realce a sua beleza com técnicas modernas e seguras.</p>
-      </div>
-
-      <div class="service-pill-grid">
-        <article class="service-pill reveal"><span>◠</span><h3>Alongamento de Cílios</h3><p>Diversos efeitos para o seu olhar.</p></article>
-        <article class="service-pill reveal"><span>⌒</span><h3>Design de Sobrancelhas</h3><p>Mais harmonia para o seu rosto.</p></article>
-        <article class="service-pill reveal"><span>◡</span><h3>Lifting de Cílios</h3><p>Cílios mais curvados e definidos.</p></article>
-        <article class="service-pill reveal"><span>✦</span><h3>Henna</h3><p>Sobrancelhas mais preenchidas.</p></article>
-        <article class="service-pill reveal"><span>☺</span><h3>Limpeza de Pele</h3><p>Cuidado e realce ainda maior para seu olhar.</p></article>
-        <article class="service-pill reveal"><span>•••</span><h3>Outros serviços</h3><p>Consulte disponibilidade.</p></article>
-      </div>
-    </section>
-
-    <section class="section results-premium results-categories" id="resultados">
-      <div class="section-head center light reveal">
-        <span class="eyebrow">PORTFÓLIO DA EMILLY</span>
-        <h2>Conheça meus trabalhos</h2>
-        <p>Escolha uma categoria e veja os resultados organizados por procedimento.</p>
-      </div>
-
-      <div class="gallery-tabs-wrap reveal">
-        <div class="gallery-category-tabs" id="galleryCategoryTabs" role="tablist" aria-label="Categorias do portfólio"></div>
-      </div>
-      <div class="gallery-category-content reveal" id="galleryCategoryContent">
-        <div class="booking-alert">Carregando portfólio...</div>
-      </div>
-    </section>
-
-    <section class="section booking-premium booking-v8" id="agendamento">
-      <div class="booking-v8-head reveal">
-        <span class="eyebrow">AGENDE SEU HORÁRIO</span>
-        <h2>Monte seu atendimento do seu jeito ♡</h2>
-        <p>Escolha um ou mais procedimentos, veja o valor total, selecione uma data e um horário liberado pela Emilly.</p>
-      </div>
-
-      <div class="booking-v8-shell reveal">
-        <div class="booking-step procedures-step">
-          <div class="step-title"><span>01</span><div><b>Escolha os procedimentos</b><small>Você pode selecionar mais de um.</small></div></div>
-          <div class="procedure-grid" id="procedureGrid"><div class="booking-alert">Carregando procedimentos...</div></div>
-        </div>
-
-        <div class="booking-step schedule-step">
-          <div class="step-title"><span>02</span><div><b>Escolha data e horário</b><small>Só aparecem horários liberados no painel.</small></div></div>
-          <div class="booking-calendar-box">
-            <label for="bookingDate">Data do atendimento</label>
-            <input type="date" id="bookingDate" required/>
-            <div class="calendar-slots-title">Horários disponíveis</div>
-            <div class="time-grid" id="timeGrid"><p class="muted">Escolha os procedimentos e uma data.</p></div>
-            <input type="hidden" id="bookingTime"/>
-          </div>
-        </div>
-
-        <div class="booking-step customer-step">
-          <div class="step-title"><span>03</span><div><b>Seus dados</b><small>Usamos seus dados para localizar e confirmar o agendamento.</small></div></div>
-          <form id="bookingForm" class="premium-form booking-form-v8">
-            <div class="field"><input id="clientName" name="name" placeholder="Seu nome completo" maxlength="80" required/></div>
-            <div class="field"><input id="clientPhone" name="phone" inputmode="tel" placeholder="Seu WhatsApp com DDD" maxlength="24" required/></div>
-            <div class="field"><input id="clientEmail" name="email" type="email" placeholder="Seu e-mail para receber a confirmação" maxlength="120" required/></div>
-
-            <div class="booking-summary">
-              <div class="summary-head"><b>Resumo</b><span id="bookingDuration">60 min aprox.</span></div>
-              <div class="selected-procedure-list" id="selectedProcedureList"><small>Nenhum procedimento selecionado.</small></div>
-              <div class="summary-total"><span>Total do atendimento</span><strong id="bookingTotal">R$ 0,00</strong></div>
-            </div>
-
-            <button class="btn btn-pink btn-lg full" type="submit">ENVIAR SOLICITAÇÃO</button>
-            <p class="privacy-note">O pedido fica pendente até a Emilly confirmar. Quando for confirmado, você recebe a confirmação pelo canal configurado.</p>
-          </form>
-
-          <div class="form-state hidden" id="successState">
-            <div class="state-icon">♥</div>
-            <h3>Solicitação enviada! 💗</h3>
-            <p>Seu pedido entrou na agenda da Lash Studio RB. Você pode acompanhar em “Meus agendamentos”.</p>
-            <a class="btn btn-outline" href="#meus-agendamentos">VER MEUS AGENDAMENTOS</a>
-            <button class="btn btn-pink" id="newBooking">Fazer outro agendamento</button>
-          </div>
-
-          <div class="form-state hidden" id="errorState">
-            <div class="state-icon">!</div>
-            <h3>Não conseguimos concluir agora.</h3>
-            <p id="bookingErrorText">Confira seus dados e tente novamente.</p>
-            <a class="btn btn-pink" id="errorWhatsapp" target="_blank" rel="noopener">FALAR COM A LASH NO WHATSAPP</a>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section my-bookings-section" id="meus-agendamentos">
-      <div class="my-bookings-shell reveal">
-        <div class="my-bookings-copy">
-          <span class="eyebrow">ÁREA DA CLIENTE</span>
-          <h2>Meus agendamentos</h2>
-          <p>Digite o mesmo WhatsApp usado no agendamento ou seu nome completo para consultar seus horários, procedimentos, total e status.</p>
-        </div>
-        <div class="my-bookings-search">
-          <input id="myBookingQuery" placeholder="WhatsApp ou nome completo" autocomplete="off"/>
-          <button class="btn btn-pink" id="myBookingsSearchBtn" type="button">BUSCAR</button>
-        </div>
-        <div id="myBookingsResult" class="my-bookings-results"></div>
-      </div>
-    </section>
-
-    <section class="section contact-premium" id="contato">
-      <div class="contact-bottom reveal">
-        <div class="contact-branding">
-          <img src="assets/logo-premium-v4.svg?v=4" alt="Lash Studio RB Emilly">
-          <span>Beleza • Autoestima • Confiança</span>
-        </div>
-
-        <div class="contact-icons">
-          <a id="instagramLink" href="#" aria-label="Instagram">◎</a>
-          <a id="whatsappLink" href="#" aria-label="WhatsApp">✆</a>
-        </div>
-
-        <div class="contact-meta">
-          <p><b>WhatsApp</b> <span id="contactWhatsapp">Atualizar número</span></p>
-          <p><b>Instagram</b> <span id="contactInstagram">@studio.__rb</span></p>
-          <p><b>Endereço</b> <span id="contactAddress">Atualizar endereço</span></p>
-          <p><b>Atendimento</b> <span id="contactHours">Seg a Sáb</span></p>
-        </div>
-
-        <div class="contact-quote">
-          <p>“Mulheres que se olham no espelho e se reconhecem, mudam o mundo.”</p>
-        </div>
-      </div>
-    </section>
+    <section class="lookup section-dark"><div class="lookup-card"><span class="kicker">MEUS AGENDAMENTOS</span><h2>Consulte sua reserva</h2><form id="lookupForm"><input id="lookupQuery" placeholder="Digite seu WhatsApp ou nome"><button class="btn btn-line" type="submit">Consultar</button></form><div id="lookupResults"></div></div></section>
   </main>
 
-  <a class="whatsapp-float" id="whatsappFloat" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
-    <span class="wa-icon">✆</span>
-    <span class="wa-copy"><b>Precisa de ajuda?</b><small>Fale conosco 💗</small></span>
-  </a>
+  <dialog id="paymentDialog" class="payment-dialog">
+    <button class="dialog-close" id="closePayment" type="button">×</button>
+    <div class="payment-head"><span class="kicker">RESERVA CRIADA</span><h2>Agora faça o sinal</h2><p>O horário fica reservado para análise do comprovante.</p></div>
+    <div class="pix-pay-box"><small>Valor do sinal</small><strong id="dialogDeposit">R$ 20,00</strong><small>Chave PIX</small><div class="copy-row"><code id="pixKeyText">Configure a chave PIX no painel</code><button id="copyPix" type="button">Copiar</button></div><p id="pixRecipientText"></p></div>
+    <form id="proofForm" class="proof-form"><input id="proofPhone" type="hidden"><label class="proof-drop"><input id="proofFile" type="file" name="proof" accept="image/*" capture="environment" required><span>📎 Enviar comprovante pelo site</span><small>Fotos grandes do celular serão reduzidas automaticamente.</small></label><button class="btn btn-hot full" id="proofSubmit" type="submit">ENVIAR COMPROVANTE</button></form>
+    <a id="whatsappProof" class="btn btn-whatsapp full" target="_blank" rel="noopener">Enviar pelo WhatsApp</a>
+    <div id="paymentStatus" class="payment-status"></div>
+  </dialog>
 
-  <nav class="bottom-nav">
-    <a href="#inicio"><span>⌂</span><small>Início</small></a>
-    <a href="#servicos"><span>✦</span><small>Serviços</small></a>
-    <a class="bottom-main" href="#agendamento"><span>＋</span><small>Agendar</small></a>
-    <a href="#meus-agendamentos"><span>◷</span><small>Agenda</small></a>
-    <a href="#contato"><span>✉</span><small>Contato</small></a>
-  </nav>
-
-  <footer class="simple-footer">
-    <p>© <span id="year"></span> Lash Studio RB — Todos os direitos reservados.</p>
-    <a href="admin.html" class="admin-link">Área da proprietária</a>
-  </footer>
-
-  <script src="lsh-premium-v15.js?v=15" defer></script>
+  <footer><div><b>Studio RB</b><span>Emilly Ribeiro</span></div><div id="footerContact"></div></footer>
+  <a id="floatingWhatsapp" class="float-wa" target="_blank" rel="noopener" aria-label="WhatsApp">WA</a>
+  <div id="toast" class="toast"></div>
+  <script src="studio-rb-v18.js?v=19" defer></script>
 </body>
 </html>

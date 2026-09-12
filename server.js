@@ -612,17 +612,17 @@ async function notifyOwnerNewBooking(b) {
 }
 async function notifyCustomerConfirmed(b) {
   const serviceText = (b.services || []).map(s => s.name).join(', ') || 'Procedimento';
-  const text = `Olá, ${b.name}! 💗 Seu agendamento no Lash Studio RB foi CONFIRMADO. Data: ${b.date} • Horário: ${b.time} • Procedimento(s): ${serviceText} • Total: ${moneyBRL(b.total)}. Até lá!`;
+  const text = `Olá, ${b.name}! 💗 Seu agendamento no Studio RB foi CONFIRMADO. Data: ${b.date} • Horário: ${b.time} • Procedimento(s): ${serviceText} • Total: ${moneyBRL(b.total)}. Até lá!`;
   const results = { email:false, whatsapp:false, errors:[] };
   try {
     const r = await sendMail({
       to: b.email,
-      subject: 'Agendamento confirmado — Lash Studio RB',
+      subject: 'Agendamento confirmado — Studio RB',
       html: `
         <div style="font-family:Arial;background:#0b0b0b;color:#fff;padding:28px;border-radius:16px">
           <h2 style="color:#ff5b9e">Seu agendamento foi confirmado 💗</h2>
           <p>Olá, <b>${escapeHtml(b.name)}</b>!</p>
-          <p>Seu horário no <b>Lash Studio RB</b> está confirmado.</p>
+          <p>Seu horário no <b>Studio RB</b> está confirmado.</p>
           <p><b>Data:</b> ${escapeHtml(b.date)}</p>
           <p><b>Horário:</b> ${escapeHtml(b.time)}</p>
           <p><b>Procedimento(s):</b> ${escapeHtml(serviceText)}</p>
@@ -748,7 +748,7 @@ app.post('/api/bookings', async (req, res) => {
     try {
       const cfg = await getState('config');
       const ownerPhone = process.env.OWNER_WHATSAPP || cfg.whatsapp;
-      const ownerMsg = `Novo agendamento Lash: ${b.name}, ${b.date} às ${b.time}. Total ${moneyBRL(b.total)}.`;
+      const ownerMsg = `Novo agendamento Studio RB: ${b.name}, ${b.date} às ${b.time}. Total ${moneyBRL(b.total)}.`;
       const wr = await sendWhatsAppCloud(ownerPhone, ownerMsg);
       b.notifications.ownerWhatsApp = !!wr.sent;
     } catch (we) { b.notifications.ownerWhatsApp = false; b.notifications.ownerWhatsAppError = we.message; }
@@ -820,7 +820,7 @@ app.post('/api/my-bookings/:id/cancel', async (req, res) => {
     const cfg = await getState('config');
     await sendMail({
       to: process.env.OWNER_EMAIL || cfg.email,
-      subject:'Agendamento desmarcado — Lash Studio RB',
+      subject:'Agendamento desmarcado — Studio RB',
       html:`<div style="font-family:Arial"><h2>Agendamento desmarcado</h2><p><b>Cliente:</b> ${escapeHtml(b.name)}</p><p><b>Data:</b> ${escapeHtml(b.date)} às ${escapeHtml(b.time)}</p></div>`
     });
   } catch(e) { console.error('Falha ao avisar cancelamento:', e.message); }
@@ -1107,7 +1107,7 @@ app.post('/api/admin/notifications/test-email', auth, async (req,res) => {
   const cfg = await getState('config');
   const to = process.env.OWNER_EMAIL || cfg.email;
   try {
-    const result = await sendMail({ to, subject:'Teste de e-mail — Lash Studio RB', html:'<h2>Lash Studio RB</h2><p>Seu envio de e-mail está funcionando corretamente. 💗</p>', verify:true });
+    const result = await sendMail({ to, subject:'Teste de e-mail — Studio RB', html:'<h2>Studio RB</h2><p>Seu envio de e-mail está funcionando corretamente. 💗</p>', verify:true });
     if (!result.sent) return res.status(400).json({ error:result.reason });
     res.json({ ok:true, to });
   } catch (e) {
@@ -1126,7 +1126,7 @@ app.get('/api/admin/backup', auth, async (req,res) => {
     bookings: await getState('bookings')
   };
   res.setHeader('Content-Type','application/json; charset=utf-8');
-  res.setHeader('Content-Disposition',`attachment; filename=lash-studio-backup-${new Date().toISOString().slice(0,10)}.json`);
+  res.setHeader('Content-Disposition',`attachment; filename=studio-rb-backup-${new Date().toISOString().slice(0,10)}.json`);
   res.send(JSON.stringify(payload, null, 2));
 });
 
@@ -1147,4 +1147,4 @@ initDb()
     dbReady = false;
     console.error('[DATABASE] Falha ao iniciar PostgreSQL:', err.stack || err.message);
   })
-  .finally(() => app.listen(PORT, () => console.log(`Lash Studio RB disponível em http://localhost:${PORT}`)));
+  .finally(() => app.listen(PORT, () => console.log(`Studio RB disponível em http://localhost:${PORT}`)));

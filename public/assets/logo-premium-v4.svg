@@ -1,13 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 220">
-<defs>
-  <linearGradient id="p" x1="0" x2="1">
-    <stop offset="0" stop-color="#ffd0df"/>
-    <stop offset=".5" stop-color="#ff91ba"/>
-    <stop offset="1" stop-color="#ff5b9e"/>
-  </linearGradient>
-</defs>
-<text x="18" y="105" font-family="Georgia,serif" font-size="88" fill="url(#p)" letter-spacing="1">Lash</text>
-<path d="M212 62c35 4 62 20 89 44 17 15 36 22 57 21 24-1 45-9 70-25-14 18-34 33-58 43 27 3 51 12 70 26-22-7-46-10-72-7 12 9 22 19 31 30-20-9-39-21-56-36-18-16-35-32-55-45-21-14-45-24-76-31z" fill="url(#p)"/>
-<text x="21" y="150" font-family="Arial,sans-serif" font-size="31" fill="#fff" letter-spacing="8">STUDIO RB</text>
-<text x="230" y="200" font-family="Segoe Script, cursive" font-size="48" fill="#ff93bb">Emilly♡</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 220">
+  <defs>
+    <linearGradient id="p" x1="0" x2="1">
+      <stop offset="0" stop-color="#ffd0df"/>
+      <stop offset=".5" stop-color="#ff91ba"/>
+      <stop offset="1" stop-color="#ff5b9e"/>
+    </linearGradient>
+  </defs>
+  <text x="18" y="98" font-family="Georgia,serif" font-size="66" fill="url(#p)" letter-spacing="1.2">Studio RB</text>
+  <path d="M360 56c35 4 62 20 89 44 17 15 36 22 57 21 24-1 45-9 70-25-14 18-34 33-58 43 27 3 51 12 70 26-22-7-46-10-72-7 12 9 22 19 31 30-20-9-39-21-56-36-18-16-35-32-55-45-21-14-45-24-76-31z" fill="url(#p)"/>
+  <text x="22" y="138" font-family="Arial,sans-serif" font-size="22" fill="#fff" letter-spacing="7">BEAUTY &amp; DESIGN</text>
+  <text x="270" y="188" font-family="Segoe Script, cursive" font-size="48" fill="#ff93bb">Emilly♡</text>
 </svg>
