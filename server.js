@@ -922,8 +922,19 @@ app.get('/api/admin/me', auth, (req,res) => res.json({ ok:true }));
 
 function bookingFinancialTotal(b){
   const direct = Number(b?.total || 0);
-  if (direct > 0) return direct;
-  return (b?.services || []).reduce((sum,x)=>sum + Number(x?.price || 0),0);
+  if (Number.isFinite(direct) && direct > 0) return direct;
+
+  const serviceSum = (b?.services || []).reduce((sum,x)=>{
+    if (typeof x === 'object' && x) {
+      const p = Number(x.price || 0);
+      return sum + (Number.isFinite(p) ? p : 0);
+    }
+    return sum;
+  },0);
+  if (serviceSum > 0) return serviceSum;
+
+  const legacy = Number(b?.amount || b?.value || b?.price || 0);
+  return Number.isFinite(legacy) && legacy > 0 ? legacy : 0;
 }
 function bookingServiceLabelList(b){
   return (b?.services || []).map(x => typeof x === 'string' ? x : (x?.name || '')).filter(Boolean);
@@ -1064,6 +1075,10 @@ app.patch('/api/admin/bookings/:id', auth, async (req,res) => {
   b.status = req.body.status;
   if (req.body.status === 'Confirmado') { b.paymentStatus='Aprovado'; b.paymentReviewedAt=new Date().toISOString(); }
   if (req.body.status === 'Pagamento recusado') { b.paymentStatus='Recusado'; b.paymentReviewedAt=new Date().toISOString(); }
+  if (req.body.status === 'Concluído' && Number(b.total||0) <= 0) {
+    const recalculated = bookingFinancialTotal(b);
+    if (recalculated > 0) b.total = recalculated;
+  }
   b.updatedAt = new Date().toISOString();
 
   await setState('bookings', arr);

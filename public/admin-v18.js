@@ -1,5 +1,5 @@
 'use strict';
-let bookings=[], adminConfig=null, currentFilter='all', calendarCursor=new Date(), selectedCalendarDate='';
+let bookings=[], adminConfig=null, currentFilter='all', calendarCursor=new Date(), selectedCalendarDate='', financePeriod='month', selectedClientKey='';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const dayNames=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 
@@ -307,11 +307,13 @@ function uniqueClientsFromBookings(rows){
 
 let clientSearchCache=[];
 
+let clientSearchSeq=0;
 async function renderClientSearch(){
   const input=$('#clientSearchInput'),month=$('#clientMonthFilter');
   if(!input||!month)return;
   if(!month.value)month.value=currentMonthValue();
   const q=input.value.trim();
+  const seq=++clientSearchSeq;
 
   if(q.length<2){
     clientSearchCache=[];
@@ -320,8 +322,11 @@ async function renderClientSearch(){
     return;
   }
 
+  $('#clientSearchResults').innerHTML='<div class="empty-state small-empty">Buscando cliente...</div>';
+
   try{
     const d=await api(`/api/admin/clients/search?q=${encodeURIComponent(q)}&month=${encodeURIComponent(month.value)}`);
+    if(seq!==clientSearchSeq)return;
     clientSearchCache=d.clients||[];
     $('#clientSearchResults').innerHTML=clientSearchCache.length?clientSearchCache.map(c=>`
       <button type="button" class="client-result ${selectedClientKey===c.key?'active':''}" data-client-key="${esc(c.key)}">
@@ -330,6 +335,7 @@ async function renderClientSearch(){
       </button>`).join(''):'<div class="empty-state small-empty">Nenhuma cliente encontrada.</div>';
     if(selectedClientKey)renderClientHistory();
   }catch(e){
+    if(seq!==clientSearchSeq)return;
     $('#clientSearchResults').innerHTML=`<div class="empty-state small-empty">${esc(e.message)}</div>`;
   }
 }
@@ -373,6 +379,7 @@ async function renderFinance(){
   if(!ref.value)ref.value=currentMonthValue();
 
   try{
+    $('#financeSummary').innerHTML='<div class="empty-state">Calculando ganhos...</div>';
     const d=await api(`/api/admin/finance?period=${encodeURIComponent(financePeriod)}&reference=${encodeURIComponent(ref.value)}`);
     $('#financeSummary').innerHTML=`
       <div class="finance-stat"><small>Período</small><b>${esc(d.label||'')}</b></div>
