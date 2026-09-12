@@ -135,11 +135,13 @@ async function readRelationalConfig(client = pgPool) {
   for (const row of settings.rows) cfg[row.key] = row.value;
 
   const services = await client.query(
-    'SELECT id,name,price,duration,active FROM lsh_services ORDER BY position,id'
+    'SELECT id,name,description,image,price,duration,active FROM lsh_services ORDER BY position,id'
   );
   cfg.services = services.rows.map(x => ({
     id: String(x.id),
     name: x.name,
+    description: x.description || '',
+    image: x.image || '',
     price: x.price === null ? null : Number(x.price),
     duration: Number(x.duration || 60),
     active: x.active !== false
@@ -192,9 +194,9 @@ async function writeRelationalConfig(cfg, client = pgPool) {
     for (let i=0; i<(normalized.services || []).length; i++) {
       const s = normalized.services[i];
       await c.query(
-        `INSERT INTO lsh_services(id,name,price,duration,active,position,updated_at)
-         VALUES($1,$2,$3,$4,$5,$6,NOW())`,
-        [String(s.id), String(s.name), s.price === null || s.price === '' ? null : Number(s.price),
+        `INSERT INTO lsh_services(id,name,description,image,price,duration,active,position,updated_at)
+         VALUES($1,$2,$3,$4,$5,$6,$7,$8,NOW())`,
+        [String(s.id), String(s.name), String(s.description || '').slice(0,220), String(s.image || ''), s.price === null || s.price === '' ? null : Number(s.price),
          Math.max(15, Number(s.duration || 60)), s.active !== false, i]
       );
     }
@@ -396,11 +398,28 @@ async function migrateV18Catalog(client) {
     await client.query('DELETE FROM lsh_services');
     for (let i=0;i<(local.services||[]).length;i++) {
       const x=local.services[i];
-      await client.query(`INSERT INTO lsh_services(id,name,price,duration,active,position,updated_at) VALUES($1,$2,$3,$4,$5,$6,NOW())`,
-        [String(x.id),String(x.name),Number(x.price||0),Math.max(15,Number(x.duration||60)),x.active!==false,i]);
+      await client.query(`INSERT INTO lsh_services(id,name,description,image,price,duration,active,position,updated_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,NOW())`,
+        [String(x.id),String(x.name),String(x.description||''),String(x.image||''),Number(x.price||0),Math.max(15,Number(x.duration||60)),x.active!==false,i]);
     }
   }
   await client.query("INSERT INTO lsh_migrations(name) VALUES('v18_pdf_catalog') ON CONFLICT DO NOTHING");
+}
+
+async function migrateV23ServiceMedia(client) {
+  const already = await client.query("SELECT 1 FROM lsh_migrations WHERE name='v23_service_media'");
+  if (already.rowCount) return;
+  const local = normalizeGalleryConfig(readJson(cfgPath, {}));
+  for (const s of (local.services || [])) {
+    await client.query(
+      `UPDATE lsh_services
+       SET description=CASE WHEN COALESCE(description,'')='' THEN $2 ELSE description END,
+           image=CASE WHEN COALESCE(image,'')='' THEN $3 ELSE image END,
+           updated_at=NOW()
+       WHERE id=$1`,
+      [String(s.id), String(s.description || ''), String(s.image || '')]
+    );
+  }
+  await client.query("INSERT INTO lsh_migrations(name) VALUES('v23_service_media') ON CONFLICT DO NOTHING");
 }
 
 async function initDb() {
@@ -415,6 +434,7 @@ async function initDb() {
     await client.query(ddl);
     await migrateLegacyData(client);
     await migrateV18Catalog(client);
+    await migrateV23ServiceMedia(client);
     dbReady = true;
     console.log('[DATABASE] PostgreSQL conectado e pronto.');
   } finally {
@@ -950,6 +970,8 @@ app.put('/api/admin/services', auth, async (req,res) => {
     cleaned.push({
       id: String(raw.id || crypto.randomUUID()).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,60) || `servico-${i+1}`,
       name,
+      description: String(raw.description || '').trim().slice(0,220),
+      image: String(raw.image || '').trim().slice(0,1600000),
       price: price === null ? null : Math.round(Math.max(0, price) * 100) / 100,
       duration: Math.max(15, Math.min(480, Math.round(duration))),
       active
@@ -964,6 +986,26 @@ app.put('/api/admin/services', auth, async (req,res) => {
   c.services = cleaned;
   await setState('config', c);
   res.json({ ok:true, services:cleaned });
+});
+
+app.post('/api/admin/services/:id/image', auth, upload.single('image'), async (req,res) => {
+  if (!req.file) return res.status(400).json({ error:'Escolha uma imagem.' });
+  const cfg = normalizeGalleryConfig(await getState('config'));
+  const service = (cfg.services || []).find(x => String(x.id) === String(req.params.id));
+  if (!service) return res.status(404).json({ error:'Procedimento não encontrado. Salve o procedimento antes de enviar a foto.' });
+  const optimized = await optimizeImage(req.file.buffer, { max:1200, quality:82 });
+  service.image = `data:image/webp;base64,${optimized.toString('base64')}`;
+  await setState('config', cfg);
+  res.json({ ok:true, image:service.image });
+});
+
+app.delete('/api/admin/services/:id/image', auth, async (req,res) => {
+  const cfg = normalizeGalleryConfig(await getState('config'));
+  const service = (cfg.services || []).find(x => String(x.id) === String(req.params.id));
+  if (!service) return res.status(404).json({ error:'Procedimento não encontrado.' });
+  service.image = '';
+  await setState('config', cfg);
+  res.json({ ok:true });
 });
 
 

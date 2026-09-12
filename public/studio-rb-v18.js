@@ -8,6 +8,7 @@ async function api(url,opts={}){const r=await fetch(url,{cache:'no-store',...opt
 function duration(){return (cfg.services||[]).filter(s=>selectedServices.has(s.id)).reduce((a,s)=>a+Number(s.duration||60),0)}
 function total(){return (cfg.services||[]).filter(s=>selectedServices.has(s.id)).reduce((a,s)=>a+Number(s.price||0),0)}
 function serviceVisual(s){
+  if (s.image || s.description) return {image:s.image || 'assets/service-placeholder.svg',description:s.description || 'Procedimento realizado com cuidado e técnica no Studio RB.'};
   const n=String(s.name||'').toLowerCase();
   const rules=[
     [/volume brasileiro/,['assets/services/volume-brasileiro.webp','Entrega volume e delicadeza ao olhar.']],

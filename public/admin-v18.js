@@ -85,11 +85,60 @@ function renderSchedule(){const weekly=adminConfig?.weeklyHours||{};$('#schedule
 async function saveWeekly(){const state=$('#scheduleSaveState');state.textContent='Salvando...';state.classList.add('saving');try{const d=await api('/api/admin/schedule',{method:'PUT',body:JSON.stringify({weeklyHours:adminConfig.weeklyHours})});adminConfig.weeklyHours=d.weeklyHours;state.textContent='Salvo ✓';state.classList.remove('saving');renderSchedule();renderCalendar();renderDayManager();return true;}catch(e){state.textContent='Erro ao salvar';state.classList.remove('saving');toast(e.message,'error');return false;}}
 $('#scheduleEditor')?.addEventListener('click',async e=>{const row=e.target.closest('[data-day]');if(!row)return;const day=row.dataset.day;const add=e.target.closest('.js-add-week-time');if(add){const input=row.querySelector('.day-time-input'),t=input.value;if(!t){toast('Escolha um horário.','error');return;}const before=[...(adminConfig.weeklyHours[day]||[])],arr=[...before];if(!arr.includes(t))arr.push(t);adminConfig.weeklyHours[day]=arr.sort();input.value='';const ok=await saveWeekly();if(ok)toast('Horário adicionado e salvo.');else adminConfig.weeklyHours[day]=before;return;}const remove=e.target.closest('.js-remove-week-time');if(remove){const before=[...(adminConfig.weeklyHours[day]||[])];adminConfig.weeklyHours[day]=before.filter(t=>t!==remove.dataset.time);const ok=await saveWeekly();if(ok)toast('Horário removido e salvo.');else adminConfig.weeklyHours[day]=before;}});
 
-function renderServices(){const services=adminConfig?.services||[];$('#servicesEditor').innerHTML=services.length?services.map((s,i)=>`<div class="service-edit-row" data-i="${i}"><input class="service-name" value="${esc(s.name)}" placeholder="Nome do procedimento"><label><span>Valor (R$)</span><input class="service-price" type="number" min="0" step="0.01" value="${s.price===null?'':Number(s.price)}" placeholder="Ex.: 80"></label><label><span>Duração (min)</span><input class="service-duration" type="number" min="15" step="15" value="${Number(s.duration||60)}"></label><label class="service-toggle"><input class="service-active" type="checkbox" ${s.active!==false?'checked':''}><span>Visível no site</span></label><button type="button" class="mini-btn danger js-remove-service">Excluir</button><small class="service-hint">${s.active!==false&&s.price===null?'⚠ Defina o valor para a cliente conseguir selecionar.':'✓ Pronto para o site'}</small></div>`).join(''):'<div class="empty-state">Nenhum procedimento cadastrado.</div>';}
-function collectServices(){return $$('.service-edit-row').map((row,i)=>({id:adminConfig.services[i]?.id||`servico-${Date.now()}-${i}`,name:row.querySelector('.service-name').value.trim(),price:row.querySelector('.service-price').value===''?null:Number(row.querySelector('.service-price').value),duration:Number(row.querySelector('.service-duration').value||60),active:row.querySelector('.service-active').checked}));}
-$('#addServiceBtn')?.addEventListener('click',()=>{adminConfig.services=collectServices();adminConfig.services.push({id:`servico-${Date.now()}`,name:'',price:null,duration:60,active:true});renderServices();const rows=$$('.service-edit-row');rows.at(-1)?.querySelector('.service-name')?.focus();});
-$('#servicesEditor')?.addEventListener('click',e=>{const btn=e.target.closest('.js-remove-service');if(!btn)return;const row=btn.closest('[data-i]');adminConfig.services=collectServices();adminConfig.services.splice(Number(row.dataset.i),1);renderServices();});
-$('#saveServicesBtn')?.addEventListener('click',async()=>{const btn=$('#saveServicesBtn');setBusy(btn,true,'SALVANDO...');try{const services=collectServices();for(const s of services){if(s.name.length<2)throw new Error('Preencha o nome de todos os procedimentos.');if(s.active&&(s.price===null||!Number.isFinite(s.price)||s.price<0))throw new Error(`Defina o valor de “${s.name||'novo procedimento'}” para liberar no site.`);}const d=await api('/api/admin/services',{method:'PUT',body:JSON.stringify({services})});adminConfig.services=d.services;renderServices();await refresh();toast('Procedimentos salvos. Eles já estão disponíveis para as clientes.');}catch(e){toast(e.message,'error');}finally{setBusy(btn,false);}});
+function renderServices(){
+  const services=adminConfig?.services||[];
+  $('#servicesEditor').innerHTML=services.length?services.map((s,i)=>`<div class="service-edit-row service-edit-v23" data-i="${i}" data-id="${esc(s.id)}">
+    <div class="service-image-admin">
+      <img src="${esc(s.image||'assets/service-placeholder.svg')}" alt="${esc(s.name||'Procedimento')}">
+      <label class="mini-btn service-image-pick">Trocar imagem<input class="service-image-file" type="file" accept="image/jpeg,image/png,image/webp" hidden></label>
+      ${s.image?'<button type="button" class="mini-btn danger js-remove-service-image">Remover imagem</button>':''}
+    </div>
+    <div class="service-fields-admin">
+      <input class="service-name" value="${esc(s.name)}" placeholder="Nome do procedimento">
+      <textarea class="service-description" maxlength="220" placeholder="Descrição curta que aparece no catálogo">${esc(s.description||'')}</textarea>
+      <div class="service-inline-fields">
+        <label><span>Valor (R$)</span><input class="service-price" type="number" min="0" step="0.01" value="${s.price===null?'':Number(s.price)}"></label>
+        <label><span>Duração (min)</span><input class="service-duration" type="number" min="15" step="15" value="${Number(s.duration||60)}"></label>
+      </div>
+      <label class="service-toggle"><input class="service-active" type="checkbox" ${s.active!==false?'checked':''}><span>Visível no site</span></label>
+      <button type="button" class="mini-btn danger js-remove-service">Excluir procedimento</button>
+    </div>
+  </div>`).join(''):'<div class="empty-state">Nenhum procedimento cadastrado.</div>';
+}
+function collectServices(){return $$('.service-edit-row').map((row,i)=>({
+  id:adminConfig.services[i]?.id||`servico-${Date.now()}-${i}`,
+  name:row.querySelector('.service-name').value.trim(),
+  description:row.querySelector('.service-description').value.trim(),
+  image:adminConfig.services[i]?.image||'',
+  price:row.querySelector('.service-price').value===''?null:Number(row.querySelector('.service-price').value),
+  duration:Number(row.querySelector('.service-duration').value||60),
+  active:row.querySelector('.service-active').checked
+}));}
+$('#addServiceBtn')?.addEventListener('click',()=>{adminConfig.services=collectServices();adminConfig.services.push({id:`servico-${Date.now()}`,name:'',description:'',image:'',price:null,duration:60,active:true});renderServices();const rows=$$('.service-edit-row');rows.at(-1)?.querySelector('.service-name')?.focus();});
+$('#servicesEditor')?.addEventListener('click',async e=>{
+  const row=e.target.closest('.service-edit-row'); if(!row)return;
+  const i=Number(row.dataset.i);
+  const remove=e.target.closest('.js-remove-service');
+  if(remove){adminConfig.services=collectServices();adminConfig.services.splice(i,1);renderServices();return;}
+  const removeImage=e.target.closest('.js-remove-service-image');
+  if(removeImage){try{await api('/api/admin/services/'+encodeURIComponent(row.dataset.id)+'/image',{method:'DELETE'});adminConfig.services[i].image='';renderServices();toast('Imagem removida.');}catch(err){toast(err.message,'error');}}
+});
+$('#servicesEditor')?.addEventListener('change',async e=>{
+  const input=e.target.closest('.service-image-file'); if(!input)return;
+  const row=input.closest('.service-edit-row'),file=input.files?.[0]; if(!file)return;
+  const btn=row.querySelector('.service-image-pick'); setBusy(btn,true,'ENVIANDO...');
+  try{
+    // garante que nome/valor já existentes estejam sincronizados antes de trocar foto
+    const services=collectServices();
+    const d=await api('/api/admin/services',{method:'PUT',body:JSON.stringify({services})});
+    adminConfig.services=d.services;
+    const fd=new FormData(); fd.append('image',file);
+    const r=await fetch('/api/admin/services/'+encodeURIComponent(row.dataset.id)+'/image',{method:'POST',body:fd,credentials:'same-origin'});
+    let j={}; try{j=await r.json();}catch{} if(!r.ok)throw new Error(j.error||`Erro ${r.status}`);
+    adminConfig.services[i].image=j.image; renderServices(); toast('Imagem do procedimento atualizada.');
+  }catch(err){toast(err.message,'error');}finally{setBusy(btn,false);}
+});
+$('#saveServicesBtn')?.addEventListener('click',async()=>{const btn=$('#saveServicesBtn');setBusy(btn,true,'SALVANDO...');try{const services=collectServices();for(const s of services){if(s.name.length<2)throw new Error('Preencha o nome de todos os procedimentos.');if(s.active&&(s.price===null||!Number.isFinite(s.price)||s.price<0))throw new Error(`Defina o valor de “${s.name||'novo procedimento'}” para liberar no site.`);}const d=await api('/api/admin/services',{method:'PUT',body:JSON.stringify({services})});adminConfig.services=d.services;renderServices();await refresh();toast('Procedimentos atualizados no catálogo e no agendamento.');}catch(e){toast(e.message,'error');}finally{setBusy(btn,false);}});
 
 function renderNotificationStatus(n){$('#notificationStatus').innerHTML=`<div class="notify-status ${n.smtpConfigured?'ok':'warn'}"><b>E-mail automático</b><span>${n.smtpConfigured?'Configurado com '+esc(n.smtpUser||'Gmail'):'Falta configurar SMTP no Render'}</span></div><div class="notify-status ${n.whatsappCloudConfigured?'ok':'warn'}"><b>WhatsApp automático</b><span>${n.whatsappCloudConfigured?'Meta Cloud API configurada':'Ainda não configurado (opcional)'}</span></div>`;}
 $('#testEmailBtn')?.addEventListener('click',async()=>{const btn=$('#testEmailBtn');setBusy(btn,true,'TESTANDO...');try{const d=await api('/api/admin/notifications/test-email',{method:'POST'});toast('E-mail enviado com sucesso para '+d.to+'.');}catch(e){toast(e.message,'error');}finally{setBusy(btn,false);}});
