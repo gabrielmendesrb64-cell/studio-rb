@@ -304,121 +304,105 @@ function uniqueClientsFromBookings(rows){
   return [...map.values()].sort((x,y)=>String(x.name).localeCompare(String(y.name),'pt-BR'));
 }
 
-function renderClientSearch(){
+
+let clientSearchCache=[];
+
+async function renderClientSearch(){
   const input=$('#clientSearchInput'),month=$('#clientMonthFilter');
   if(!input||!month)return;
   if(!month.value)month.value=currentMonthValue();
   const q=input.value.trim();
-  if(!q){
+
+  if(q.length<2){
+    clientSearchCache=[];
     $('#clientSearchResults').innerHTML='';
-    if(!selectedClientKey)$('#clientHistoryView').innerHTML='<div class="empty-state">Digite o nome ou telefone da cliente.</div>';
+    $('#clientHistoryView').innerHTML='<div class="empty-state">Digite pelo menos 2 caracteres do nome ou telefone.</div>';
     return;
   }
-  const matches=uniqueClientsFromBookings(bookings.filter(b=>clientMatchesQuery(b,q))).slice(0,12);
-  $('#clientSearchResults').innerHTML=matches.length?matches.map(c=>`
-    <button type="button" class="client-result ${selectedClientKey===c.key?'active':''}" data-client-key="${esc(c.key)}">
-      <span><b>${esc(c.name)}</b><small>${esc(c.phone||'Sem telefone')}</small></span>
-      <span>Ver histórico ›</span>
-    </button>`).join(''):'<div class="empty-state small-empty">Nenhuma cliente encontrada.</div>';
-  if(selectedClientKey)renderClientHistory();
+
+  try{
+    const d=await api(`/api/admin/clients/search?q=${encodeURIComponent(q)}&month=${encodeURIComponent(month.value)}`);
+    clientSearchCache=d.clients||[];
+    $('#clientSearchResults').innerHTML=clientSearchCache.length?clientSearchCache.map(c=>`
+      <button type="button" class="client-result ${selectedClientKey===c.key?'active':''}" data-client-key="${esc(c.key)}">
+        <span><b>${esc(c.name)}</b><small>${esc(c.phone||'Sem telefone')}</small></span>
+        <span>Ver histórico ›</span>
+      </button>`).join(''):'<div class="empty-state small-empty">Nenhuma cliente encontrada.</div>';
+    if(selectedClientKey)renderClientHistory();
+  }catch(e){
+    $('#clientSearchResults').innerHTML=`<div class="empty-state small-empty">${esc(e.message)}</div>`;
+  }
 }
 
 function renderClientHistory(){
-  const box=$('#clientHistoryView'),month=$('#clientMonthFilter');
+  const box=$('#clientHistoryView');
   if(!box||!selectedClientKey)return;
-  const all=bookings.filter(b=>clientKey(b)===selectedClientKey).sort((x,y)=>(y.date+y.time).localeCompare(x.date+x.time));
-  if(!all.length){box.innerHTML='<div class="empty-state">Nenhum atendimento encontrado.</div>';return}
-  const client=all[0];
-  const monthValue=month?.value||currentMonthValue();
-  const monthly=all.filter(b=>String(b.date||'').startsWith(monthValue));
-  const realizedAll=all.filter(bookingIsRealized);
-  const spent=realizedAll.reduce((sum,b)=>sum+Number(b.total||0),0);
+  const c=clientSearchCache.find(x=>x.key===selectedClientKey);
+  if(!c){box.innerHTML='<div class="empty-state">Cliente não encontrada.</div>';return}
 
   box.innerHTML=`
     <div class="client-profile-card">
-      <div><span class="eyebrow">CLIENTE</span><h3>${esc(client.name||'Cliente')}</h3>
-      <p>${esc(client.phone||'')}${client.email?` • ${esc(client.email)}`:''}</p></div>
+      <div><span class="eyebrow">CLIENTE</span><h3>${esc(c.name||'Cliente')}</h3>
+      <p>${esc(c.phone||'')}${c.email?` • ${esc(c.email)}`:''}</p></div>
       <div class="client-profile-stats">
-        <span><b>${realizedAll.length}</b><small>realizados</small></span>
-        <span><b>${money(spent)}</b><small>total realizado</small></span>
+        <span><b>${Number(c.completedCount||0)}</b><small>realizados</small></span>
+        <span><b>${money(c.completedValue||0)}</b><small>total realizado</small></span>
       </div>
     </div>
-    <div class="client-month-title"><b>Atendimentos de ${esc(monthValue)}</b><span>${monthly.length} registro(s)</span></div>
+    <div class="client-month-title"><b>Atendimentos do mês selecionado</b><span>${(c.monthly||[]).length} registro(s)</span></div>
     <div class="client-booking-history">
-      ${monthly.length?monthly.map(b=>{
-        const names=bookingServiceNames(b).join(' + ')||'Sem procedimento';
-        return `<article class="client-history-row">
-          <div><b>${esc(names)}</b><small>${fmtDate(b.date)} às ${esc(b.time||'')}</small></div>
-          <div><strong>${money(b.total)}</strong><span class="status status-${esc(String(b.status||'').toLowerCase().replace(/\s+/g,'-'))}">${esc(b.status||'')}</span></div>
-        </article>`;
-      }).join(''):'<div class="empty-state small-empty">Nenhum agendamento dessa cliente neste mês.</div>'}
+      ${(c.monthly||[]).length?(c.monthly||[]).map(b=>`
+        <article class="client-history-row">
+          <div><b>${esc((b.services||[]).join(' + ')||'Sem procedimento')}</b><small>${fmtDate(b.date)} às ${esc(b.time||'')}</small></div>
+          <div><strong>${money(b.total||0)}</strong><span>${esc(b.status||'')}</span></div>
+        </article>`).join(''):'<div class="empty-state small-empty">Nenhum agendamento desta cliente neste mês.</div>'}
     </div>
     <details class="client-all-history">
-      <summary>Ver histórico completo (${all.length})</summary>
-      <div class="client-booking-history">${all.map(b=>{
-        const names=bookingServiceNames(b).join(' + ')||'Sem procedimento';
-        return `<article class="client-history-row">
-          <div><b>${esc(names)}</b><small>${fmtDate(b.date)} às ${esc(b.time||'')}</small></div>
-          <div><strong>${money(b.total)}</strong><span>${esc(b.status||'')}</span></div>
-        </article>`;
-      }).join('')}</div>
+      <summary>Ver histórico completo (${(c.all||[]).length})</summary>
+      <div class="client-booking-history">${(c.all||[]).map(b=>`
+        <article class="client-history-row">
+          <div><b>${esc((b.services||[]).join(' + ')||'Sem procedimento')}</b><small>${fmtDate(b.date)} às ${esc(b.time||'')}</small></div>
+          <div><strong>${money(b.total||0)}</strong><span>${esc(b.status||'')}</span></div>
+        </article>`).join('')}</div>
     </details>`;
 }
 
-function financeRange(reference,period){
-  const [y,m]=String(reference||currentMonthValue()).split('-').map(Number);
-  if(period==='year')return {start:`${y}-01-01`,end:`${y}-12-31`,label:`Ano ${y}`};
-  if(period==='quarter'){
-    const q=Math.floor((m-1)/3),sm=q*3+1,em=sm+2;
-    const last=new Date(y,em,0).getDate();
-    return {start:`${y}-${String(sm).padStart(2,'0')}-01`,end:`${y}-${String(em).padStart(2,'0')}-${String(last).padStart(2,'0')}`,label:`${q+1}º trimestre de ${y}`};
-  }
-  const last=new Date(y,m,0).getDate();
-  return {start:`${y}-${String(m).padStart(2,'0')}-01`,end:`${y}-${String(m).padStart(2,'0')}-${String(last).padStart(2,'0')}`,label:`${String(m).padStart(2,'0')}/${y}`};
-}
-function renderFinance(){
+async function renderFinance(){
   const ref=$('#financeReference');
   if(!ref)return;
   if(!ref.value)ref.value=currentMonthValue();
-  const range=financeRange(ref.value,financePeriod);
-  const rows=bookings.filter(b=>bookingIsRealized(b)&&b.date>=range.start&&b.date<=range.end);
-  const revenue=rows.reduce((s,b)=>s+Number(b.total||0),0);
-  const ticket=rows.length?revenue/rows.length:0;
-  const clients=new Set(rows.map(clientKey)).size;
 
-  $('#financeSummary').innerHTML=`
-    <div class="finance-stat"><small>Período</small><b>${esc(range.label)}</b></div>
-    <div class="finance-stat main"><small>Ganhos</small><b>${money(revenue)}</b></div>
-    <div class="finance-stat"><small>Atendimentos</small><b>${rows.length}</b></div>
-    <div class="finance-stat"><small>Clientes</small><b>${clients}</b></div>
-    <div class="finance-stat"><small>Ticket médio</small><b>${money(ticket)}</b></div>`;
+  try{
+    const d=await api(`/api/admin/finance?period=${encodeURIComponent(financePeriod)}&reference=${encodeURIComponent(ref.value)}`);
+    $('#financeSummary').innerHTML=`
+      <div class="finance-stat"><small>Período</small><b>${esc(d.label||'')}</b></div>
+      <div class="finance-stat main"><small>Ganhos</small><b>${money(d.revenue||0)}</b></div>
+      <div class="finance-stat"><small>Atendimentos</small><b>${Number(d.count||0)}</b></div>
+      <div class="finance-stat"><small>Clientes</small><b>${Number(d.clients||0)}</b></div>
+      <div class="finance-stat"><small>Ticket médio</small><b>${money(d.ticket||0)}</b></div>`;
 
-  const byService=new Map();
-  rows.forEach(b=>{
-    const names=bookingServiceNames(b);
-    const share=names.length?Number(b.total||0)/names.length:Number(b.total||0);
-    (names.length?names:['Sem procedimento']).forEach(name=>{
-      const cur=byService.get(name)||{count:0,total:0};
-      cur.count++;cur.total+=share;byService.set(name,cur);
-    });
-  });
-  const breakdown=[...byService.entries()].sort((a,b)=>b[1].total-a[1].total);
-  $('#financeBreakdown').innerHTML=breakdown.length?breakdown.map(([name,v])=>`
-    <div class="finance-service-row"><span><b>${esc(name)}</b><small>${v.count} atendimento(s)</small></span><strong>${money(v.total)}</strong></div>`
-  ).join(''):'<div class="empty-state small-empty">Nenhum procedimento concluído neste período.</div>';
+    $('#financeBreakdown').innerHTML=(d.services||[]).length?(d.services||[]).map(x=>`
+      <div class="finance-service-row">
+        <span><b>${esc(x.name)}</b><small>${Number(x.count||0)} atendimento(s)</small></span>
+        <strong>${money(x.total||0)}</strong>
+      </div>`).join(''):'<div class="empty-state small-empty">Nenhum procedimento concluído neste período.</div>';
 
-  $('#financeBookings').innerHTML=rows.length?rows.sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time)).map(b=>`
-    <div class="finance-booking-row">
-      <span><b>${esc(b.name||'Cliente')}</b><small>${fmtDate(b.date)} • ${esc(bookingServiceNames(b).join(' + ')||'Sem procedimento')}</small></span>
-      <strong>${money(b.total)}</strong>
-    </div>`).join(''):'<div class="empty-state small-empty">Nenhum atendimento concluído neste período.</div>';
+    $('#financeBookings').innerHTML=(d.bookings||[]).length?(d.bookings||[]).map(b=>`
+      <div class="finance-booking-row">
+        <span><b>${esc(b.name||'Cliente')}</b><small>${fmtDate(b.date)} • ${esc((b.services||[]).join(' + ')||'Sem procedimento')}</small></span>
+        <strong>${money(b.total||0)}</strong>
+      </div>`).join(''):'<div class="empty-state small-empty">Nenhum atendimento concluído neste período.</div>';
+  }catch(e){
+    $('#financeSummary').innerHTML=`<div class="empty-state">${esc(e.message)}</div>`;
+  }
 }
 
 $('#clientSearchInput')?.addEventListener('input',()=>{selectedClientKey='';renderClientSearch()});
-$('#clientMonthFilter')?.addEventListener('change',()=>{if(selectedClientKey)renderClientHistory()});
+$('#clientMonthFilter')?.addEventListener('change',()=>{selectedClientKey='';renderClientSearch()});
 $('#clientSearchResults')?.addEventListener('click',e=>{
   const btn=e.target.closest('[data-client-key]');if(!btn)return;
-  selectedClientKey=btn.dataset.clientKey;renderClientSearch();renderClientHistory();
+  selectedClientKey=btn.dataset.clientKey;
+  renderClientSearch();
 });
 document.querySelector('.finance-period-tabs')?.addEventListener('click',e=>{
   const btn=e.target.closest('[data-finance-period]');if(!btn)return;

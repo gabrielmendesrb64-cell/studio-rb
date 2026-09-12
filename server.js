@@ -919,6 +919,120 @@ app.post('/api/admin/login', loginLimiter, (req, res) => {
 });
 app.post('/api/admin/logout', auth, (req,res) => req.session.destroy(() => res.json({ ok:true })));
 app.get('/api/admin/me', auth, (req,res) => res.json({ ok:true }));
+
+function bookingFinancialTotal(b){
+  const direct = Number(b?.total || 0);
+  if (direct > 0) return direct;
+  return (b?.services || []).reduce((sum,x)=>sum + Number(x?.price || 0),0);
+}
+function bookingServiceLabelList(b){
+  return (b?.services || []).map(x => typeof x === 'string' ? x : (x?.name || '')).filter(Boolean);
+}
+
+
+app.get('/api/admin/clients/search', auth, async (req,res) => {
+  const q=String(req.query.q||'').trim();
+  const month=String(req.query.month||'').trim();
+  if(q.length<2)return res.json({clients:[]});
+
+  const digits=cleanPhone(q);
+  const nq=normalizeName(q);
+  const bookings=await getState('bookings');
+  const matched=bookings.filter(b=>{
+    const byPhone=digits && cleanPhone(b.phone).includes(digits);
+    const byName=nq && normalizeName(b.name).includes(nq);
+    return byPhone || byName;
+  });
+
+  const groups=new Map();
+  for(const b of matched){
+    const key=cleanPhone(b.phone) ? `p:${cleanPhone(b.phone)}` : `n:${normalizeName(b.name)}`;
+    if(!groups.has(key))groups.set(key,{
+      key,name:b.name||'Cliente',phone:b.phone||'',email:b.email||'',bookings:[]
+    });
+    groups.get(key).bookings.push(b);
+  }
+
+  const clients=[...groups.values()].map(c=>{
+    const all=c.bookings.sort((a,b)=>(String(b.date)+String(b.time)).localeCompare(String(a.date)+String(a.time)));
+    const monthly=month ? all.filter(b=>String(b.date||'').startsWith(month)) : all;
+    const completed=all.filter(b=>b.status==='Concluído');
+    return {
+      key:c.key,name:c.name,phone:c.phone,email:c.email,
+      completedCount:completed.length,
+      completedValue:completed.reduce((sum,b)=>sum+bookingFinancialTotal(b),0),
+      monthly:monthly.map(b=>({
+        id:b.id,date:b.date,time:b.time,status:b.status,
+        total:bookingFinancialTotal(b),
+        services:bookingServiceLabelList(b)
+      })),
+      all:all.map(b=>({
+        id:b.id,date:b.date,time:b.time,status:b.status,
+        total:bookingFinancialTotal(b),
+        services:bookingServiceLabelList(b)
+      }))
+    };
+  }).sort((a,b)=>String(a.name).localeCompare(String(b.name),'pt-BR')).slice(0,20);
+
+  res.json({clients});
+});
+
+app.get('/api/admin/finance', auth, async (req,res) => {
+  const period=['month','quarter','year'].includes(String(req.query.period))?String(req.query.period):'month';
+  const ref=String(req.query.reference||'');
+  const now=new Date();
+  let y=now.getFullYear(),m=now.getMonth()+1;
+  if(/^\d{4}-\d{2}$/.test(ref)){const parts=ref.split('-').map(Number);y=parts[0];m=parts[1];}
+
+  let start,end,label;
+  if(period==='year'){
+    start=`${y}-01-01`; end=`${y}-12-31`; label=`Ano ${y}`;
+  }else if(period==='quarter'){
+    const q=Math.floor((m-1)/3),sm=q*3+1,em=sm+2,last=new Date(y,em,0).getDate();
+    start=`${y}-${String(sm).padStart(2,'0')}-01`;
+    end=`${y}-${String(em).padStart(2,'0')}-${String(last).padStart(2,'0')}`;
+    label=`${q+1}º trimestre de ${y}`;
+  }else{
+    const last=new Date(y,m,0).getDate();
+    start=`${y}-${String(m).padStart(2,'0')}-01`;
+    end=`${y}-${String(m).padStart(2,'0')}-${String(last).padStart(2,'0')}`;
+    label=`${String(m).padStart(2,'0')}/${y}`;
+  }
+
+  const bookings=(await getState('bookings')).filter(b=>b.status==='Concluído' && b.date>=start && b.date<=end);
+  const revenue=bookings.reduce((sum,b)=>sum+bookingFinancialTotal(b),0);
+  const clients=new Set(bookings.map(b=>cleanPhone(b.phone)||normalizeName(b.name))).size;
+  const ticket=bookings.length?revenue/bookings.length:0;
+
+  const byService=new Map();
+  for(const b of bookings){
+    const names=bookingServiceLabelList(b);
+    const total=bookingFinancialTotal(b);
+    const services=(b.services||[]).filter(x=>typeof x!=='string');
+    if(services.length && services.some(x=>Number(x.price||0)>0)){
+      for(const x of services){
+        const name=x.name||'Procedimento';
+        const cur=byService.get(name)||{count:0,total:0};
+        cur.count++;cur.total+=Number(x.price||0);byService.set(name,cur);
+      }
+    }else{
+      const share=names.length?total/names.length:total;
+      for(const name of (names.length?names:['Sem procedimento'])){
+        const cur=byService.get(name)||{count:0,total:0};
+        cur.count++;cur.total+=share;byService.set(name,cur);
+      }
+    }
+  }
+
+  res.json({
+    period,label,start,end,revenue,clients,ticket,count:bookings.length,
+    services:[...byService.entries()].map(([name,v])=>({name,...v})).sort((a,b)=>b.total-a.total),
+    bookings:bookings.sort((a,b)=>(String(b.date)+String(b.time)).localeCompare(String(a.date)+String(a.time))).map(b=>({
+      id:b.id,name:b.name,date:b.date,time:b.time,total:bookingFinancialTotal(b),services:bookingServiceLabelList(b)
+    }))
+  });
+});
+
 app.get('/api/admin/bookings', auth, async (req,res) => res.json({ bookings: await getState('bookings') }));
 app.get('/api/admin/config', auth, async (req,res) => {
   const config = normalizeGalleryConfig(await getState('config'));
