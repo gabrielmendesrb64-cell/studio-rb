@@ -90,8 +90,9 @@ function renderServices(){
   $('#servicesEditor').innerHTML=services.length?services.map((s,i)=>`<div class="service-edit-row service-edit-v23" data-i="${i}" data-id="${esc(s.id)}">
     <div class="service-image-admin">
       <img src="${esc(s.image||'assets/service-placeholder.svg')}" alt="${esc(s.name||'Procedimento')}">
-      <label class="mini-btn service-image-pick">Trocar imagem<input class="service-image-file" type="file" accept="image/jpeg,image/png,image/webp" hidden></label>
+      <label class="mini-btn service-image-pick">Trocar imagem<input class="service-image-file" type="file" accept="image/*,.heic,.heif" hidden></label>
       ${s.image?'<button type="button" class="mini-btn danger js-remove-service-image">Remover imagem</button>':''}
+      <small class="service-image-help">JPG, PNG, WEBP ou foto do celular • até 20 MB</small>
     </div>
     <div class="service-fields-admin">
       <input class="service-name" value="${esc(s.name)}" placeholder="Nome do procedimento">
@@ -126,17 +127,25 @@ $('#servicesEditor')?.addEventListener('click',async e=>{
 $('#servicesEditor')?.addEventListener('change',async e=>{
   const input=e.target.closest('.service-image-file'); if(!input)return;
   const row=input.closest('.service-edit-row'),file=input.files?.[0]; if(!file)return;
-  const btn=row.querySelector('.service-image-pick'); setBusy(btn,true,'ENVIANDO...');
+  const i=Number(row.dataset.i),id=row.dataset.id;
+  const btn=row.querySelector('.service-image-pick');
+  if(file.size>20*1024*1024){toast('A imagem passou de 20 MB. Escolha outra foto.','error');input.value='';return;}
+  setBusy(btn,true,'ENVIANDO...');
   try{
-    // garante que nome/valor já existentes estejam sincronizados antes de trocar foto
-    const services=collectServices();
-    const d=await api('/api/admin/services',{method:'PUT',body:JSON.stringify({services})});
-    adminConfig.services=d.services;
     const fd=new FormData(); fd.append('image',file);
-    const r=await fetch('/api/admin/services/'+encodeURIComponent(row.dataset.id)+'/image',{method:'POST',body:fd,credentials:'same-origin'});
-    let j={}; try{j=await r.json();}catch{} if(!r.ok)throw new Error(j.error||`Erro ${r.status}`);
-    adminConfig.services[i].image=j.image; renderServices(); toast('Imagem do procedimento atualizada.');
-  }catch(err){toast(err.message,'error');}finally{setBusy(btn,false);}
+    let r=await fetch('/api/admin/services/'+encodeURIComponent(id)+'/image',{method:'POST',body:fd,credentials:'same-origin',cache:'no-store'});
+    let j={}; try{j=await r.json();}catch{}
+    if(r.status===404){
+      throw new Error('Salve o procedimento primeiro e depois troque a imagem.');
+    }
+    if(!r.ok)throw new Error(j.error||`Erro ${r.status}`);
+    adminConfig.services[i].image=j.image;
+    const img=row.querySelector('.service-image-admin img'); if(img)img.src=j.image;
+    input.value='';
+    toast('Imagem atualizada com sucesso.');
+    setTimeout(()=>refresh().catch(()=>{}),250);
+  }catch(err){toast(err.message||'Não foi possível trocar a imagem.','error');input.value='';}
+  finally{setBusy(btn,false);}
 });
 $('#saveServicesBtn')?.addEventListener('click',async()=>{const btn=$('#saveServicesBtn');setBusy(btn,true,'SALVANDO...');try{const services=collectServices();for(const s of services){if(s.name.length<2)throw new Error('Preencha o nome de todos os procedimentos.');if(s.active&&(s.price===null||!Number.isFinite(s.price)||s.price<0))throw new Error(`Defina o valor de “${s.name||'novo procedimento'}” para liberar no site.`);}const d=await api('/api/admin/services',{method:'PUT',body:JSON.stringify({services})});adminConfig.services=d.services;renderServices();await refresh();toast('Procedimentos atualizados no catálogo e no agendamento.');}catch(e){toast(e.message,'error');}finally{setBusy(btn,false);}});
 

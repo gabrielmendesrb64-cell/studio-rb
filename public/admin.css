@@ -674,3 +674,6 @@ dialog h2{
 .admin-v15 .service-image-admin img{border-color:var(--admin-line)!important;background:#170b12!important}
 .admin-v15 .payment-settings-grid label span{color:var(--admin-muted)!important}
 .admin-v15 .proof-btn{border-color:var(--admin-line)!important;background:#160c14!important;color:#ffd7e9!important}
+
+/* V25 - upload de imagem de procedimentos */
+.service-image-help{display:block;color:rgba(255,255,255,.62);font-size:12px;line-height:1.35}.service-image-pick{display:flex!important;align-items:center;justify-content:center;min-height:44px;background:linear-gradient(135deg,#ff4fa3,#e94891)!important;color:#130911!important;font-weight:800;border-radius:14px!important}.service-image-file{display:none!important}@media(max-width:720px){.service-image-admin{grid-template-columns:96px 1fr!important}.service-image-admin img{width:96px!important;height:96px!important;aspect-ratio:1!important}.service-image-help{grid-column:1/-1}}
