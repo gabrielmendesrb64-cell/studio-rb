@@ -43,17 +43,25 @@ function normalizeServiceName(v){
     .replace(/[^a-z0-9]+/g,' ')
     .trim();
 }
+const maintenancePairs={
+  'volume-brasileiro':'manut-brasileiro',
+  'volume-3d':'manut-3d',
+  'volume-5d':'manut-5d',
+  'volume-8d':'manut-8d',
+  'volume-fox':'manut-fox',
+  'mega-brasileiro':'manut-mega-brasileiro',
+  'volume-luxo':'manut-volume-luxo',
+  'mega-fox':'manut-mega-fox'
+};
 function findMaintenance(base, all){
   const baseId=String(base.id||'').toLowerCase();
+  const exactId=maintenancePairs[baseId];
+  if(exactId){
+    const exact=all.find(x=>String(x.id||'').toLowerCase()===exactId && x.active!==false);
+    if(exact)return exact;
+  }
   const baseName=normalizeServiceName(base.name);
-  return all.find(m=>{
-    if(!isMaintenanceService(m))return false;
-    const mid=String(m.id||'').toLowerCase();
-    const mname=normalizeServiceName(m.name);
-    if(mid===`manut-${baseId}`)return true;
-    if(mid.replace(/^manut-/,'')===baseId.replace(/^volume-/,'').replace(/^mega-/,'mega-'))return true;
-    return mname===baseName || mname.includes(baseName) || baseName.includes(mname);
-  }) || null;
+  return all.find(m=>isMaintenanceService(m)&&m.active!==false&&normalizeServiceName(m.name)===baseName) || null;
 }
 function renderServices(){
   const all=(cfg.services||[]).filter(s=>s.active!==false);
@@ -63,11 +71,18 @@ function renderServices(){
     const maintenanceHtml=maintenance?`<div class="maintenance-price"><span>Manutenção</span><strong>${money(maintenance.price)}</strong></div>`:'';
     return `<article class="service-card" data-service="${esc(s.id)}"><img class="service-photo" src="${esc(v.image)}" alt="${esc(s.name)}" loading="lazy"><div class="service-info"><span class="kicker">STUDIO RB</span><h3>${esc(s.name)}</h3><p>${esc(v.description)}</p><div class="service-bottom"><div class="price-wrap"><div class="price">${money(s.price)}</div>${maintenanceHtml}</div><span class="service-select-hint">Selecionar</span></div></div></article>`;
   }).join('')||'<div class="loading-card">Nenhum procedimento cadastrado.</div>';
-  $('#bookingServices').innerHTML=all.map(s=>`<label class="booking-service"><input type="checkbox" value="${esc(s.id)}"><span><strong>${esc(s.name)}</strong></span></label>`).join('');
+
+  $('#bookingServices').innerHTML=catalog.map(s=>{
+    const maintenance=findMaintenance(s,all);
+    if(maintenance){
+      return `<div class="booking-service-group"><strong class="booking-service-title">${esc(s.name)}</strong><div class="booking-service-options"><label class="booking-service"><input type="checkbox" value="${esc(s.id)}"><span><strong>Procedimento completo</strong></span></label><label class="booking-service maintenance-option"><input type="checkbox" value="${esc(maintenance.id)}"><span><strong>Manutenção</strong></span></label></div></div>`;
+    }
+    return `<div class="booking-service-group"><strong class="booking-service-title">${esc(s.name)}</strong><div class="booking-service-options"><label class="booking-service"><input type="checkbox" value="${esc(s.id)}"><span><strong>Procedimento completo</strong></span></label></div></div>`;
+  }).join('');
 }
 function syncServiceUI(){$$('[data-service]').forEach(x=>x.classList.toggle('selected',selectedServices.has(x.dataset.service)));$$('#bookingServices input').forEach(x=>x.checked=selectedServices.has(x.value));$('#bookingTotal').textContent=money(total())}
 document.addEventListener('click',e=>{const card=e.target.closest('[data-service]');if(card){const id=card.dataset.service;selectedServices.has(id)?selectedServices.delete(id):selectedServices.add(id);syncServiceUI();document.querySelector('#agendar')?.scrollIntoView({behavior:'smooth',block:'start'})}});
-$('#bookingServices')?.addEventListener('change',e=>{if(!e.target.matches('input[type=checkbox]'))return;e.target.checked?selectedServices.add(e.target.value):selectedServices.delete(e.target.value);syncServiceUI()});
+$('#bookingServices')?.addEventListener('change',e=>{if(!e.target.matches('input[type=checkbox]'))return;const input=e.target;const group=input.closest('.booking-service-group');if(input.checked&&group){group.querySelectorAll('input[type=checkbox]').forEach(other=>{if(other!==input){other.checked=false;selectedServices.delete(other.value);}});selectedServices.add(input.value);}else selectedServices.delete(input.value);syncServiceUI()});
 function renderGallery(){const cats=cfg.galleryCategories||[];if(!activeCategory)activeCategory=cats[0]?.id||'';$('#galleryTabs').innerHTML=cats.map(c=>`<button type="button" class="${c.id===activeCategory?'active':''}" data-cat="${esc(c.id)}">${esc(c.name)}</button>`).join('');const items=(cfg.gallery||[]).filter(x=>!activeCategory||x.categoryId===activeCategory);$('#galleryGrid').innerHTML=items.map(x=>`<figure class="gallery-item"><img src="${esc(x.src)}" alt="${esc(x.title||'Resultado Studio RB')}" loading="lazy"><figcaption><b>${esc(x.title||'Resultado')}</b><small>${esc(x.caption||'')}</small></figcaption></figure>`).join('')||'<div class="loading-card">Em breve novos resultados nesta categoria.</div>'}
 $('#galleryTabs')?.addEventListener('click',e=>{const b=e.target.closest('[data-cat]');if(!b)return;activeCategory=b.dataset.cat;renderGallery()});
 async function loadAvailability(){const date=$('#bookingDate').value;$('#bookingTime').value='';if(!date){$('#timeSlots').innerHTML='<span class="muted">Escolha uma data.</span>';return}if(!selectedServices.size){$('#timeSlots').innerHTML='<span class="muted">Selecione pelo menos um procedimento primeiro.</span>';return}try{const d=await api(`/api/availability?date=${encodeURIComponent(date)}&duration=${duration()}`);$('#timeSlots').innerHTML=d.slots.length?d.slots.map(x=>`<button type="button" data-time="${x.time}" ${x.available?'':'disabled'}>${x.time}</button>`).join(''):'<span class="muted">Nenhum horário liberado para este dia.</span>'}catch(e){$('#timeSlots').innerHTML=`<span class="muted">${esc(e.message)}</span>`}}

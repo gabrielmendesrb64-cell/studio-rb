@@ -140,3 +140,22 @@
   .maintenance-price{font-size:11px}
   .maintenance-price strong{font-size:12px}
 }
+
+/* V31 — manutenção no catálogo + escolha completa/manutenção */
+.price-wrap{display:grid;gap:4px;min-width:0}
+.maintenance-price{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px;font-size:12px;line-height:1.2}
+.maintenance-price span{color:#c9b6c1}
+.maintenance-price strong{color:#ff7ab8;font-size:13px;white-space:nowrap}
+.booking-service-group{display:grid;gap:8px;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.025)}
+.booking-service-title{font-size:14px;color:#fff}
+.booking-service-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.booking-service-options .booking-service{margin:0;min-width:0}
+.booking-service-options .maintenance-option{border-color:rgba(255,79,163,.28)}
+@media(max-width:560px){
+  .booking-service-group{padding:10px;gap:7px}
+  .booking-service-title{font-size:13px}
+  .booking-service-options{grid-template-columns:1fr 1fr;gap:6px}
+  .booking-service-options .booking-service span strong{font-size:11px;line-height:1.15}
+  .maintenance-price{font-size:11px}
+  .maintenance-price strong{font-size:12px}
+}
