@@ -807,3 +807,15 @@ dialog h2{
   .admin-section-menu button{min-height:40px;padding:9px 13px}
   .services-settings{padding:13px!important}
 }
+
+/* V44 — controle de onde o procedimento aparece */
+.booking-visibility-box{
+  display:grid;
+  gap:8px;
+  padding:12px;
+  border:1px solid rgba(255,92,164,.22);
+  border-radius:14px;
+  background:rgba(255,255,255,.015);
+}
+.booking-visibility-box>b{font-size:12px;color:#ff8fc2;text-transform:uppercase;letter-spacing:.08em}
+.booking-visibility-box .service-toggle{margin:0!important}

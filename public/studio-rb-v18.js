@@ -83,8 +83,13 @@ function renderBookingMenu(){
     return;
   }
   const rows=mode==='maintenance'
-    ? catalog.map(base=>({base,item:findMaintenance(base,all)})).filter(x=>x.item)
-    : catalog.map(base=>({base,item:base}));
+    ? catalog
+        .filter(base=>base.bookingMaintenance!==false)
+        .map(base=>({base,item:findMaintenance(base,all)}))
+        .filter(x=>x.item)
+    : catalog
+        .filter(base=>base.bookingComplete!==false)
+        .map(base=>({base,item:base}));
   $('#bookingServices').innerHTML=`<div class="booking-mode-head"><button type="button" id="bookingModeBack">‹</button><div><b>${mode==='maintenance'?'Manutenção':'Procedimento completo'}</b><small>Escolha o serviço</small></div></div>
   <div class="booking-simple-list">${rows.map(({base,item})=>`<label><input type="checkbox" value="${esc(item.id)}"><span>${esc(base.name)}</span></label>`).join('')}</div>`;
 }
@@ -99,7 +104,7 @@ function renderServices(){
   renderBookingMenu();
 }
 function syncServiceUI(){$$('[data-service]').forEach(x=>x.classList.toggle('selected',selectedServices.has(x.dataset.service)));$$('#bookingServices input').forEach(x=>x.checked=selectedServices.has(x.value));$('#bookingTotal').textContent=money(total())}
-document.addEventListener('click',e=>{const card=e.target.closest('[data-service]');if(card){const id=card.dataset.service;selectedServices.has(id)?selectedServices.delete(id):selectedServices.add(id);syncServiceUI();document.querySelector('#agendar')?.scrollIntoView({behavior:'smooth',block:'start'})}});
+document.addEventListener('click',e=>{const card=e.target.closest('[data-service]');if(card){const id=card.dataset.service;selectedServices.clear();selectedServices.add(id);syncServiceUI();document.querySelector('#agendar')?.scrollIntoView({behavior:'smooth',block:'start'})}});
 $('#bookingServices')?.addEventListener('click',e=>{
   const b=e.target.closest('[data-booking-mode]');
   if(b){window.bookingMode=b.dataset.bookingMode;selectedServices.clear();renderBookingMenu();syncServiceUI();return}
@@ -112,8 +117,10 @@ async function loadAvailability(){const date=$('#bookingDate').value;$('#booking
 $('#bookingServices')?.addEventListener('change',e=>{
   const input=e.target;
   if(!input.matches('.booking-simple-list input[type="checkbox"]'))return;
-  if(input.checked) selectedServices.add(String(input.value));
-  else selectedServices.delete(String(input.value));
+  if(input.checked){
+    selectedServices.clear();
+    selectedServices.add(String(input.value));
+  }else selectedServices.delete(String(input.value));
   syncServiceUI();
   if($('#bookingDate').value) loadAvailability();
 });

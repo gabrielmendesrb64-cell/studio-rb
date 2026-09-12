@@ -141,7 +141,7 @@ async function readRelationalConfig(client = pgPool) {
   for (const row of settings.rows) cfg[row.key] = row.value;
 
   const services = await client.query(
-    'SELECT id,name,description,image,price,duration,active FROM lsh_services ORDER BY position,id'
+    'SELECT id,name,description,image,price,duration,active,booking_complete,booking_maintenance FROM lsh_services ORDER BY position,id'
   );
   cfg.services = services.rows.map(x => ({
     id: String(x.id),
@@ -150,7 +150,9 @@ async function readRelationalConfig(client = pgPool) {
     image: x.image || '',
     price: x.price === null ? null : Number(x.price),
     duration: Number(x.duration || 60),
-    active: x.active !== false
+    active: x.active !== false,
+    bookingComplete: x.booking_complete !== false,
+    bookingMaintenance: x.booking_maintenance !== false
   }));
 
   cfg.weeklyHours = { '0':[], '1':[], '2':[], '3':[], '4':[], '5':[], '6':[] };
@@ -785,7 +787,9 @@ app.get('/api/config', async (req, res) => {
       description:s.description || '',
       image:s.image || '',
       price:s.price,
-      duration:s.duration
+      duration:s.duration,
+      bookingComplete:s.bookingComplete !== false,
+      bookingMaintenance:s.bookingMaintenance !== false
     })),
     galleryCategories: (c.galleryCategories || []).filter(x => x.active !== false).map(x => ({ id:x.id, name:x.name })),
     gallery: (c.gallery || []).filter(x => x.active !== false).slice(0,100).map(x => ({
@@ -916,7 +920,26 @@ app.post('/api/admin/login', loginLimiter, (req, res) => {
 app.post('/api/admin/logout', auth, (req,res) => req.session.destroy(() => res.json({ ok:true })));
 app.get('/api/admin/me', auth, (req,res) => res.json({ ok:true }));
 app.get('/api/admin/bookings', auth, async (req,res) => res.json({ bookings: await getState('bookings') }));
-app.get('/api/admin/config', auth, async (req,res) => res.json({ config: normalizeGalleryConfig(await getState('config')) }));
+app.get('/api/admin/config', auth, async (req,res) => {
+  const config = normalizeGalleryConfig(await getState('config'));
+  delete config.services;
+  res.json({ config });
+});
+
+app.get('/api/admin/services', auth, async (req,res) => {
+  if (pgPool && dbReady) {
+    const r = await pgPool.query(
+      'SELECT id,name,description,image,price,duration,active,booking_complete,booking_maintenance FROM lsh_services ORDER BY position,id'
+    );
+    return res.json({ services:r.rows.map(x=>({
+      id:String(x.id), name:x.name, description:x.description||'', image:x.image||'',
+      price:x.price===null?null:Number(x.price), duration:Number(x.duration||60), active:x.active!==false,
+      bookingComplete:x.booking_complete!==false, bookingMaintenance:x.booking_maintenance!==false
+    }))});
+  }
+  const cfg = normalizeGalleryConfig(await getState('config'));
+  res.json({ services:cfg.services||[] });
+});
 
 app.patch('/api/admin/bookings/:id', auth, async (req,res) => {
   const allowed = ['Aguardando pagamento','Comprovante enviado','Pagamento recusado','Pendente','Confirmado','Concluído','Cancelado'];
@@ -959,6 +982,31 @@ app.put('/api/admin/schedule', auth, async (req,res) => {
     const items = Array.isArray(weeklyHours[String(day)]) ? weeklyHours[String(day)] : [];
     normalized[String(day)] = [...new Set(items.map(String).filter(validTime))].sort();
   }
+
+  if (pgPool && dbReady) {
+    const client = await pgPool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('DELETE FROM lsh_weekly_hours');
+      for (let day=0; day<7; day++) {
+        for (const time of normalized[String(day)]) {
+          await client.query('INSERT INTO lsh_weekly_hours(weekday,time_value) VALUES($1,$2)', [day,time]);
+        }
+      }
+      await client.query(
+        `INSERT INTO lsh_settings(key,value,updated_at) VALUES('openingHours',$1::jsonb,NOW())
+         ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value,updated_at=NOW()`,
+        [JSON.stringify('Horários definidos pela proprietária no painel')]
+      );
+      await client.query('COMMIT');
+      return res.json({ ok:true, weeklyHours:normalized });
+    } catch (e) {
+      await client.query('ROLLBACK');
+      console.error('[SCHEDULE]', e);
+      return res.status(500).json({ error:'Não foi possível salvar os horários.' });
+    } finally { client.release(); }
+  }
+
   const c = await getState('config');
   c.weeklyHours = normalized;
   c.openingHours = 'Horários definidos pela proprietária no painel';
@@ -971,16 +1019,36 @@ app.put('/api/admin/date-schedule', auth, async (req,res) => {
   const times = Array.isArray(req.body.times) ? req.body.times : null;
   if (!validDate(date) || !times) return res.status(400).json({ error:'Data ou horários inválidos.' });
   const normalized = [...new Set(times.map(String).filter(validTime))].sort();
+
+  if (pgPool && dbReady) {
+    const client = await pgPool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('DELETE FROM lsh_date_hours WHERE date_value=$1', [date]);
+      for (const time of normalized) {
+        await client.query('INSERT INTO lsh_date_hours(date_value,time_value) VALUES($1,$2)', [date,time]);
+      }
+      await client.query('COMMIT');
+      return res.json({ ok:true, date, times:normalized });
+    } catch(e) {
+      await client.query('ROLLBACK');
+      return res.status(500).json({ error:'Não foi possível salvar os horários desse dia.' });
+    } finally { client.release(); }
+  }
+
   const c = normalizeGalleryConfig(await getState('config'));
   c.dateHours = c.dateHours || {};
   c.dateHours[date] = normalized;
-  c.openingHours = 'Agenda definida pela proprietária no painel';
   await setState('config', c);
   res.json({ ok:true, date, times:normalized });
 });
 app.delete('/api/admin/date-schedule/:date', auth, async (req,res) => {
   const date = String(req.params.date || '');
   if (!validDate(date)) return res.status(400).json({ error:'Data inválida.' });
+  if (pgPool && dbReady) {
+    await pgPool.query('DELETE FROM lsh_date_hours WHERE date_value=$1', [date]);
+    return res.json({ ok:true });
+  }
   const c = normalizeGalleryConfig(await getState('config'));
   delete c.dateHours[date];
   await setState('config', c);
@@ -990,58 +1058,93 @@ app.delete('/api/admin/date-schedule/:date', auth, async (req,res) => {
 app.put('/api/admin/services', auth, async (req,res) => {
   const services = Array.isArray(req.body.services) ? req.body.services : null;
   if (!services) return res.status(400).json({ error:'Procedimentos inválidos' });
+
   const cleaned = [];
-  for (let i = 0; i < Math.min(services.length, 30); i++) {
-    const raw = services[i] || {};
-    const name = String(raw.name || '').trim().slice(0,80);
-    if (name.length < 2) return res.status(400).json({ error:`Preencha o nome do procedimento ${i+1}.` });
-    const active = raw.active !== false;
-    const priceRaw = raw.price;
-    const price = priceRaw === null || priceRaw === '' ? null : Number(priceRaw);
-    if (active && (price === null || !Number.isFinite(price) || price < 0)) {
-      return res.status(400).json({ error:`Defina um valor válido para “${name}” antes de deixá-lo ativo.` });
-    }
-    const duration = Number(raw.duration || 60);
-    if (!Number.isFinite(duration) || duration < 15) return res.status(400).json({ error:`Duração inválida em “${name}”.` });
+  for (let i=0; i<Math.min(services.length,40); i++) {
+    const raw=services[i]||{};
+    const name=String(raw.name||'').trim().slice(0,80);
+    if(name.length<2) return res.status(400).json({error:`Preencha o nome do procedimento ${i+1}.`});
+    const active=raw.active!==false;
+    const price=raw.price===null||raw.price===''?null:Number(raw.price);
+    if(active&&(price===null||!Number.isFinite(price)||price<0))
+      return res.status(400).json({error:`Defina um valor válido para “${name}”.`});
+    const duration=Math.max(15,Math.min(480,Math.round(Number(raw.duration||60))));
     cleaned.push({
-      id: String(raw.id || crypto.randomUUID()).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,60) || `servico-${i+1}`,
-      name,
-      description: String(raw.description || '').trim().slice(0,220),
-      image: String(raw.image || '').trim().slice(0,1600000),
-      price: price === null ? null : Math.round(Math.max(0, price) * 100) / 100,
-      duration: Math.max(15, Math.min(480, Math.round(duration))),
-      active
+      id:String(raw.id||crypto.randomUUID()).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,60)||crypto.randomUUID(),
+      name, description:String(raw.description||'').trim().slice(0,220),
+      image:String(raw.image||'').trim().slice(0,2200000),
+      price:price===null?null:Math.round(price*100)/100,
+      duration, active,
+      bookingComplete: raw.bookingComplete !== false,
+      bookingMaintenance: raw.bookingMaintenance !== false
     });
   }
-  const ids = new Set();
-  for (const item of cleaned) {
-    if (ids.has(item.id)) item.id = crypto.randomUUID();
-    ids.add(item.id);
+
+  const ids=new Set();
+  for(const item of cleaned){if(ids.has(item.id))item.id=crypto.randomUUID();ids.add(item.id);}
+
+  if(pgPool&&dbReady){
+    const client=await pgPool.connect();
+    try{
+      await client.query('BEGIN');
+      const incoming=cleaned.map(x=>x.id);
+      if(incoming.length) await client.query('DELETE FROM lsh_services WHERE NOT (id = ANY($1::text[]))',[incoming]);
+      else await client.query('DELETE FROM lsh_services');
+      for(let i=0;i<cleaned.length;i++){
+        const x=cleaned[i];
+        await client.query(
+          `INSERT INTO lsh_services(id,name,description,image,price,duration,active,booking_complete,booking_maintenance,position,updated_at)
+           VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW())
+           ON CONFLICT(id) DO UPDATE SET
+             name=EXCLUDED.name,description=EXCLUDED.description,
+             image=CASE WHEN EXCLUDED.image='' THEN lsh_services.image ELSE EXCLUDED.image END,
+             price=EXCLUDED.price,duration=EXCLUDED.duration,active=EXCLUDED.active,
+             booking_complete=EXCLUDED.booking_complete,booking_maintenance=EXCLUDED.booking_maintenance,
+             position=EXCLUDED.position,updated_at=NOW()`,
+          [x.id,x.name,x.description,x.image,x.price,x.duration,x.active,x.bookingComplete,x.bookingMaintenance,i]
+        );
+      }
+      await client.query('COMMIT');
+      const r=await pgPool.query('SELECT id,name,description,image,price,duration,active,booking_complete,booking_maintenance FROM lsh_services ORDER BY position,id');
+      return res.json({ok:true,services:r.rows.map(x=>({...x,price:x.price===null?null:Number(x.price),duration:Number(x.duration||60)}))});
+    }catch(e){
+      await client.query('ROLLBACK');
+      console.error('[SERVICES SAVE]',e);
+      return res.status(500).json({error:'Não foi possível salvar os procedimentos.'});
+    }finally{client.release();}
   }
-  const c = normalizeGalleryConfig(await getState('config'));
-  c.services = cleaned;
-  await setState('config', c);
-  res.json({ ok:true, services:cleaned });
+
+  const c=normalizeGalleryConfig(await getState('config'));c.services=cleaned;await setState('config',c);
+  res.json({ok:true,services:cleaned});
 });
 
 app.post('/api/admin/services/:id/image', auth, upload.single('image'), async (req,res) => {
-  if (!req.file) return res.status(400).json({ error:'Escolha uma imagem.' });
-  const cfg = normalizeGalleryConfig(await getState('config'));
-  const service = (cfg.services || []).find(x => String(x.id) === String(req.params.id));
-  if (!service) return res.status(404).json({ error:'Procedimento não encontrado. Salve o procedimento antes de enviar a foto.' });
-  const optimized = await optimizeImage(req.file.buffer, { max:1200, quality:82 });
-  service.image = `data:image/webp;base64,${optimized.toString('base64')}`;
-  await setState('config', cfg);
-  res.json({ ok:true, image:service.image });
+  if(!req.file)return res.status(400).json({error:'Escolha uma imagem.'});
+  const id=String(req.params.id||'');
+  const optimized=await optimizeImage(req.file.buffer,{max:1200,quality:82});
+  const image=`data:image/webp;base64,${optimized.toString('base64')}`;
+  if(pgPool&&dbReady){
+    const r=await pgPool.query('UPDATE lsh_services SET image=$2,updated_at=NOW() WHERE id=$1 RETURNING id',[id,image]);
+    if(!r.rowCount)return res.status(404).json({error:'Procedimento não encontrado. Salve primeiro.'});
+    return res.json({ok:true,image});
+  }
+  const cfg=normalizeGalleryConfig(await getState('config'));
+  const service=(cfg.services||[]).find(x=>String(x.id)===id);
+  if(!service)return res.status(404).json({error:'Procedimento não encontrado. Salve primeiro.'});
+  service.image=image;await setState('config',cfg);res.json({ok:true,image});
 });
 
 app.delete('/api/admin/services/:id/image', auth, async (req,res) => {
-  const cfg = normalizeGalleryConfig(await getState('config'));
-  const service = (cfg.services || []).find(x => String(x.id) === String(req.params.id));
-  if (!service) return res.status(404).json({ error:'Procedimento não encontrado.' });
-  service.image = '';
-  await setState('config', cfg);
-  res.json({ ok:true });
+  const id=String(req.params.id||'');
+  if(pgPool&&dbReady){
+    const r=await pgPool.query("UPDATE lsh_services SET image='',updated_at=NOW() WHERE id=$1 RETURNING id",[id]);
+    if(!r.rowCount)return res.status(404).json({error:'Procedimento não encontrado.'});
+    return res.json({ok:true});
+  }
+  const cfg=normalizeGalleryConfig(await getState('config'));
+  const service=(cfg.services||[]).find(x=>String(x.id)===id);
+  if(!service)return res.status(404).json({error:'Procedimento não encontrado.'});
+  service.image='';await setState('config',cfg);res.json({ok:true});
 });
 
 

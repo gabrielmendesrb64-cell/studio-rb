@@ -1,6 +1,6 @@
 {
   "name": "lsh-studio-rb",
-  "version": "6.9.0",
+  "version": "7.2.0",
   "private": true,
   "description": "Studio RB V18 - visual baseado no catálogo, PIX R$20, comprovante e uploads mobile robustos",
   "main": "server.js",

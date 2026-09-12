@@ -36,8 +36,16 @@ $('#logoutBtn')?.addEventListener('click',async()=>{try{await api('/api/admin/lo
 async function check(){try{await api('/api/admin/me');await showDash();}catch{}}
 async function showDash(){$('#loginView')?.classList.add('hidden');$('#dashboard')?.classList.remove('hidden');$('#logoutBtn')?.classList.remove('hidden');selectedCalendarDate=todayISO();await refresh();}
 async function refresh(){
-  const [b,c,n]=await Promise.all([api('/api/admin/bookings'),api('/api/admin/config'),api('/api/admin/notifications/status')]);
-  bookings=b.bookings||[];adminConfig=c.config||{};adminConfig.weeklyHours=adminConfig.weeklyHours||{};adminConfig.dateHours=adminConfig.dateHours||{};adminConfig.services=adminConfig.services||[];
+  const [b,c,s]=await Promise.all([
+    api('/api/admin/bookings'),
+    api('/api/admin/config'),
+    api('/api/admin/services')
+  ]);
+  bookings=b.bookings||[];
+  adminConfig=c.config||{};
+  adminConfig.weeklyHours=adminConfig.weeklyHours||{};
+  adminConfig.dateHours=adminConfig.dateHours||{};
+  adminConfig.services=s.services||[];
   renderStats();renderCalendar();renderDayManager();renderList();renderBlocks();renderSchedule();renderServices();renderGallery();renderPaymentSettings();
 }
 function renderStats(){const rows=[['Pendentes',bookings.filter(b=>b.status==='Pendente').length],['Confirmados',bookings.filter(b=>b.status==='Confirmado').length],['Hoje',bookings.filter(b=>b.date===todayISO()&&b.status!=='Cancelado').length],['Total',bookings.length]];$('#stats').innerHTML=rows.map(([l,n])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('');}
@@ -134,6 +142,11 @@ function renderServices(){
           <label><span>Duração manutenção (min)</span><input class="service-maint-duration" type="number" min="15" step="15" value="${Number(maintenance?.duration||90)}"></label>
         </div>
 
+        <div class="booking-visibility-box">
+          <b>Onde aparece no agendamento</b>
+          <label class="service-toggle"><input class="service-booking-complete" type="checkbox" ${s.bookingComplete!==false?'checked':''}><span>Procedimento completo</span></label>
+          <label class="service-toggle"><input class="service-booking-maintenance" type="checkbox" ${s.bookingMaintenance!==false?'checked':''}><span>Manutenção</span></label>
+        </div>
         <label class="service-toggle"><input class="service-active" type="checkbox" ${s.active!==false?'checked':''}><span>Visível no site</span></label>
         <button type="button" class="mini-btn danger js-remove-service">Excluir procedimento</button>
       </div>
@@ -156,7 +169,9 @@ function collectServices(){
       image:oldBase.image||'',
       price:row.querySelector('.service-price').value===''?null:Number(row.querySelector('.service-price').value),
       duration:Number(row.querySelector('.service-duration').value||60),
-      active
+      active,
+      bookingComplete: !!row.querySelector('.service-booking-complete')?.checked,
+      bookingMaintenance: !!row.querySelector('.service-booking-maintenance')?.checked
     };
     result.push(base);
 
@@ -171,13 +186,14 @@ function collectServices(){
         image:'',
         price:Number(maintValue),
         duration:Number(row.querySelector('.service-maint-duration').value||90),
-        active
+        active,
+        bookingComplete:false,
+        bookingMaintenance:true
       });
     }
   });
   return result;
 }
-$('#addServiceBtn')?.addEventListener('click',()=>{adminConfig.services=collectServices();adminConfig.services.push({id:`servico-${Date.now()}`,name:'',description:'',image:'',price:null,duration:60,active:true});renderServices();const rows=$$('.service-edit-row');rows.at(-1)?.querySelector('.service-name')?.focus();});
 
 $('#servicesEditor')?.addEventListener('click',async e=>{
   const row=e.target.closest('.service-edit-row'); if(!row)return;
@@ -197,7 +213,7 @@ $('#servicesEditor')?.addEventListener('click',async e=>{
 $('#servicesEditor')?.addEventListener('change',async e=>{
   const input=e.target.closest('.service-image-file'); if(!input)return;
   const row=input.closest('.service-edit-row'),file=input.files?.[0]; if(!file)return;
-  const i=Number(row.dataset.i),id=row.dataset.id;
+  const i=adminConfig.services.findIndex(s=>String(s.id)===String(row.dataset.id)),id=row.dataset.id;
   const btn=row.querySelector('.service-image-pick');
   if(file.size>40*1024*1024){toast('A imagem passou de 40 MB. Escolha outra foto.','error');input.value='';return;}
   setBusy(btn,true,'ENVIANDO FOTO...');
@@ -217,7 +233,19 @@ $('#servicesEditor')?.addEventListener('change',async e=>{
   }catch(err){toast(err.message||'Não foi possível trocar a imagem.','error');input.value='';}
   finally{setBusy(btn,false);}
 });
-$('#saveServicesBtn')?.addEventListener('click',async()=>{const btn=$('#saveServicesBtn');setBusy(btn,true,'SALVANDO...');try{const services=collectServices();for(const s of services){if(s.name.length<2)throw new Error('Preencha o nome de todos os procedimentos.');if(s.active&&(s.price===null||!Number.isFinite(s.price)||s.price<0))throw new Error(`Defina o valor de “${s.name||'novo procedimento'}” para liberar no site.`);}const d=await api('/api/admin/services',{method:'PUT',body:JSON.stringify({services})});adminConfig.services=d.services;renderServices();await refresh();toast('Procedimentos atualizados no catálogo e no agendamento.');}catch(e){toast(e.message,'error');}finally{setBusy(btn,false);}});
+$('#saveServicesBtn')?.addEventListener('click',async()=>{const btn=$('#saveServicesBtn');setBusy(btn,true,'SALVANDO...');try{
+  const services=collectServices();
+  const bases=services.filter(s=>!isMaintenanceServiceAdmin(s));
+  for(const s of bases){
+    if(String(s.name||'').trim().length<2)throw new Error('Preencha o nome do novo procedimento.');
+    if(s.active&&(s.price===null||!Number.isFinite(s.price)||s.price<0))throw new Error(`Defina o valor de “${s.name||'novo procedimento'}”.`);
+  }
+  const d=await api('/api/admin/services',{method:'PUT',body:JSON.stringify({services})});
+  adminConfig.services=d.services;
+  renderServices();
+  await refresh();
+  toast('Procedimentos salvos.');
+}catch(e){toast(e.message,'error');}finally{setBusy(btn,false);}});
 
 $('#backupBtn')?.addEventListener('click',async()=>{const btn=$('#backupBtn');setBusy(btn,true,'GERANDO...');try{const r=await fetch('/api/admin/backup',{credentials:'same-origin',cache:'no-store'});if(!r.ok){let d={};try{d=await r.json();}catch{}throw new Error(d.error||'Falha ao gerar backup.');}const blob=await r.blob(),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`studio-rb-backup-${todayISO()}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('Backup baixado.');}catch(e){toast(e.message,'error');}finally{setBusy(btn,false);}});
 
@@ -258,4 +286,35 @@ document.querySelector('.admin-section-menu')?.addEventListener('click',e=>{
   const btn=e.target.closest('[data-admin-section]');
   if(!btn)return;
   showAdminSection(btn.dataset.adminSection);
+});
+
+
+// V42 — criar novo procedimento de forma confiável, inclusive no celular
+document.addEventListener('click',e=>{
+  const btn=e.target.closest('#addServiceBtn');
+  if(!btn)return;
+  e.preventDefault();
+
+  if(!adminConfig) adminConfig={};
+  adminConfig.services=collectServices();
+
+  const id=`servico-${Date.now()}`;
+  adminConfig.services.push({
+    id,
+    name:'',
+    description:'',
+    image:'',
+    price:null,
+    duration:60,
+    active:true,
+    bookingComplete:true,
+    bookingMaintenance:false
+  });
+
+  renderServices();
+
+  const row=document.querySelector(`.service-edit-row[data-id="${id}"]`);
+  row?.scrollIntoView({behavior:'smooth',block:'center'});
+  setTimeout(()=>row?.querySelector('.service-name')?.focus(),250);
+  toast('Novo procedimento criado. Preencha os dados e clique em Salvar procedimentos.');
 });
