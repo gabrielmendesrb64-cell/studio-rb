@@ -698,3 +698,43 @@ dialog h2{
 @media(max-width:720px){
   .service-image-pick{min-height:50px!important;font-size:15px!important}
 }
+
+/* V27 — upload de procedimento realmente nativo no celular */
+.service-image-pick{
+  position:relative!important;
+  overflow:hidden!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:50px!important;
+  cursor:pointer!important;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation!important;
+}
+.service-image-pick > span{
+  pointer-events:none!important;
+}
+.service-image-pick .service-image-file{
+  display:block!important;
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  opacity:0!important;
+  cursor:pointer!important;
+  pointer-events:auto!important;
+  clip:auto!important;
+  overflow:visible!important;
+  white-space:normal!important;
+  z-index:5!important;
+  font-size:100px!important; /* amplia a área nativa clicável no Safari */
+}
+@media(max-width:720px){
+  .service-image-admin{
+    grid-template-columns:92px minmax(0,1fr)!important;
+  }
+  .service-image-pick{
+    width:100%!important;
+    min-width:0!important;
+  }
+}
