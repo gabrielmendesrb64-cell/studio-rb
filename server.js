@@ -428,6 +428,36 @@ async function migrateV23ServiceMedia(client) {
   await client.query("INSERT INTO lsh_migrations(name) VALUES('v23_service_media') ON CONFLICT DO NOTHING");
 }
 
+async function migrateV32Maintenance(client) {
+  const already = await client.query("SELECT 1 FROM lsh_migrations WHERE name='v32_maintenance_seed'");
+  if (already.rowCount) return;
+
+  const local = normalizeGalleryConfig(readJson(cfgPath, {}));
+  const maintenance = (local.services || []).filter(x =>
+    /^manut/i.test(String(x.id || '')) ||
+    /^manuten[cç][aã]o\b/i.test(String(x.name || '').trim())
+  );
+
+  for (const x of maintenance) {
+    await client.query(
+      `INSERT INTO lsh_services(id,name,description,image,price,duration,active,position,updated_at)
+       VALUES($1,$2,$3,$4,$5,$6,$7,999,NOW())
+       ON CONFLICT(id) DO UPDATE SET
+         price=CASE WHEN lsh_services.price IS NULL OR lsh_services.price=0 THEN EXCLUDED.price ELSE lsh_services.price END,
+         duration=CASE WHEN lsh_services.duration IS NULL OR lsh_services.duration=60 THEN EXCLUDED.duration ELSE lsh_services.duration END,
+         active=TRUE,
+         updated_at=NOW()`,
+      [
+        String(x.id), String(x.name), String(x.description || ''), String(x.image || ''),
+        x.price === null || x.price === '' ? null : Number(x.price),
+        Math.max(15, Number(x.duration || 60)), x.active !== false
+      ]
+    );
+  }
+
+  await client.query("INSERT INTO lsh_migrations(name) VALUES('v32_maintenance_seed') ON CONFLICT DO NOTHING");
+}
+
 async function initDb() {
   if (!pgPool) {
     console.warn('[DATABASE] DATABASE_URL não configurada. Em produção, alterações não serão aceitas até conectar o PostgreSQL.');
@@ -441,6 +471,7 @@ async function initDb() {
     await migrateLegacyData(client);
     await migrateV18Catalog(client);
     await migrateV23ServiceMedia(client);
+    await migrateV32Maintenance(client);
     dbReady = true;
     console.log('[DATABASE] PostgreSQL conectado e pronto.');
   } finally {

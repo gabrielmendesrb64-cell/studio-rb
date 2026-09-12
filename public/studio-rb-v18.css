@@ -159,3 +159,79 @@
   .maintenance-price{font-size:11px}
   .maintenance-price strong{font-size:12px}
 }
+
+/* V32 — seletor de procedimento compacto e manutenção visível */
+#bookingServices{display:grid;gap:10px}
+.compact-service-choice{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:10px!important;
+  min-height:64px!important;
+  padding:12px 14px!important;
+  border:1px solid rgba(255,92,164,.28)!important;
+  border-radius:18px!important;
+  background:rgba(255,255,255,.018)!important;
+}
+.compact-service-choice .booking-service-title{
+  margin:0!important;
+  font-size:15px!important;
+  line-height:1.15!important;
+  color:#fff!important;
+}
+.compact-service-choice .booking-service-options{
+  display:flex!important;
+  gap:7px!important;
+  margin:0!important;
+  flex-wrap:nowrap!important;
+}
+.compact-option{
+  min-height:38px!important;
+  padding:0 10px!important;
+  border-radius:999px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  border:1px solid rgba(255,105,176,.35)!important;
+  background:rgba(255,79,163,.035)!important;
+}
+.compact-option input{
+  width:18px!important;
+  height:18px!important;
+  min-width:18px!important;
+  margin:0!important;
+}
+.compact-option span{
+  font-size:12px!important;
+  font-weight:800!important;
+  white-space:nowrap!important;
+}
+.single-choice{
+  grid-template-columns:22px minmax(0,1fr)!important;
+  cursor:pointer!important;
+}
+.single-service-input{
+  width:20px!important;
+  height:20px!important;
+  min-width:20px!important;
+  margin:0!important;
+}
+.service-bottom .price-wrap{display:grid!important;gap:3px!important}
+.service-bottom .maintenance-price{
+  display:flex!important;
+  align-items:baseline!important;
+  gap:6px!important;
+  margin-top:2px!important;
+}
+.service-bottom .maintenance-price span{font-size:11px!important;color:#cab6c0!important}
+.service-bottom .maintenance-price strong{font-size:12px!important;color:#ff8fc2!important}
+@media(max-width:560px){
+  .compact-service-choice{
+    grid-template-columns:1fr!important;
+    gap:9px!important;
+    padding:11px 12px!important;
+  }
+  .compact-service-choice .booking-service-options{width:100%!important}
+  .compact-option{flex:1!important;justify-content:center!important}
+  .single-choice{grid-template-columns:22px minmax(0,1fr)!important}
+}
