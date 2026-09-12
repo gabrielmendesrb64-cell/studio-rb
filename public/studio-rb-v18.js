@@ -118,10 +118,97 @@ $('#bookingServices')?.addEventListener('change',e=>{
   if($('#bookingDate').value) loadAvailability();
 });
 $('#bookingDate')?.addEventListener('change',loadAvailability);$('#bookingServices')?.addEventListener('change',()=>{$('#bookingDate').value&&loadAvailability()});$('#timeSlots')?.addEventListener('click',e=>{const b=e.target.closest('[data-time]');if(!b||b.disabled)return;$$('#timeSlots button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$('#bookingTime').value=b.dataset.time});
-$('#bookingForm')?.addEventListener('submit',async e=>{e.preventDefault();const btn=$('#bookingSubmit');if(!selectedServices.size)return toast('Escolha pelo menos um procedimento.');if(!$('#bookingTime').value)return toast('Escolha um horário.');btn.disabled=true;btn.textContent='CRIANDO RESERVA...';try{const fd=new FormData(e.currentTarget);const payload={name:fd.get('name'),phone:fd.get('phone'),email:fd.get('email'),date:$('#bookingDate').value,time:$('#bookingTime').value,services:[...selectedServices]};const d=await api('/api/bookings',{method:'POST',body:JSON.stringify(payload)});currentBooking={id:d.id,phone:payload.phone};$('#proofPhone').value=payload.phone;openPayment()}catch(err){toast(err.message)}finally{btn.disabled=false;btn.textContent='CONTINUAR PARA O PIX'}});
-function openPayment(){if(!currentBooking)return;$('#dialogDeposit').textContent=money(cfg.depositAmount||20);$('#pixKeyText').textContent=cfg.pixKey||'Configure a chave PIX no painel';$('#pixRecipientText').textContent=[cfg.pixRecipient,cfg.pixCity].filter(Boolean).join(' • ');const msg=`Olá! Fiz o sinal de ${money(cfg.depositAmount||20)} para meu agendamento no Studio RB. Meu código de reserva é ${currentBooking.id}. Vou enviar o comprovante aqui.`;$('#whatsappProof').href=`https://wa.me/${String(cfg.whatsapp||'').replace(/\D/g,'')}?text=${encodeURIComponent(msg)}`;$('#paymentStatus').textContent='';$('#paymentDialog').showModal()}
+$('#bookingForm')?.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const btn=$('#bookingSubmit');
+  if(!selectedServices.size)return toast('Escolha pelo menos um procedimento.');
+  if(!$('#bookingTime').value)return toast('Escolha um horário.');
+  btn.disabled=true;btn.textContent='CRIANDO RESERVA...';
+  try{
+    const fd=new FormData(e.currentTarget);
+    const payload={
+      name:fd.get('name'),
+      phone:fd.get('phone'),
+      email:fd.get('email'),
+      date:$('#bookingDate').value,
+      time:$('#bookingTime').value,
+      services:[...selectedServices]
+    };
+    const d=await api('/api/bookings',{method:'POST',body:JSON.stringify(payload)});
+    const selectedNames=(cfg.services||[])
+      .filter(x=>payload.services.includes(String(x.id)))
+      .map(x=>x.name);
+    currentBooking={
+      id:d.id,
+      phone:payload.phone,
+      name:payload.name,
+      date:payload.date,
+      time:payload.time,
+      services:selectedNames
+    };
+    openPayment();
+  }catch(err){toast(err.message)}
+  finally{btn.disabled=false;btn.textContent='CONTINUAR PARA O PIX'}
+});
+function openPayment(){
+  if(!currentBooking)return;
+  $('#dialogDeposit').textContent=money(cfg.depositAmount||20);
+  $('#pixKeyText').textContent=cfg.pixKey||'Configure a chave PIX no painel';
+  $('#pixRecipientText').textContent=[cfg.pixRecipient,cfg.pixCity].filter(Boolean).join(' • ');
+  $('#paymentStatus').textContent='';
+  $('#whatsappProofBox')?.classList.add('hidden');
+  $('#paymentDoneBtn').style.display='';
+  const file=$('#proofFile'); if(file) file.value='';
+  const fileName=$('#proofFileName'); if(fileName) fileName.textContent='Nenhuma imagem escolhida';
+  $('#paymentDialog').showModal();
+}
 $('#closePayment')?.addEventListener('click',()=>$('#paymentDialog').close());$('#copyPix')?.addEventListener('click',async()=>{if(!cfg.pixKey)return toast('A chave PIX ainda não foi configurada.');await navigator.clipboard.writeText(cfg.pixKey);toast('Chave PIX copiada.')});
-$('#proofForm')?.addEventListener('submit',async e=>{e.preventDefault();if(!currentBooking)return;const file=$('#proofFile').files?.[0];if(!file)return toast('Escolha a imagem do comprovante.');const btn=$('#proofSubmit');btn.disabled=true;btn.textContent='ENVIANDO...';const fd=new FormData();fd.append('proof',file);fd.append('phone',currentBooking.phone);try{const r=await fetch(`/api/bookings/${encodeURIComponent(currentBooking.id)}/proof`,{method:'POST',body:fd});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||'Não foi possível enviar o comprovante.');$('#paymentStatus').textContent='✓ Comprovante enviado. Agora aguarde a aprovação da Emilly.';$('#proofForm').style.display='none';toast('Comprovante enviado com sucesso.')}catch(err){toast(err.message)}finally{btn.disabled=false;btn.textContent='ENVIAR COMPROVANTE'}});
+$('#paymentDoneBtn')?.addEventListener('click',()=>{
+  $('#paymentDoneBtn').style.display='none';
+  $('#whatsappProofBox')?.classList.remove('hidden');
+  $('#paymentStatus').textContent='Pagamento marcado como realizado. Envie o comprovante para concluir a confirmação.';
+});
+$('#proofFile')?.addEventListener('change',e=>{
+  const file=e.target.files?.[0];
+  $('#proofFileName').textContent=file?file.name:'Nenhuma imagem escolhida';
+});
+function whatsappProofMessage(){
+  if(!currentBooking)return '';
+  const services=(currentBooking.services||[]).join(' + ')||'Procedimento não informado';
+  return `Olá! Segue meu comprovante de pagamento do Studio RB.
+
+Nome: ${currentBooking.name}
+Data: ${currentBooking.date}
+Horário: ${currentBooking.time}
+Procedimento: ${services}
+
+Código da reserva: ${currentBooking.id}`;
+}
+$('#sendWhatsappProof')?.addEventListener('click',async()=>{
+  if(!currentBooking)return toast('Reserva não encontrada.');
+  const file=$('#proofFile')?.files?.[0];
+  if(!file)return toast('Escolha a imagem do comprovante.');
+  const msg=whatsappProofMessage();
+
+  try{
+    if(navigator.canShare && navigator.canShare({files:[file]}) && navigator.share){
+      await navigator.share({
+        files:[file],
+        text:msg,
+        title:'Comprovante Studio RB'
+      });
+      $('#paymentStatus').textContent='✓ Comprovante preparado para envio. Selecione o WhatsApp e envie a conversa.';
+      return;
+    }
+  }catch(err){
+    if(err?.name==='AbortError')return;
+  }
+
+  const number=String(cfg.whatsapp||'').replace(/\D/g,'');
+  window.open(`https://wa.me/${number}?text=${encodeURIComponent(msg)}`,'_blank');
+  $('#paymentStatus').textContent='O WhatsApp foi aberto com a mensagem pronta. Anexe a imagem do comprovante e envie.';
+});
+
 $('#lookupForm')?.addEventListener('submit',async e=>{e.preventDefault();const q=$('#lookupQuery').value.trim();if(!q)return;try{const d=await api(`/api/my-bookings?q=${encodeURIComponent(q)}`);$('#lookupResults').innerHTML=(d.bookings||[]).map(b=>`<div class="lookup-item"><b>${esc((b.services||[]).map(s=>s.name).join(' + '))}</b><div>${esc(b.date)} • ${esc(b.time)}</div><div class="status">${esc(b.status)}</div><small>${b.paymentStatus?`Pagamento: ${esc(b.paymentStatus)}`:''}</small></div>`).join('')||'<p class="muted">Nenhum agendamento encontrado.</p>'}catch(err){toast(err.message)}});
 async function init(){try{cfg=await api('/api/config');const dep=money(cfg.depositAmount||20);if($('#heroDeposit'))$('#heroDeposit').textContent=dep;if($('#pixValue'))$('#pixValue').textContent=dep;renderServices();renderGallery();const phone=String(cfg.whatsapp||'').replace(/\D/g,'');$('#floatingWhatsapp').href=`https://wa.me/${phone}`;$('#footerContact').innerHTML=`<span>${esc(cfg.address||'')}</span><span>${esc(cfg.instagram||'')}</span>`;const today=new Date();$('#bookingDate').min=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`}catch(e){toast('Não foi possível carregar o site.')}}
 init();

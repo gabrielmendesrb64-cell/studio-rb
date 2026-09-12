@@ -749,7 +749,12 @@ app.get('/api/config', async (req, res) => {
     pixCity: c.pixCity || '',
     paymentInstructions: c.paymentInstructions || '',
     services: (c.services || []).filter(s => s.active !== false).map(s => ({
-      id:s.id, name:s.name, price:s.price, duration:s.duration
+      id:s.id,
+      name:s.name,
+      description:s.description || '',
+      image:s.image || '',
+      price:s.price,
+      duration:s.duration
     })),
     galleryCategories: (c.galleryCategories || []).filter(x => x.active !== false).map(x => ({ id:x.id, name:x.name })),
     gallery: (c.gallery || []).filter(x => x.active !== false).slice(0,100).map(x => ({
