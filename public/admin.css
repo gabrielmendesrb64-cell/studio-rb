@@ -819,3 +819,59 @@ dialog h2{
 }
 .booking-visibility-box>b{font-size:12px;color:#ff8fc2;text-transform:uppercase;letter-spacing:.08em}
 .booking-visibility-box .service-toggle{margin:0!important}
+
+/* V45 — Clientes + Financeiro */
+.client-search-grid,.finance-controls{
+  display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:12px;margin:14px 0;
+}
+.client-search-grid label,.finance-controls label{display:grid;gap:6px}
+.client-search-grid label>span,.finance-controls label>span{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#c8aab9;font-weight:800}
+.client-search-results{display:grid;gap:8px;margin-bottom:14px}
+.client-result{
+  width:100%;display:flex;align-items:center;justify-content:space-between;gap:14px;
+  border:1px solid rgba(255,92,164,.22);background:#100a0e;color:#fff;border-radius:15px;padding:12px 14px;text-align:left
+}
+.client-result span:first-child{display:grid;gap:2px}
+.client-result small{color:#bba8b1}
+.client-result.active{border-color:#ff58a7;background:rgba(255,79,163,.08)}
+.client-profile-card{
+  display:flex;justify-content:space-between;gap:16px;align-items:center;padding:16px;border:1px solid rgba(255,92,164,.25);
+  border-radius:18px;background:rgba(255,255,255,.015);margin-bottom:14px
+}
+.client-profile-card h3{margin:3px 0 4px;font-size:24px}.client-profile-card p{margin:0;color:#bba8b1}
+.client-profile-stats{display:flex;gap:10px}.client-profile-stats span{display:grid;gap:2px;text-align:center;padding:10px 13px;border-radius:14px;background:rgba(255,79,163,.07)}
+.client-profile-stats b{color:#ff74b5}.client-profile-stats small{color:#bba8b1}
+.client-month-title{display:flex;justify-content:space-between;gap:10px;margin:12px 0;color:#fff}.client-month-title span{color:#bba8b1}
+.client-booking-history{display:grid;gap:8px}
+.client-history-row,.finance-service-row,.finance-booking-row{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px 14px;
+  border:1px solid rgba(255,92,164,.18);border-radius:14px;background:#0f090d
+}
+.client-history-row>div:first-child,.finance-service-row>span,.finance-booking-row>span{display:grid;gap:3px}
+.client-history-row small,.finance-service-row small,.finance-booking-row small{color:#bba8b1}
+.client-history-row>div:last-child{display:flex;align-items:center;gap:9px}
+.client-history-row strong,.finance-service-row strong,.finance-booking-row strong{color:#ff74b5}
+.client-all-history{margin-top:14px;border-top:1px solid rgba(255,92,164,.18);padding-top:12px}
+.client-all-history summary{cursor:pointer;color:#ff85bc;font-weight:800;margin-bottom:10px}
+.small-empty{padding:16px!important}
+
+.finance-period-tabs{display:flex;gap:6px}
+.finance-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:16px 0}
+.finance-stat{
+  display:grid;gap:5px;padding:14px;border:1px solid rgba(255,92,164,.2);border-radius:16px;background:#100a0e
+}
+.finance-stat small{color:#bba8b1}.finance-stat b{font-size:19px;color:#fff}.finance-stat.main b{color:#ff67ad;font-size:24px}
+.finance-breakdown-wrap,.finance-bookings-wrap{margin-top:20px}
+.compact-head{margin-bottom:10px}
+.compact-head h3{margin:2px 0 0;font-size:19px}
+.finance-breakdown,.finance-bookings{display:grid;gap:8px}
+
+@media(max-width:760px){
+  .client-search-grid,.finance-controls{grid-template-columns:1fr}
+  .client-profile-card{display:grid}
+  .client-profile-stats{display:grid;grid-template-columns:1fr 1fr}
+  .finance-summary{grid-template-columns:1fr 1fr}
+  .finance-stat.main{grid-column:1/-1}
+  .client-history-row,.finance-service-row,.finance-booking-row{align-items:flex-start}
+  .client-history-row>div:last-child{display:grid;justify-items:end}
+}

@@ -46,7 +46,7 @@ async function refresh(){
   adminConfig.weeklyHours=adminConfig.weeklyHours||{};
   adminConfig.dateHours=adminConfig.dateHours||{};
   adminConfig.services=s.services||[];
-  renderStats();renderCalendar();renderDayManager();renderList();renderBlocks();renderSchedule();renderServices();renderGallery();renderPaymentSettings();
+  renderStats();renderCalendar();renderDayManager();renderList();renderBlocks();renderSchedule();renderServices();renderGallery();renderPaymentSettings();renderClientSearch();renderFinance();
 }
 function renderStats(){const rows=[['Pendentes',bookings.filter(b=>b.status==='Pendente').length],['Confirmados',bookings.filter(b=>b.status==='Confirmado').length],['Hoje',bookings.filter(b=>b.date===todayISO()&&b.status!=='Cancelado').length],['Total',bookings.length]];$('#stats').innerHTML=rows.map(([l,n])=>`<div class="stat"><b>${n}</b><span>${l}</span></div>`).join('');}
 
@@ -273,6 +273,161 @@ check();
 
 
 // V41 — navegação real por seções no painel
+
+function normalizePhoneValue(v){return String(v||'').replace(/\D/g,'')}
+function normalizeSearchValue(v){
+  return String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim()
+}
+function bookingServiceNames(b){
+  return (b.services||[]).map(s=>typeof s==='string'?s:(s?.name||'')).filter(Boolean)
+}
+function bookingIsRealized(b){return b.status==='Concluído'}
+function currentMonthValue(){
+  const d=new Date(),m=String(d.getMonth()+1).padStart(2,'0');return `${d.getFullYear()}-${m}`
+}
+function clientKey(b){
+  const p=normalizePhoneValue(b.phone);
+  return p?`p:${p}`:`n:${normalizeSearchValue(b.name)}`
+}
+function clientMatchesQuery(b,q){
+  const term=normalizeSearchValue(q),digits=normalizePhoneValue(q);
+  if(!term&&!digits)return false;
+  const name=normalizeSearchValue(b.name),phone=normalizePhoneValue(b.phone);
+  return (term&&name.includes(term)) || (digits&&phone.includes(digits));
+}
+function uniqueClientsFromBookings(rows){
+  const map=new Map();
+  rows.forEach(b=>{
+    const key=clientKey(b);
+    if(!map.has(key))map.set(key,{key,name:b.name||'Cliente',phone:b.phone||'',email:b.email||''});
+  });
+  return [...map.values()].sort((x,y)=>String(x.name).localeCompare(String(y.name),'pt-BR'));
+}
+
+function renderClientSearch(){
+  const input=$('#clientSearchInput'),month=$('#clientMonthFilter');
+  if(!input||!month)return;
+  if(!month.value)month.value=currentMonthValue();
+  const q=input.value.trim();
+  if(!q){
+    $('#clientSearchResults').innerHTML='';
+    if(!selectedClientKey)$('#clientHistoryView').innerHTML='<div class="empty-state">Digite o nome ou telefone da cliente.</div>';
+    return;
+  }
+  const matches=uniqueClientsFromBookings(bookings.filter(b=>clientMatchesQuery(b,q))).slice(0,12);
+  $('#clientSearchResults').innerHTML=matches.length?matches.map(c=>`
+    <button type="button" class="client-result ${selectedClientKey===c.key?'active':''}" data-client-key="${esc(c.key)}">
+      <span><b>${esc(c.name)}</b><small>${esc(c.phone||'Sem telefone')}</small></span>
+      <span>Ver histórico ›</span>
+    </button>`).join(''):'<div class="empty-state small-empty">Nenhuma cliente encontrada.</div>';
+  if(selectedClientKey)renderClientHistory();
+}
+
+function renderClientHistory(){
+  const box=$('#clientHistoryView'),month=$('#clientMonthFilter');
+  if(!box||!selectedClientKey)return;
+  const all=bookings.filter(b=>clientKey(b)===selectedClientKey).sort((x,y)=>(y.date+y.time).localeCompare(x.date+x.time));
+  if(!all.length){box.innerHTML='<div class="empty-state">Nenhum atendimento encontrado.</div>';return}
+  const client=all[0];
+  const monthValue=month?.value||currentMonthValue();
+  const monthly=all.filter(b=>String(b.date||'').startsWith(monthValue));
+  const realizedAll=all.filter(bookingIsRealized);
+  const spent=realizedAll.reduce((sum,b)=>sum+Number(b.total||0),0);
+
+  box.innerHTML=`
+    <div class="client-profile-card">
+      <div><span class="eyebrow">CLIENTE</span><h3>${esc(client.name||'Cliente')}</h3>
+      <p>${esc(client.phone||'')}${client.email?` • ${esc(client.email)}`:''}</p></div>
+      <div class="client-profile-stats">
+        <span><b>${realizedAll.length}</b><small>realizados</small></span>
+        <span><b>${money(spent)}</b><small>total realizado</small></span>
+      </div>
+    </div>
+    <div class="client-month-title"><b>Atendimentos de ${esc(monthValue)}</b><span>${monthly.length} registro(s)</span></div>
+    <div class="client-booking-history">
+      ${monthly.length?monthly.map(b=>{
+        const names=bookingServiceNames(b).join(' + ')||'Sem procedimento';
+        return `<article class="client-history-row">
+          <div><b>${esc(names)}</b><small>${fmtDate(b.date)} às ${esc(b.time||'')}</small></div>
+          <div><strong>${money(b.total)}</strong><span class="status status-${esc(String(b.status||'').toLowerCase().replace(/\s+/g,'-'))}">${esc(b.status||'')}</span></div>
+        </article>`;
+      }).join(''):'<div class="empty-state small-empty">Nenhum agendamento dessa cliente neste mês.</div>'}
+    </div>
+    <details class="client-all-history">
+      <summary>Ver histórico completo (${all.length})</summary>
+      <div class="client-booking-history">${all.map(b=>{
+        const names=bookingServiceNames(b).join(' + ')||'Sem procedimento';
+        return `<article class="client-history-row">
+          <div><b>${esc(names)}</b><small>${fmtDate(b.date)} às ${esc(b.time||'')}</small></div>
+          <div><strong>${money(b.total)}</strong><span>${esc(b.status||'')}</span></div>
+        </article>`;
+      }).join('')}</div>
+    </details>`;
+}
+
+function financeRange(reference,period){
+  const [y,m]=String(reference||currentMonthValue()).split('-').map(Number);
+  if(period==='year')return {start:`${y}-01-01`,end:`${y}-12-31`,label:`Ano ${y}`};
+  if(period==='quarter'){
+    const q=Math.floor((m-1)/3),sm=q*3+1,em=sm+2;
+    const last=new Date(y,em,0).getDate();
+    return {start:`${y}-${String(sm).padStart(2,'0')}-01`,end:`${y}-${String(em).padStart(2,'0')}-${String(last).padStart(2,'0')}`,label:`${q+1}º trimestre de ${y}`};
+  }
+  const last=new Date(y,m,0).getDate();
+  return {start:`${y}-${String(m).padStart(2,'0')}-01`,end:`${y}-${String(m).padStart(2,'0')}-${String(last).padStart(2,'0')}`,label:`${String(m).padStart(2,'0')}/${y}`};
+}
+function renderFinance(){
+  const ref=$('#financeReference');
+  if(!ref)return;
+  if(!ref.value)ref.value=currentMonthValue();
+  const range=financeRange(ref.value,financePeriod);
+  const rows=bookings.filter(b=>bookingIsRealized(b)&&b.date>=range.start&&b.date<=range.end);
+  const revenue=rows.reduce((s,b)=>s+Number(b.total||0),0);
+  const ticket=rows.length?revenue/rows.length:0;
+  const clients=new Set(rows.map(clientKey)).size;
+
+  $('#financeSummary').innerHTML=`
+    <div class="finance-stat"><small>Período</small><b>${esc(range.label)}</b></div>
+    <div class="finance-stat main"><small>Ganhos</small><b>${money(revenue)}</b></div>
+    <div class="finance-stat"><small>Atendimentos</small><b>${rows.length}</b></div>
+    <div class="finance-stat"><small>Clientes</small><b>${clients}</b></div>
+    <div class="finance-stat"><small>Ticket médio</small><b>${money(ticket)}</b></div>`;
+
+  const byService=new Map();
+  rows.forEach(b=>{
+    const names=bookingServiceNames(b);
+    const share=names.length?Number(b.total||0)/names.length:Number(b.total||0);
+    (names.length?names:['Sem procedimento']).forEach(name=>{
+      const cur=byService.get(name)||{count:0,total:0};
+      cur.count++;cur.total+=share;byService.set(name,cur);
+    });
+  });
+  const breakdown=[...byService.entries()].sort((a,b)=>b[1].total-a[1].total);
+  $('#financeBreakdown').innerHTML=breakdown.length?breakdown.map(([name,v])=>`
+    <div class="finance-service-row"><span><b>${esc(name)}</b><small>${v.count} atendimento(s)</small></span><strong>${money(v.total)}</strong></div>`
+  ).join(''):'<div class="empty-state small-empty">Nenhum procedimento concluído neste período.</div>';
+
+  $('#financeBookings').innerHTML=rows.length?rows.sort((a,b)=>(b.date+b.time).localeCompare(a.date+a.time)).map(b=>`
+    <div class="finance-booking-row">
+      <span><b>${esc(b.name||'Cliente')}</b><small>${fmtDate(b.date)} • ${esc(bookingServiceNames(b).join(' + ')||'Sem procedimento')}</small></span>
+      <strong>${money(b.total)}</strong>
+    </div>`).join(''):'<div class="empty-state small-empty">Nenhum atendimento concluído neste período.</div>';
+}
+
+$('#clientSearchInput')?.addEventListener('input',()=>{selectedClientKey='';renderClientSearch()});
+$('#clientMonthFilter')?.addEventListener('change',()=>{if(selectedClientKey)renderClientHistory()});
+$('#clientSearchResults')?.addEventListener('click',e=>{
+  const btn=e.target.closest('[data-client-key]');if(!btn)return;
+  selectedClientKey=btn.dataset.clientKey;renderClientSearch();renderClientHistory();
+});
+document.querySelector('.finance-period-tabs')?.addEventListener('click',e=>{
+  const btn=e.target.closest('[data-finance-period]');if(!btn)return;
+  financePeriod=btn.dataset.financePeriod;
+  document.querySelectorAll('[data-finance-period]').forEach(x=>x.classList.toggle('active',x===btn));
+  renderFinance();
+});
+$('#financeReference')?.addEventListener('change',renderFinance);
+
 function showAdminSection(name){
   document.querySelectorAll('.admin-section-view').forEach(el=>{
     el.classList.toggle('admin-view-hidden', el.dataset.adminView!==name);
@@ -280,6 +435,8 @@ function showAdminSection(name){
   document.querySelectorAll('.admin-section-menu [data-admin-section]').forEach(btn=>{
     btn.classList.toggle('active', btn.dataset.adminSection===name);
   });
+  if(name==='clientes')renderClientSearch();
+  if(name==='financeiro')renderFinance();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelector('.admin-section-menu')?.addEventListener('click',e=>{

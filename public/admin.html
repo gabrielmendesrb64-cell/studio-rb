@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#fff7fb">
   <title>Painel • Studio RB</title>
   <link rel="stylesheet" href="styles.css?v=23">
-  <link rel="stylesheet" href="admin.css?v=44">
+  <link rel="stylesheet" href="admin.css?v=45">
   <link rel="icon" href="assets/logo-premium-v4.svg?v=23">
 </head>
 <body class="admin-body admin-v15">
@@ -55,6 +55,8 @@
         <button type="button" data-admin-section="horarios">Horários</button>
         <button type="button" data-admin-section="pix">PIX</button>
         <button type="button" data-admin-section="portfolio">Portfólio</button>
+        <button type="button" data-admin-section="clientes">Clientes</button>
+        <button type="button" data-admin-section="financeiro">Financeiro</button>
       </nav>
 
       <section class="panel-card calendar-card calendar-card-wide admin-section-view" data-admin-view="agenda">
@@ -156,6 +158,71 @@
           <div id="galleryEditor" class="gallery-editor"></div>
         </div>
       </section>
+
+      <section class="panel-card admin-section-view admin-view-hidden client-history-panel" data-admin-view="clientes">
+        <div class="panel-head">
+          <div>
+            <span class="eyebrow">CLIENTES</span>
+            <h2>Histórico de atendimentos</h2>
+            <p class="panel-desc">Busque pelo nome ou telefone e veja os procedimentos realizados pela cliente.</p>
+          </div>
+        </div>
+
+        <div class="client-search-grid">
+          <label>
+            <span>Nome ou telefone</span>
+            <input id="clientSearchInput" type="search" placeholder="Ex.: Maria ou 12999999999" autocomplete="off">
+          </label>
+          <label>
+            <span>Mês</span>
+            <input id="clientMonthFilter" type="month">
+          </label>
+        </div>
+
+        <div id="clientSearchResults" class="client-search-results"></div>
+        <div id="clientHistoryView" class="client-history-view">
+          <div class="empty-state">Digite o nome ou telefone da cliente.</div>
+        </div>
+      </section>
+
+      <section class="panel-card admin-section-view admin-view-hidden finance-panel" data-admin-view="financeiro">
+        <div class="panel-head">
+          <div>
+            <span class="eyebrow">FINANCEIRO</span>
+            <h2>Ganhos do Studio RB</h2>
+            <p class="panel-desc">Valores calculados pelos atendimentos marcados como Concluído.</p>
+          </div>
+        </div>
+
+        <div class="finance-controls">
+          <div class="segmented finance-period-tabs">
+            <button class="active" type="button" data-finance-period="month">Mensal</button>
+            <button type="button" data-finance-period="quarter">Trimestral</button>
+            <button type="button" data-finance-period="year">Anual</button>
+          </div>
+          <label>
+            <span>Referência</span>
+            <input id="financeReference" type="month">
+          </label>
+        </div>
+
+        <div id="financeSummary" class="finance-summary"></div>
+
+        <div class="finance-breakdown-wrap">
+          <div class="panel-head compact-head">
+            <div><span class="eyebrow">PROCEDIMENTOS</span><h3>Ganhos por serviço</h3></div>
+          </div>
+          <div id="financeBreakdown" class="finance-breakdown"></div>
+        </div>
+
+        <div class="finance-bookings-wrap">
+          <div class="panel-head compact-head">
+            <div><span class="eyebrow">ATENDIMENTOS</span><h3>Procedimentos concluídos no período</h3></div>
+          </div>
+          <div id="financeBookings" class="finance-bookings"></div>
+        </div>
+      </section>
+
     </section>
   </main>
 
@@ -173,6 +240,6 @@
     </form>
   </dialog>
 
-  <script src="admin-v18.js?v=44" defer></script>
+  <script src="admin-v18.js?v=45" defer></script>
 </body>
 </html>
