@@ -620,3 +620,57 @@ dialog h2{
 .service-edit-v23{display:grid;grid-template-columns:180px 1fr;gap:18px;align-items:start}
 .service-image-admin{display:grid;gap:10px}.service-image-admin img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:18px;border:1px solid rgba(236,85,151,.3);background:#170b12}.service-image-pick{position:relative;text-align:center;cursor:pointer}.service-fields-admin{display:grid;gap:10px}.service-description{min-height:86px;resize:vertical}.service-inline-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.service-inline-fields label{display:grid;gap:5px}
 @media(max-width:720px){.service-edit-v23{grid-template-columns:1fr}.service-image-admin{grid-template-columns:110px 1fr;align-items:center}.service-image-admin img{width:110px}.service-inline-fields{grid-template-columns:1fr 1fr}}
+
+/* V24 — ADMIN NO MESMO VISUAL PRETO/PINK DO SITE */
+.admin-v15{
+  --admin-bg:#08050a;
+  --admin-card:#10090f;
+  --admin-card-2:#160c14;
+  --admin-text:#fff8fc;
+  --admin-muted:#cbb9c4;
+  --admin-line:rgba(255,104,179,.23);
+  --admin-pink:#ff4fa3;
+  --admin-pink-2:#ff78b8;
+  background:
+    radial-gradient(circle at 12% 8%,rgba(255,79,163,.12),transparent 24%),
+    radial-gradient(circle at 88% 72%,rgba(255,79,163,.08),transparent 25%),
+    linear-gradient(180deg,#08050a 0%,#0b060a 100%)!important;
+  color:var(--admin-text)!important;
+}
+.admin-v15 .admin-top{background:rgba(8,5,10,.90)!important;border-color:var(--admin-line)!important;box-shadow:0 12px 34px rgba(0,0,0,.34)!important}
+.admin-v15 .admin-brand b,.admin-v15 .dash-head h1,.admin-v15 .panel-head h2,.admin-v15 .calendar-title h2,.admin-v15 .calendar-day-manager h2,.admin-v15 h3{color:var(--admin-text)!important}
+.admin-v15 .admin-brand small,.admin-v15 .login-card p,.admin-v15 .dash-sub,.admin-v15 .panel-desc,.admin-v15 .muted,.admin-v15 .schedule-day-head small,.admin-v15 .service-edit-row label>span,.admin-v15 .gallery-category-manager-head small,.admin-v15 .gallery-admin-item small,.admin-v15 .gallery-move-label>span,.admin-v15 .notify-status span{color:var(--admin-muted)!important}
+.admin-v15 .login-card,.admin-v15 .panel-card,.admin-v15 .stat,.admin-v15 .calendar-day-manager,.admin-v15 .block-item,.admin-v15 .schedule-day,.admin-v15 .service-edit-row,.admin-v15 .gallery-category-manager,.admin-v15 .gallery-admin-item,.admin-v15 .notify-status{
+  background:linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012))!important;
+  border:1px solid var(--admin-line)!important;
+  box-shadow:0 18px 48px rgba(0,0,0,.24)!important;
+  color:var(--admin-text)!important;
+}
+.admin-v15 .login-card input,.admin-v15 .toolbar input,.admin-v15 .stack input,.admin-v15 #manualForm input,
+.admin-v15 .schedule-add input,.admin-v15 .service-edit-row input,.admin-v15 .service-edit-row textarea,
+.admin-v15 .gallery-category-add input,.admin-v15 .gallery-upload-form input,.admin-v15 .gallery-upload-form select,
+.admin-v15 .gallery-admin-item select,.admin-v15 .gallery-category-row input,.admin-v15 .date-time-add input,
+.admin-v15 .payment-settings-grid input,.admin-v15 .payment-settings-grid textarea,.admin-v15 .payment-settings-grid select{
+  background:#0c070b!important;color:#fff!important;border:1px solid var(--admin-line)!important;box-shadow:none!important
+}
+.admin-v15 input::placeholder,.admin-v15 textarea::placeholder{color:#8f7783!important}
+.admin-v15 .btn-ghost,.admin-v15 .mini-btn{background:#160c14!important;color:#ffd7e9!important;border-color:var(--admin-line)!important}
+.admin-v15 .btn-pink,.admin-v15 .mini-btn.pink{background:linear-gradient(135deg,#ff78b8,#ff4fa3)!important;color:#18060f!important;border-color:#ff4fa3!important;box-shadow:0 10px 26px rgba(255,79,163,.22)!important}
+.admin-v15 .mini-btn.danger{background:rgba(255,79,111,.08)!important;color:#ffb5c9!important;border-color:rgba(255,79,111,.28)!important}
+.admin-v15 .eyebrow,.admin-v15 .stat b,.admin-v15 .day-booking-mini b,.admin-v15 .payment-badge{color:var(--admin-pink-2)!important}
+.admin-v15 .stat span{color:var(--admin-muted)!important}
+.admin-v15 .calendar-weekdays span{color:var(--admin-muted)!important}
+.admin-v15 .calendar-day{background:#10090f!important;color:#fff!important;border-color:var(--admin-line)!important;box-shadow:none!important}
+.admin-v15 .calendar-day.active,.admin-v15 .segmented button.active{background:linear-gradient(135deg,#ff78b8,#ff4fa3)!important;color:#18060f!important;border-color:#ff4fa3!important;box-shadow:0 8px 24px rgba(255,79,163,.20)!important}
+.admin-v15 .calendar-day .dot{background:#301322!important;color:#ff9bc8!important}.admin-v15 .calendar-day.active .dot{background:rgba(24,6,15,.18)!important;color:#18060f!important}
+.admin-v15 .segmented button{background:#10090f!important;color:#f7e8ef!important;border-color:var(--admin-line)!important}
+.admin-v15 .selected-date,.admin-v15 .time-chip,.admin-v15 .gallery-admin-category{background:#190d16!important;color:#ff9bc8!important;border-color:var(--admin-line)!important}
+.admin-v15 .booking-card{background:#10090f!important;border-color:var(--admin-line)!important;box-shadow:0 10px 28px rgba(0,0,0,.18)!important}
+.admin-v15 .booking-main b,.admin-v15 .booking-meta{color:#fff!important}.admin-v15 .booking-main small,.admin-v15 .booking-main p{color:var(--admin-muted)!important}
+.admin-v15 .status{color:#ffb1d4!important;background:#190d16!important;border-color:var(--admin-line)!important}
+.admin-v15 .upload-drop{background:#120a10!important;border-color:var(--admin-line)!important}.admin-v15 .upload-drop span{color:#ff9bc8!important}.admin-v15 .upload-drop small{color:var(--admin-muted)!important}
+.admin-v15 .save-state{background:#102019!important;color:#87e5aa!important}.admin-v15 .save-state.saving{background:#24180d!important;color:#ffc57e!important}
+.admin-v15 dialog{background:#0d070c!important;color:#fff!important;border-color:var(--admin-line)!important;box-shadow:0 30px 90px rgba(0,0,0,.55)!important}.admin-v15 dialog::backdrop{background:rgba(0,0,0,.75)}
+.admin-v15 .service-image-admin img{border-color:var(--admin-line)!important;background:#170b12!important}
+.admin-v15 .payment-settings-grid label span{color:var(--admin-muted)!important}
+.admin-v15 .proof-btn{border-color:var(--admin-line)!important;background:#160c14!important;color:#ffd7e9!important}
