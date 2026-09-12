@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#fff7fb">
   <title>Painel • Studio RB</title>
   <link rel="stylesheet" href="styles.css?v=23">
-  <link rel="stylesheet" href="admin.css?v=39">
+  <link rel="stylesheet" href="admin.css?v=41">
   <link rel="icon" href="assets/logo-premium-v4.svg?v=23">
 </head>
 <body class="admin-body admin-v15">
@@ -49,7 +49,15 @@
 
       <div class="stats" id="stats"></div>
 
-      <section class="panel-card calendar-card calendar-card-wide">
+      <nav class="admin-section-menu" aria-label="Menu do painel">
+        <button class="active" type="button" data-admin-section="agenda">Agenda</button>
+        <button type="button" data-admin-section="procedimentos">Procedimentos</button>
+        <button type="button" data-admin-section="horarios">Horários</button>
+        <button type="button" data-admin-section="pix">PIX</button>
+        <button type="button" data-admin-section="portfolio">Portfólio</button>
+      </nav>
+
+      <section class="panel-card calendar-card calendar-card-wide admin-section-view" data-admin-view="agenda">
         <div class="calendar-wide-grid">
           <div>
             <div class="calendar-top">
@@ -79,7 +87,7 @@
         </div>
       </section>
 
-      <div class="admin-layout admin-layout-v15">
+      <div class="admin-layout admin-layout-v15 admin-section-view" data-admin-view="agenda">
         <section class="admin-content">
           <div class="toolbar">
             <div class="segmented">
@@ -106,13 +114,13 @@
         </aside>
       </div>
 
-      <section class="admin-settings-grid">
-        <div class="panel-card settings-card schedule-settings">
+      <section class="admin-settings-grid admin-settings-tabs">
+        <div class="panel-card settings-card schedule-settings admin-section-view admin-view-hidden" data-admin-view="horarios">
           <div class="panel-head"><div><span class="eyebrow">AGENDA SEMANAL</span><h2>Horários padrão</h2><p class="panel-desc">São os horários que se repetem toda semana. Ao adicionar ou remover, o painel já salva automaticamente.</p></div><span id="scheduleSaveState" class="save-state">Salvo</span></div>
           <div id="scheduleEditor" class="schedule-editor"></div>
         </div>
 
-        <div class="panel-card settings-card services-settings">
+        <div class="panel-card settings-card services-settings admin-section-view admin-view-hidden" data-admin-view="procedimentos">
           <div class="panel-head">
             <div><span class="eyebrow">PROCEDIMENTOS</span><h2>Serviços e valores</h2><p class="panel-desc">Para aparecer e poder ser escolhido no site, o procedimento precisa estar ativo e ter um valor definido.</p></div>
             <div class="panel-actions"><button id="addServiceBtn" class="btn btn-ghost" type="button">＋ Procedimento</button><button id="saveServicesBtn" class="btn btn-pink" type="button">Salvar procedimentos</button></div>
@@ -120,7 +128,7 @@
           <div id="servicesEditor" class="services-editor"></div>
         </div>
 
-        <div class="panel-card settings-card payment-settings">
+        <div class="panel-card settings-card payment-settings admin-section-view admin-view-hidden" data-admin-view="pix">
           <div class="panel-head"><div><span class="eyebrow">PIX & SINAL</span><h2>Pagamento da reserva</h2><p class="panel-desc">Defina a chave PIX e o valor do sinal exibido para as clientes.</p></div><button id="savePaymentBtn" class="btn btn-pink" type="button">Salvar PIX</button></div>
           <div class="payment-settings-grid">
             <label><span>Valor do sinal (R$)</span><input id="depositAmount" type="number" min="0" step="0.01" value="20"></label>
@@ -131,7 +139,7 @@
           </div>
         </div>
 
-        <div class="panel-card settings-card gallery-settings">
+        <div class="panel-card settings-card gallery-settings admin-section-view admin-view-hidden" data-admin-view="portfolio">
           <div class="panel-head"><div><span class="eyebrow">PORTFÓLIO</span><h2>Fotos do site</h2><p class="panel-desc">Adicione, mova e exclua fotos. Adicione, mova e exclua fotos do portfólio.</p></div></div>
           <div class="gallery-category-manager">
             <div class="gallery-category-manager-head"><div><b>Abas / categorias</b><small>Cílios, Sobrancelhas, Lábios e qualquer outra categoria que quiser criar.</small></div></div>
@@ -165,6 +173,6 @@
     </form>
   </dialog>
 
-  <script src="admin-v18.js?v=39" defer></script>
+  <script src="admin-v18.js?v=41" defer></script>
 </body>
 </html>

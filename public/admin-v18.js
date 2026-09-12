@@ -242,3 +242,20 @@ document.addEventListener('click',async e=>{
 $('#galleryUploadForm')?.addEventListener('submit',async e=>{e.preventDefault();const file=$('#galleryPhoto')?.files?.[0],categoryId=$('#galleryCategory')?.value;if(!file){toast('Escolha uma foto.','error');return;}if(!categoryId){toast('Escolha a categoria.','error');return;}const btn=e.currentTarget.querySelector('button[type="submit"]');setBusy(btn,true,'ENVIANDO...');try{const fd=new FormData();fd.append('photo',file);fd.append('categoryId',categoryId);fd.append('title',$('#galleryTitle').value||'');fd.append('caption',$('#galleryCaption').value||'');const r=await fetch('/api/admin/gallery',{method:'POST',body:fd,credentials:'same-origin'});let d={};try{d=await r.json();}catch{}if(!r.ok)throw new Error(d.error||`Erro ${r.status}`);e.currentTarget.reset();await refresh();toast('Foto adicionada e otimizada automaticamente.');}catch(err){toast(err.message,'error');}finally{setBusy(btn,false);}});
 
 check();
+
+
+// V41 — navegação real por seções no painel
+function showAdminSection(name){
+  document.querySelectorAll('.admin-section-view').forEach(el=>{
+    el.classList.toggle('admin-view-hidden', el.dataset.adminView!==name);
+  });
+  document.querySelectorAll('.admin-section-menu [data-admin-section]').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.adminSection===name);
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelector('.admin-section-menu')?.addEventListener('click',e=>{
+  const btn=e.target.closest('[data-admin-section]');
+  if(!btn)return;
+  showAdminSection(btn.dataset.adminSection);
+});

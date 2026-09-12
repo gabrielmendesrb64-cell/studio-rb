@@ -748,3 +748,62 @@ dialog h2{
     grid-template-columns:1fr!important;
   }
 }
+
+/* V41 — menu real do painel */
+.admin-section-menu{
+  display:flex;
+  gap:8px;
+  overflow-x:auto;
+  padding:2px 0 14px;
+  margin:8px 0 14px;
+  scrollbar-width:none;
+}
+.admin-section-menu::-webkit-scrollbar{display:none}
+.admin-section-menu button{
+  flex:0 0 auto;
+  min-height:42px;
+  padding:10px 15px;
+  border-radius:999px;
+  border:1px solid rgba(255,91,166,.28);
+  background:#110a0e;
+  color:#d8c8cf;
+  font-weight:800;
+}
+.admin-section-menu button.active{
+  background:linear-gradient(135deg,#ff4fa3,#ea4c94);
+  color:#160912;
+  border-color:transparent;
+}
+.admin-view-hidden{display:none!important}
+.admin-settings-tabs{display:block!important}
+.admin-section-view{margin-bottom:14px}
+
+/* procedimento: garante que valor/foto sempre aparecem */
+.services-settings .service-edit-row{display:grid!important}
+.services-settings .service-image-admin{display:grid!important}
+.services-settings .service-fields-admin{display:grid!important}
+.services-settings .service-image-pick{
+  position:relative!important;
+  overflow:hidden!important;
+}
+.services-settings .service-image-file{
+  display:block!important;
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  opacity:0!important;
+  z-index:5!important;
+  cursor:pointer!important;
+}
+@media(max-width:700px){
+  .admin-section-menu{
+    position:sticky;
+    top:72px;
+    z-index:20;
+    background:linear-gradient(180deg,#090608 80%,rgba(9,6,8,0));
+    padding-top:8px;
+  }
+  .admin-section-menu button{min-height:40px;padding:9px 13px}
+  .services-settings{padding:13px!important}
+}
