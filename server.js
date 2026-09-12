@@ -12,6 +12,8 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { Pool } = require('pg');
+const multer = require('multer');
+const sharp = require('sharp');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -76,7 +78,32 @@ function sameOriginWrite(req, res, next) {
   } catch { return res.status(403).json({ error:'Origem inválida' }); }
   next();
 }
+
 app.use('/api/admin', sameOriginWrite);
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 20 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    const ok = /^image\/(jpeg|jpg|png|webp|heic|heif)$/i.test(file.mimetype || '');
+    cb(ok ? null : new Error('Envie uma imagem JPG, PNG, WEBP ou HEIC.'), ok);
+  }
+});
+
+async function optimizeImage(buffer, { max=1800, quality=82 } = {}) {
+  try {
+    return await sharp(buffer, { failOn:'none' })
+      .rotate()
+      .resize({ width:max, height:max, fit:'inside', withoutEnlargement:true })
+      .webp({ quality, effort:4 })
+      .toBuffer();
+  } catch (e) {
+    const err = new Error('Não consegui processar essa imagem. Tente enviar uma captura de tela ou JPG/PNG.');
+    err.code = 'IMAGE_PROCESSING';
+    throw err;
+  }
+}
+
 
 const pgPool = process.env.DATABASE_URL ? new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -152,7 +179,7 @@ async function writeRelationalConfig(cfg, client = pgPool) {
   try {
     if (ownClient) await c.query('BEGIN');
 
-    const settingsKeys = ['businessName','whatsapp','email','instagram','tiktok','address','openingHours'];
+    const settingsKeys = ['businessName','whatsapp','email','instagram','tiktok','address','openingHours','depositAmount','pixKey','pixRecipient','pixCity','paymentInstructions'];
     for (const key of settingsKeys) {
       await c.query(
         `INSERT INTO lsh_settings(key,value,updated_at) VALUES($1,$2::jsonb,NOW())
@@ -233,6 +260,7 @@ async function writeRelationalConfig(cfg, client = pgPool) {
 async function readRelationalBookings(client = pgPool) {
   const br = await client.query(`
     SELECT id,name,phone,email,date_value::text AS date,time_value AS time,total,duration,status,source,
+           deposit_amount,payment_status,proof_uploaded_at,payment_reviewed_at,
            created_at,updated_at,cancelled_at,cancelled_by,notifications
     FROM lsh_bookings
     ORDER BY created_at ASC
@@ -264,6 +292,10 @@ async function readRelationalBookings(client = pgPool) {
     duration:Number(row.duration || 60),
     status:row.status,
     source:row.source,
+    depositAmount:Number(row.deposit_amount || 20),
+    paymentStatus:row.payment_status || 'Aguardando pagamento',
+    proofUploadedAt:row.proof_uploaded_at ? new Date(row.proof_uploaded_at).toISOString() : null,
+    paymentReviewedAt:row.payment_reviewed_at ? new Date(row.payment_reviewed_at).toISOString() : null,
     createdAt:row.created_at ? new Date(row.created_at).toISOString() : new Date().toISOString(),
     ...(row.updated_at ? { updatedAt:new Date(row.updated_at).toISOString() } : {}),
     ...(row.cancelled_at ? { cancelledAt:new Date(row.cancelled_at).toISOString() } : {}),
@@ -282,19 +314,23 @@ async function upsertRelationalBookings(bookings, client = pgPool) {
       await c.query(`
         INSERT INTO lsh_bookings(
           id,name,phone,email,date_value,time_value,total,duration,status,source,
+          deposit_amount,payment_status,proof_uploaded_at,payment_reviewed_at,
           created_at,updated_at,cancelled_at,cancelled_by,notifications
-        ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb)
+        ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19::jsonb)
         ON CONFLICT(id) DO UPDATE SET
           name=EXCLUDED.name,phone=EXCLUDED.phone,email=EXCLUDED.email,
           date_value=EXCLUDED.date_value,time_value=EXCLUDED.time_value,
           total=EXCLUDED.total,duration=EXCLUDED.duration,status=EXCLUDED.status,
-          source=EXCLUDED.source,updated_at=EXCLUDED.updated_at,
-          cancelled_at=EXCLUDED.cancelled_at,cancelled_by=EXCLUDED.cancelled_by,
+          source=EXCLUDED.source,deposit_amount=EXCLUDED.deposit_amount,payment_status=EXCLUDED.payment_status,
+          proof_uploaded_at=EXCLUDED.proof_uploaded_at,payment_reviewed_at=EXCLUDED.payment_reviewed_at,
+          updated_at=EXCLUDED.updated_at,cancelled_at=EXCLUDED.cancelled_at,cancelled_by=EXCLUDED.cancelled_by,
           notifications=EXCLUDED.notifications
       `, [
         String(b.id), String(b.name || ''), String(b.phone || ''), String(b.email || ''),
         String(b.date), String(b.time), Number(b.total || 0), Math.max(15,Number(b.duration || 60)),
-        String(b.status || 'Pendente'), String(b.source || 'site'),
+        String(b.status || 'Aguardando pagamento'), String(b.source || 'site'),
+        Number(b.depositAmount || 20), String(b.paymentStatus || 'Aguardando pagamento'),
+        b.proofUploadedAt || null, b.paymentReviewedAt || null,
         b.createdAt || new Date().toISOString(), b.updatedAt || null, b.cancelledAt || null,
         b.cancelledBy || null, JSON.stringify(b.notifications || {})
       ]);
@@ -350,6 +386,23 @@ async function migrateLegacyData(client) {
   await client.query("INSERT INTO lsh_migrations(name) VALUES('v17_relational_import') ON CONFLICT DO NOTHING");
 }
 
+async function migrateV18Catalog(client) {
+  const already = await client.query("SELECT 1 FROM lsh_migrations WHERE name='v18_pdf_catalog'");
+  if (already.rowCount) return;
+  const current = await client.query('SELECT id,name,price FROM lsh_services ORDER BY position,id');
+  const looksLikeOldStarter = current.rows.length <= 5 && current.rows.every(r => r.price === null || Number(r.price) === 0);
+  if (looksLikeOldStarter) {
+    const local = normalizeGalleryConfig(readJson(cfgPath, {}));
+    await client.query('DELETE FROM lsh_services');
+    for (let i=0;i<(local.services||[]).length;i++) {
+      const x=local.services[i];
+      await client.query(`INSERT INTO lsh_services(id,name,price,duration,active,position,updated_at) VALUES($1,$2,$3,$4,$5,$6,NOW())`,
+        [String(x.id),String(x.name),Number(x.price||0),Math.max(15,Number(x.duration||60)),x.active!==false,i]);
+    }
+  }
+  await client.query("INSERT INTO lsh_migrations(name) VALUES('v18_pdf_catalog') ON CONFLICT DO NOTHING");
+}
+
 async function initDb() {
   if (!pgPool) {
     console.warn('[DATABASE] DATABASE_URL não configurada. Em produção, alterações não serão aceitas até conectar o PostgreSQL.');
@@ -361,6 +414,7 @@ async function initDb() {
     const ddl = fs.readFileSync(path.join(__dirname, 'database.sql'), 'utf8');
     await client.query(ddl);
     await migrateLegacyData(client);
+    await migrateV18Catalog(client);
     dbReady = true;
     console.log('[DATABASE] PostgreSQL conectado e pronto.');
   } finally {
@@ -407,6 +461,11 @@ function galleryDefaults() { return [
   { id:'epilacao', name:'Epilação', active:true }
 ]; }
 function normalizeGalleryConfig(c) {
+  c.depositAmount = Number.isFinite(Number(c.depositAmount)) ? Math.max(0, Number(c.depositAmount)) : 20;
+  c.pixKey = String(c.pixKey || '').trim().slice(0,180);
+  c.pixRecipient = String(c.pixRecipient || 'Emilly Ribeiro').trim().slice(0,120);
+  c.pixCity = String(c.pixCity || '').trim().slice(0,80);
+  c.paymentInstructions = String(c.paymentInstructions || 'O horário só é confirmado após o envio e aprovação do comprovante do sinal.').trim().slice(0,300);
   c.dateHours = c.dateHours && typeof c.dateHours === 'object' && !Array.isArray(c.dateHours) ? c.dateHours : {};
   for (const [date, times] of Object.entries(c.dateHours)) {
     if (!validDate(date) || !Array.isArray(times)) { delete c.dateHours[date]; continue; }
@@ -438,7 +497,10 @@ function publicBooking(b) {
     services: b.services || [],
     total: Number(b.total || 0),
     duration: Number(b.duration || 0),
-    createdAt: b.createdAt
+    createdAt: b.createdAt,
+    depositAmount:Number(b.depositAmount || 20),
+    paymentStatus:b.paymentStatus || 'Aguardando pagamento',
+    proofUploadedAt:b.proofUploadedAt || null
   };
 }
 
@@ -624,6 +686,11 @@ app.get('/api/config', async (req, res) => {
     tiktok: c.tiktok,
     address: c.address,
     openingHours: c.openingHours,
+    depositAmount: Number(c.depositAmount || 20),
+    pixKey: c.pixKey || '',
+    pixRecipient: c.pixRecipient || 'Emilly Ribeiro',
+    pixCity: c.pixCity || '',
+    paymentInstructions: c.paymentInstructions || '',
     services: (c.services || []).filter(s => s.active !== false).map(s => ({
       id:s.id, name:s.name, price:s.price, duration:s.duration
     })),
@@ -666,8 +733,10 @@ app.post('/api/bookings', async (req, res) => {
     services: selected,
     total,
     duration,
-    status: 'Pendente',
+    status: 'Aguardando pagamento',
     source: 'site',
+    depositAmount:Number((await getState('config')).depositAmount || 20),
+    paymentStatus:'Aguardando pagamento',
     createdAt: new Date().toISOString(),
     notifications: {}
   };
@@ -691,6 +760,35 @@ app.post('/api/bookings', async (req, res) => {
     console.error('Falha ao enviar e-mail para proprietária:', e.message);
   }
   res.status(201).json({ ok:true, id:b.id, status:b.status });
+});
+
+app.post('/api/bookings/:id/proof', upload.single('proof'), async (req,res) => {
+  if (!pgPool || !dbReady) return res.status(503).json({ error:'Banco de dados indisponível.' });
+  if (!req.file) return res.status(400).json({ error:'Selecione a foto do comprovante.' });
+  const phone = cleanPhone(req.body.phone || '');
+  const bookings = await getState('bookings');
+  const b = bookings.find(x => x.id === req.params.id);
+  if (!b) return res.status(404).json({ error:'Agendamento não encontrado.' });
+  if (phone.length < 8 || !cleanPhone(b.phone).endsWith(phone)) return res.status(403).json({ error:'WhatsApp não confere com o agendamento.' });
+  const optimized = await optimizeImage(req.file.buffer, { max:1800, quality:86 });
+  await pgPool.query(`INSERT INTO lsh_payment_proofs(booking_id,mime_type,original_name,data,created_at)
+    VALUES($1,'image/webp',$2,$3,NOW()) ON CONFLICT(booking_id) DO UPDATE SET mime_type=EXCLUDED.mime_type,original_name=EXCLUDED.original_name,data=EXCLUDED.data,created_at=NOW()`,
+    [b.id, String(req.file.originalname || 'comprovante').slice(0,160), optimized]);
+  b.paymentStatus='Comprovante enviado';
+  b.status='Comprovante enviado';
+  b.proofUploadedAt=new Date().toISOString();
+  await setState('bookings', bookings);
+  try { await notifyOwnerNewBooking({...b, name:`${b.name} — comprovante enviado`}); } catch(e) { console.error('Aviso comprovante:',e.message); }
+  res.json({ ok:true, status:b.status });
+});
+
+app.get('/api/admin/bookings/:id/proof', auth, async (req,res) => {
+  if (!pgPool || !dbReady) return res.status(503).end();
+  const r=await pgPool.query('SELECT mime_type,data FROM lsh_payment_proofs WHERE booking_id=$1',[req.params.id]);
+  if (!r.rowCount) return res.status(404).json({ error:'Comprovante ainda não enviado.' });
+  res.setHeader('Content-Type', r.rows[0].mime_type || 'image/webp');
+  res.setHeader('Cache-Control','private, no-store');
+  res.send(r.rows[0].data);
 });
 
 app.get('/api/my-bookings', async (req, res) => {
@@ -754,13 +852,15 @@ app.get('/api/admin/bookings', auth, async (req,res) => res.json({ bookings: awa
 app.get('/api/admin/config', auth, async (req,res) => res.json({ config: normalizeGalleryConfig(await getState('config')) }));
 
 app.patch('/api/admin/bookings/:id', auth, async (req,res) => {
-  const allowed = ['Pendente','Confirmado','Concluído','Cancelado'];
+  const allowed = ['Aguardando pagamento','Comprovante enviado','Pagamento recusado','Pendente','Confirmado','Concluído','Cancelado'];
   if (!allowed.includes(req.body.status)) return res.status(400).json({ error:'Status inválido' });
   const arr = await getState('bookings');
   const b = arr.find(x => x.id === req.params.id);
   if (!b) return res.status(404).json({ error:'Não encontrado' });
   const previous = b.status;
   b.status = req.body.status;
+  if (req.body.status === 'Confirmado') { b.paymentStatus='Aprovado'; b.paymentReviewedAt=new Date().toISOString(); }
+  if (req.body.status === 'Pagamento recusado') { b.paymentStatus='Recusado'; b.paymentReviewedAt=new Date().toISOString(); }
   b.updatedAt = new Date().toISOString();
   const shouldNotify = previous !== 'Confirmado' && b.status === 'Confirmado';
   if (shouldNotify) {
@@ -867,6 +967,19 @@ app.put('/api/admin/services', auth, async (req,res) => {
 });
 
 
+app.put('/api/admin/payment-settings', auth, async (req,res) => {
+  const cfg = normalizeGalleryConfig(await getState('config'));
+  const amount = Number(req.body.depositAmount);
+  if (!Number.isFinite(amount) || amount < 0 || amount > 1000) return res.status(400).json({ error:'Valor do sinal inválido.' });
+  cfg.depositAmount = Math.round(amount * 100) / 100;
+  cfg.pixKey = String(req.body.pixKey || '').trim().slice(0,180);
+  cfg.pixRecipient = String(req.body.pixRecipient || 'Emilly Ribeiro').trim().slice(0,120);
+  cfg.pixCity = String(req.body.pixCity || '').trim().slice(0,80);
+  cfg.paymentInstructions = String(req.body.paymentInstructions || '').trim().slice(0,300);
+  await setState('config', cfg);
+  res.json({ ok:true, payment:{ depositAmount:cfg.depositAmount,pixKey:cfg.pixKey,pixRecipient:cfg.pixRecipient,pixCity:cfg.pixCity,paymentInstructions:cfg.paymentInstructions } });
+});
+
 app.post('/api/admin/gallery-categories', auth, async (req,res) => {
   const cfg = normalizeGalleryConfig(await getState('config'));
   if (cfg.galleryCategories.length >= 12) return res.status(409).json({ error:'Limite de 12 categorias atingido.' });
@@ -905,22 +1018,20 @@ app.delete('/api/admin/gallery-categories/:id', auth, async (req,res) => {
   res.json({ ok:true, movedTo:fallback.id });
 });
 
-app.post('/api/admin/gallery', auth, async (req,res) => {
-  const src = String(req.body.image || '');
-  if (!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(src)) return res.status(400).json({ error:'Imagem inválida.' });
-  if (Buffer.byteLength(src, 'utf8') > 1400 * 1024) return res.status(413).json({ error:'A foto ficou muito grande. Escolha outra imagem.' });
+app.post('/api/admin/gallery', auth, upload.single('photo'), async (req,res) => {
+  if (!req.file) return res.status(400).json({ error:'Escolha uma imagem.' });
   const cfg = normalizeGalleryConfig(await getState('config'));
   cfg.gallery = Array.isArray(cfg.gallery) ? cfg.gallery : [];
   if (cfg.gallery.length >= 100) return res.status(409).json({ error:'Limite de 100 fotos atingido.' });
   const categoryId = String(req.body.categoryId || '').trim();
   if (!cfg.galleryCategories.some(x => x.id === categoryId)) return res.status(400).json({ error:'Escolha uma categoria válida.' });
+  const optimized = await optimizeImage(req.file.buffer, { max:1600, quality:84 });
+  const src = `data:image/webp;base64,${optimized.toString('base64')}`;
   const item = {
-    id: crypto.randomUUID(),
-    src,
+    id: crypto.randomUUID(), src,
     title: String(req.body.title || `Resultado ${cfg.gallery.length + 1}`).trim().slice(0,80),
     caption: String(req.body.caption || 'Trabalho realizado pela Emilly').trim().slice(0,180),
-    categoryId,
-    active: true
+    categoryId, active:true
   };
   cfg.gallery.push(item);
   await setState('config', cfg);
@@ -1021,6 +1132,8 @@ app.get('/api/admin/backup', auth, async (req,res) => {
 
 app.use((err, req, res, next) => {
   console.error('Erro:', err.stack || err.message);
+  if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ error:'A imagem passou de 20 MB. Escolha uma foto menor.' });
+  if (err.code === 'IMAGE_PROCESSING') return res.status(400).json({ error:err.message });
   if (err.code === 'DB_REQUIRED') return res.status(503).json({ error:err.message });
   if (err.code === '23505') return res.status(409).json({ error:'Esse registro já existe.' });
   if (err.code === '22P02') return res.status(400).json({ error:'Algum dado enviado é inválido.' });

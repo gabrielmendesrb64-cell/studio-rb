@@ -1,13 +1,13 @@
 {
   "name": "lsh-studio-rb",
-  "version": "5.0.0",
+  "version": "6.0.0",
   "private": true,
-  "description": "Lash Studio RB - V17 produção com PostgreSQL persistente e correções gerais",
+  "description": "Studio RB V18 - visual baseado no catálogo, PIX R$20, comprovante e uploads mobile robustos",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "check": "node --check server.js && node --check public/lsh-premium-v15.js && node --check public/admin-v17.js"
+    "check": "node --check server.js && node --check public/studio-rb-v18.js && node --check public/admin-v18.js"
   },
   "dependencies": {
     "compression": "^1.7.4",
@@ -19,6 +19,8 @@
     "memorystore": "^1.6.7",
     "nodemailer": "^6.9.15",
     "pg": "^8.13.1",
-    "express-async-errors": "^3.1.1"
+    "express-async-errors": "^3.1.1",
+    "multer": "^2.0.2",
+    "sharp": "^0.34.3"
   }
 }

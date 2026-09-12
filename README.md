@@ -1,47 +1,41 @@
-# Lash Studio RB — V17 DATABASE PRODUCTION
+# Studio RB — V18 Catálogo + PIX
 
-Versão preparada para produção com PostgreSQL persistente.
+Versão redesenhada com base no catálogo enviado pela cliente.
 
-## O que mudou
-- PostgreSQL relacional para agendamentos, procedimentos, horários semanais, horários por data, bloqueios, categorias e fotos.
-- Migração automática dos dados antigos da tabela `lsh_state` ou dos JSON locais quando o banco estiver vazio.
-- Em produção, se o PostgreSQL não estiver conectado, o painel NÃO finge que salvou: alterações retornam erro e nada é gravado em arquivo temporário.
-- Removido do painel o aviso visual sobre database/JSON.
-- Corrigido falso “horário salvo” quando a gravação falhava.
-- Tratamento melhor de erros assíncronos.
-- Upload de foto com limite maior e até 100 fotos.
-- Cache do painel atualizado para V17.
-- SMTP mantido, com mensagem de diagnóstico compatível com a porta configurada.
-
-## Render
-Variável obrigatória para persistência:
-`DATABASE_URL=<Internal Database URL do PostgreSQL do Render>`
-
-Também mantenha:
-- NODE_ENV=production
-- SESSION_SECRET
-- ADMIN_USER
-- ADMIN_PASSWORD
-- OWNER_EMAIL
-- OWNER_WHATSAPP
-- SMTP_HOST
-- SMTP_PORT
-- SMTP_SECURE
-- SMTP_SERVICE
-- SMTP_USER
-- SMTP_PASS
-- SMTP_FROM
+## Principais mudanças
+- Visual preto, rosa/pink e branco, inspirado no PDF da Studio RB.
+- Catálogo de procedimentos com os valores do material de referência.
+- Fluxo de reserva com sinal PIX (padrão R$ 20,00).
+- Cliente pode enviar comprovante pelo próprio site ou seguir para o WhatsApp.
+- Agendamento fica como **Comprovante enviado** até aprovação da Emilly.
+- Painel admin possui **Aprovar / Confirmar**, **Recusar PIX** e **Ver comprovante**.
+- Chave PIX, valor do sinal, recebedor, cidade e instruções são configuráveis no painel.
+- Uploads de fotos do celular agora usam multipart e otimização no servidor com Sharp. O servidor aceita imagem de até 20 MB e reduz automaticamente para WebP.
+- Fotos de portfólio também são otimizadas automaticamente no servidor.
+- PostgreSQL/Supabase continua sendo a fonte persistente dos dados.
 
 ## Banco
-O arquivo `database.sql` está na raiz. O `server.js` cria as tabelas automaticamente ao iniciar.
-Não é necessário executar o SQL manualmente se `DATABASE_URL` estiver correta.
+Ao iniciar, `database.sql` cria/atualiza as tabelas. A V18 adiciona:
+- campos de status PIX no agendamento;
+- tabela `lsh_payment_proofs` para os comprovantes.
 
-## Deploy
-Build: `npm install`
-Start: `npm start`
+## Render
+Build command: `npm install`
+Start command: `npm start`
 
-Depois do deploy, confira os Logs. Deve aparecer:
-`[DATABASE] PostgreSQL conectado e pronto.`
+Variável obrigatória:
+`DATABASE_URL=<Session Pooler do Supabase>`
+
+Mantenha também as variáveis de admin, e-mail e WhatsApp já configuradas.
+
+## Primeiro acesso após deploy
+1. Abra o painel `/admin.html`.
+2. Vá em **PIX & Sinal**.
+3. Coloque a chave PIX correta e confirme o valor do sinal.
+4. Confira os procedimentos/valores.
+5. Libere os horários.
+6. Faça um agendamento de teste e envie um comprovante de teste.
+7. No painel, abra o comprovante e aprove.
 
 ## Segurança
-Nunca envie `.env`, SMTP_PASS, ADMIN_PASSWORD ou DATABASE_URL para GitHub público.
+Nunca envie `DATABASE_URL`, `SMTP_PASS`, senha de admin ou outras credenciais ao GitHub público.

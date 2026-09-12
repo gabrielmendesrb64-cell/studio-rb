@@ -1,5 +1,5 @@
 {
-  "businessName": "Lash Studio RB",
+  "businessName": "Studio RB",
   "whatsapp": "5511999999999",
   "email": "contato@lshstudiorb.com.br",
   "instagram": "@lshstudiorb",
@@ -19,38 +19,185 @@
   "blockedSlots": [],
   "services": [
     {
-      "id": "cilios",
-      "name": "Alongamento de Cílios",
-      "price": null,
-      "duration": 60,
+      "id": "volume-brasileiro",
+      "name": "Volume Brasileiro",
+      "price": 110,
+      "duration": 120,
       "active": true
     },
     {
-      "id": "sobrancelhas",
-      "name": "Design de Sobrancelhas",
-      "price": null,
+      "id": "manut-brasileiro",
+      "name": "Manutenção — Volume Brasileiro",
+      "price": 90,
+      "duration": 90,
+      "active": true
+    },
+    {
+      "id": "volume-3d",
+      "name": "Volume 3D",
+      "price": 110,
+      "duration": 120,
+      "active": true
+    },
+    {
+      "id": "manut-3d",
+      "name": "Manutenção — Volume 3D",
+      "price": 90,
+      "duration": 90,
+      "active": true
+    },
+    {
+      "id": "lash-lifting",
+      "name": "Lash Lifting",
+      "price": 100,
+      "duration": 90,
+      "active": true
+    },
+    {
+      "id": "volume-5d",
+      "name": "Volume 5D",
+      "price": 120,
+      "duration": 120,
+      "active": true
+    },
+    {
+      "id": "manut-5d",
+      "name": "Manutenção — Volume 5D",
+      "price": 100,
+      "duration": 90,
+      "active": true
+    },
+    {
+      "id": "volume-8d",
+      "name": "Volume 8D",
+      "price": 120,
+      "duration": 120,
+      "active": true
+    },
+    {
+      "id": "manut-8d",
+      "name": "Manutenção — Volume 8D",
+      "price": 100,
+      "duration": 90,
+      "active": true
+    },
+    {
+      "id": "volume-fox",
+      "name": "Volume Fox",
+      "price": 120,
+      "duration": 120,
+      "active": true
+    },
+    {
+      "id": "manut-fox",
+      "name": "Manutenção — Volume Fox",
+      "price": 100,
+      "duration": 90,
+      "active": true
+    },
+    {
+      "id": "mega-brasileiro",
+      "name": "Mega Brasileiro",
+      "price": 130,
+      "duration": 120,
+      "active": true
+    },
+    {
+      "id": "manut-mega-brasileiro",
+      "name": "Manutenção — Mega Brasileiro",
+      "price": 110,
+      "duration": 90,
+      "active": true
+    },
+    {
+      "id": "volume-luxo",
+      "name": "Volume Luxo",
+      "price": 140,
+      "duration": 120,
+      "active": true
+    },
+    {
+      "id": "manut-volume-luxo",
+      "name": "Manutenção — Volume Luxo",
+      "price": 115,
+      "duration": 90,
+      "active": true
+    },
+    {
+      "id": "mega-fox",
+      "name": "Mega Fox",
+      "price": 150,
+      "duration": 120,
+      "active": true
+    },
+    {
+      "id": "manut-mega-fox",
+      "name": "Manutenção — Mega Fox",
+      "price": 120,
+      "duration": 90,
+      "active": true
+    },
+    {
+      "id": "design-sobrancelha",
+      "name": "Design de Sobrancelha",
+      "price": 30,
       "duration": 45,
       "active": true
     },
     {
-      "id": "lifting",
-      "name": "Lifting de Cílios",
-      "price": null,
+      "id": "design-henna",
+      "name": "Design de Sobrancelha com Henna",
+      "price": 40,
       "duration": 60,
       "active": true
     },
     {
-      "id": "henna",
-      "name": "Henna",
-      "price": null,
+      "id": "brow-lamination",
+      "name": "Brow Lamination",
+      "price": 80,
+      "duration": 75,
+      "active": true
+    },
+    {
+      "id": "micro-shadow",
+      "name": "Micropigmentação Shadow",
+      "price": 299.99,
+      "duration": 120,
+      "active": true
+    },
+    {
+      "id": "micro-fio",
+      "name": "Micropigmentação Fio a Fio",
+      "price": 299.99,
+      "duration": 120,
+      "active": true
+    },
+    {
+      "id": "micro-labial",
+      "name": "Micropigmentação Labial",
+      "price": 299.99,
+      "duration": 120,
+      "active": true
+    },
+    {
+      "id": "hidraglos",
+      "name": "Hidraglos",
+      "price": 100,
+      "duration": 60,
+      "active": true
+    },
+    {
+      "id": "spa-labial-henna",
+      "name": "Spa Labial com Henna",
+      "price": 25,
       "duration": 45,
       "active": true
     },
     {
-      "id": "pele",
-      "name": "Limpeza de Pele",
-      "price": null,
-      "duration": 60,
+      "id": "depilacao-buco",
+      "name": "Depilação de Buço",
+      "price": 10,
+      "duration": 30,
       "active": true
     }
   ],
@@ -102,5 +249,10 @@
       "active": true
     }
   ],
-  "dateHours": {}
+  "dateHours": {},
+  "depositAmount": 20,
+  "pixKey": "",
+  "pixRecipient": "Emilly Ribeiro",
+  "pixCity": "",
+  "paymentInstructions": "O horário só é confirmado após o envio e aprovação do comprovante do sinal."
 }

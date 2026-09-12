@@ -91,3 +91,18 @@ CREATE TABLE IF NOT EXISTS lsh_migrations (
   name TEXT PRIMARY KEY,
   applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+
+-- V18: sinal PIX e comprovantes
+ALTER TABLE lsh_bookings ADD COLUMN IF NOT EXISTS deposit_amount NUMERIC(10,2) NOT NULL DEFAULT 20;
+ALTER TABLE lsh_bookings ADD COLUMN IF NOT EXISTS payment_status TEXT NOT NULL DEFAULT 'Aguardando pagamento';
+ALTER TABLE lsh_bookings ADD COLUMN IF NOT EXISTS proof_uploaded_at TIMESTAMPTZ;
+ALTER TABLE lsh_bookings ADD COLUMN IF NOT EXISTS payment_reviewed_at TIMESTAMPTZ;
+
+CREATE TABLE IF NOT EXISTS lsh_payment_proofs (
+  booking_id TEXT PRIMARY KEY REFERENCES lsh_bookings(id) ON DELETE CASCADE,
+  mime_type TEXT NOT NULL,
+  original_name TEXT,
+  data BYTEA NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
