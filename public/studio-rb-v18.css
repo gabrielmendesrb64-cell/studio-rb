@@ -235,3 +235,15 @@
   .compact-option{flex:1!important;justify-content:center!important}
   .single-choice{grid-template-columns:22px minmax(0,1fr)!important}
 }
+
+/* V33 - menu simples de agendamento */
+.booking-mode-picker{display:grid;gap:12px}
+.booking-mode-picker button{width:100%;min-height:78px;padding:15px 16px;border-radius:19px;border:1px solid rgba(255,92,164,.32);background:#100a0e;color:#fff;text-align:left}
+.booking-mode-picker b{display:block;font-size:16px}.booking-mode-picker small{display:block;margin-top:5px;color:#cdbdc5;font-size:12px}
+.booking-mode-head{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+.booking-mode-head button{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,92,164,.35);background:#160b11;color:#ff69ad;font-size:27px}
+.booking-mode-head b{display:block;color:#fff;font-size:17px}.booking-mode-head small{display:block;color:#cdbdc5;font-size:12px}
+.booking-simple-list{display:grid;gap:8px}
+.booking-simple-list label{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 13px;border:1px solid rgba(255,92,164,.27);border-radius:16px;background:#100a0e;color:#fff;font-weight:750}
+.booking-simple-list input{width:21px!important;height:21px!important;min-width:21px!important;margin:0!important}
+.booking-simple-list span{font-size:15px}

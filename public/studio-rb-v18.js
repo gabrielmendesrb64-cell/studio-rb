@@ -71,6 +71,23 @@ function findMaintenance(base, all){
     return mn===baseName || mn.includes(baseName) || baseName.includes(mn);
   }) || null;
 }
+function renderBookingMenu(){
+  const all=(cfg.services||[]).filter(s=>s.active!==false);
+  const catalog=all.filter(s=>!isMaintenanceService(s));
+  const mode=window.bookingMode||'';
+  if(!mode){
+    $('#bookingServices').innerHTML=`<div class="booking-mode-picker">
+      <button type="button" data-booking-mode="complete"><b>✨ Procedimento completo</b><small>Primeira aplicação ou procedimento normal</small></button>
+      <button type="button" data-booking-mode="maintenance"><b>↻ Manutenção</b><small>Para quem já realizou o procedimento</small></button>
+    </div>`;
+    return;
+  }
+  const rows=mode==='maintenance'
+    ? catalog.map(base=>({base,item:findMaintenance(base,all)})).filter(x=>x.item)
+    : catalog.map(base=>({base,item:base}));
+  $('#bookingServices').innerHTML=`<div class="booking-mode-head"><button type="button" id="bookingModeBack">‹</button><div><b>${mode==='maintenance'?'Manutenção':'Procedimento completo'}</b><small>Escolha o serviço</small></div></div>
+  <div class="booking-simple-list">${rows.map(({base,item})=>`<label><input type="checkbox" value="${esc(item.id)}"><span>${esc(base.name)}</span></label>`).join('')}</div>`;
+}
 function renderServices(){
   const all=(cfg.services||[]).filter(s=>s.active!==false);
   const catalog=all.filter(s=>!isMaintenanceService(s));
@@ -79,32 +96,15 @@ function renderServices(){
     const maintenanceHtml=maintenance?`<div class="maintenance-price"><span>Manutenção</span><strong>${money(maintenance.price)}</strong></div>`:'';
     return `<article class="service-card" data-service="${esc(s.id)}"><img class="service-photo" src="${esc(v.image)}" alt="${esc(s.name)}" loading="lazy"><div class="service-info"><span class="kicker">STUDIO RB</span><h3>${esc(s.name)}</h3><p>${esc(v.description)}</p><div class="service-bottom"><div class="price-wrap"><div class="price">${money(s.price)}</div>${maintenanceHtml}</div><span class="service-select-hint">Selecionar</span></div></div></article>`;
   }).join('')||'<div class="loading-card">Nenhum procedimento cadastrado.</div>';
-
-  $('#bookingServices').innerHTML=catalog.map(s=>{
-    const maintenance=findMaintenance(s,all);
-    if(maintenance){
-      return `<div class="booking-service-group compact-service-choice">
-        <strong class="booking-service-title">${esc(s.name)}</strong>
-        <div class="booking-service-options">
-          <label class="booking-service compact-option">
-            <input type="checkbox" value="${esc(s.id)}">
-            <span>Completo</span>
-          </label>
-          <label class="booking-service compact-option maintenance-option">
-            <input type="checkbox" value="${esc(maintenance.id)}">
-            <span>Manutenção</span>
-          </label>
-        </div>
-      </div>`;
-    }
-    return `<label class="booking-service-group compact-service-choice single-choice">
-      <input class="single-service-input" type="checkbox" value="${esc(s.id)}">
-      <strong class="booking-service-title">${esc(s.name)}</strong>
-    </label>`;
-  }).join('');
+  renderBookingMenu();
 }
 function syncServiceUI(){$$('[data-service]').forEach(x=>x.classList.toggle('selected',selectedServices.has(x.dataset.service)));$$('#bookingServices input').forEach(x=>x.checked=selectedServices.has(x.value));$('#bookingTotal').textContent=money(total())}
 document.addEventListener('click',e=>{const card=e.target.closest('[data-service]');if(card){const id=card.dataset.service;selectedServices.has(id)?selectedServices.delete(id):selectedServices.add(id);syncServiceUI();document.querySelector('#agendar')?.scrollIntoView({behavior:'smooth',block:'start'})}});
+$('#bookingServices')?.addEventListener('click',e=>{
+  const b=e.target.closest('[data-booking-mode]');
+  if(b){window.bookingMode=b.dataset.bookingMode;selectedServices.clear();renderBookingMenu();syncServiceUI();return}
+  if(e.target.closest('#bookingModeBack')){window.bookingMode='';selectedServices.clear();renderBookingMenu();syncServiceUI()}
+});
 $('#bookingServices')?.addEventListener('change',e=>{
   if(!e.target.matches('input[type=checkbox]'))return;
   const input=e.target;
